@@ -11,9 +11,9 @@ import (
 
 func TestImportCmd(t *testing.T) {
 	set := flag.NewFlagSet("", flag.ContinueOnError)
-	set.String("image", "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
-	set.String("file", "../../../data/grype.json", "")
-	set.String("source", "grype", "")
+	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
+	set.String(fileFlag.Name, "../../../data/grype.json", "")
+	set.String(formatFlag.Name, "grype", "")
 
 	c := cli.NewContext(newTestApp(t), set, nil)
 	err := importCmd(c)

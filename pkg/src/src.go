@@ -22,16 +22,16 @@ func NewSource(opt *types.ImportOptions) (*Source, error) {
 	}
 
 	s := &Source{
-		ImageURI: opt.ImageURI,
-		Data:     c,
+		URI:  opt.Source,
+		Data: c,
 	}
 
 	return s, nil
 }
 
 type Source struct {
-	// ImageURI is the image URI.
-	ImageURI string
+	// URI is the image URI.
+	URI string
 
 	// Data is the source data.
 	Data *gabs.Container
