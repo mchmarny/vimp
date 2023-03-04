@@ -11,4 +11,6 @@ bin/vulctl -v
 bin/vulctl -h
 
 msg "import"
-bin/vulctl imp -p cloudy-demos -f data/grype-json.json -s grype
+bin/vulctl import -s snyk \
+                  -f data/snyk.json \
+                  -i us-docker.pkg.dev/project/repo/img@sha256:f6efe

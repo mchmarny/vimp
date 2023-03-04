@@ -1,4 +1,4 @@
-package grype
+package snyk
 
 import (
 	"context"
@@ -9,28 +9,28 @@ import (
 	aa "google.golang.org/api/containeranalysis/v1"
 )
 
-func Convert(ctx context.Context, s *src.Source) ([]*aa.VulnerabilityOccurrence, error) {
+func Convert(ctx context.Context, s *src.Source) ([]*aa.Occurrence, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
 	}
 
-	if !s.Data.Search("matches").Exists() {
-		return nil, errors.New("unable to find vulnerability matches in source data")
+	if !s.Data.Search("vulnerabilities").Exists() {
+		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make([]*aa.VulnerabilityOccurrence, 0)
+	list := make([]*aa.Occurrence, 0)
 
-	for _, v := range s.Data.Search("matches").Children() {
-		if !v.Search("vulnerability").Exists() {
-			continue
-		}
-
-		item := &aa.VulnerabilityOccurrence{
-			EffectiveSeverity: toSeverity(v.Search("vulnerability", "severity").Data().(string)),
-			FixAvailable:      v.Search("vulnerability", "fix", "state").Data().(string) == "fixed",
-			PackageIssue:      make([]*aa.PackageIssue, 0),
-			Severity:          toSeverity(v.Search("vulnerability", "severity").Data().(string)),
-			Type:              v.Search("artifact", "type").Data().(string),
+	for _, v := range s.Data.Search("vulnerabilities").Children() {
+		oc := &aa.Occurrence{
+			Kind:        "VULNERABILITY",
+			ResourceUri: s.ImageURI,
+			Vulnerability: &aa.VulnerabilityOccurrence{
+				EffectiveSeverity: toSeverity(v.Search("severity").Data().(string)),
+				FixAvailable:      v.Search("isPatchable").Data().(bool),
+				Severity:          toSeverity(v.Search("cvssDetails", "severity").Data().(string)),
+				Type:              v.Search("artifact", "type").Data().(string),
+				PackageIssue:      make([]*aa.PackageIssue, 0),
+			},
 		}
 
 		for _, rvs := range v.Search("relatedVulnerabilities").Children() {
@@ -39,7 +39,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.VulnerabilityOccurrence,
 				ver := cvss.Search("version").Data().(string)
 				if ver == "2.0" {
 					// "AV:N/AC:L/Au:N/C:N/I:P/A:N"
-					item.CvssV2 = &aa.CVSS{
+					oc.Vulnerability.CvssV2 = &aa.CVSS{
 						BaseScore:             cvss.Search("metrics", "baseScore").Data().(float64),
 						ExploitabilityScore:   cvss.Search("metrics", "exploitabilityScore").Data().(float64),
 						ImpactScore:           cvss.Search("metrics", "impactScore").Data().(float64),
@@ -53,7 +53,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.VulnerabilityOccurrence,
 				}
 				if ver == "3.0" {
 					// "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
-					item.Cvssv3 = &aa.CVSS{
+					oc.Vulnerability.Cvssv3 = &aa.CVSS{
 						BaseScore:             cvss.Search("metrics", "baseScore").Data().(float64),
 						ExploitabilityScore:   cvss.Search("metrics", "exploitabilityScore").Data().(float64),
 						ImpactScore:           cvss.Search("metrics", "impactScore").Data().(float64),
@@ -71,7 +71,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.VulnerabilityOccurrence,
 			}
 		}
 
-		list = append(list, item)
+		list = append(list, oc)
 	}
 
 	return list, nil
@@ -79,20 +79,11 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.VulnerabilityOccurrence,
 
 // toSeverity converts grype severity to CVSS severity.
 func toSeverity(v string) string {
-	switch v {
-	case "Negligible":
-	case "Minimal":
-		return "MINIMAL"
-	case "Low":
-		return "LOW"
-	case "Medium":
-		return "MEDIUM"
-	case "High":
-		return "HIGH"
-	case "Critical":
-		return "CRITICAL"
+	if v == "" {
+		return "SEVERITY_UNSPECIFIED"
 	}
-	return "SEVERITY_UNSPECIFIED"
+
+	return strings.ToUpper(v)
 }
 
 const expectedVectorParts = 2
