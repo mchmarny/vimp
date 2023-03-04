@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+msg () {
+   echo "====== running $1 tests ======"
+}
+
+msg "root"
+bin/vulctl -v
+bin/vulctl -h
+
+msg "import"
+bin/vulctl imp -p cloudy-demos -f data/grype-json.json -s grype
