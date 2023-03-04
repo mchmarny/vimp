@@ -1,0 +1,126 @@
+{
+    "matches": [],
+    "source": {
+        "type": "image",
+        "target": {
+            "userInput": "us-west1-docker.pkg.dev/cloudy-demos/cloudbuild-demo/hello@sha256:397d453545170bf8a92f3525a554fefb9af466724f62a8889bc45aa986e8e518",
+            "imageID": "sha256:7be181487b4cd2f5e680c8ad0f1bc169d71af8fea7c13725c02a8ed850ec42f0",
+            "manifestDigest": "sha256:2039a2c8dd3daa35d557b8a2bd52793f8e5c5e761fa30b98b7f85c703557a4fc",
+            "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "tags": [],
+            "imageSize": 9341379,
+            "layers": [
+                {
+                    "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+                    "digest": "sha256:cb60fb9b862c6a89f92e484bc3b72bbc0352b41166df5c4a68bfb52f52504a7d",
+                    "size": 2337219
+                },
+                {
+                    "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
+                    "digest": "sha256:7606179a6514b781e389b6b7ec1fff7a410a6d13537a78d08a2970d7c4ded159",
+                    "size": 7004160
+                }
+            ],
+            "manifest": "eyJzY2hlbWFWZXJzaW9uIjoyLCJtZWRpYVR5cGUiOiJhcHBsaWNhdGlvbi92bmQuZG9ja2VyLmRpc3RyaWJ1dGlvbi5tYW5pZmVzdC52Mitqc29uIiwiY29uZmlnIjp7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuY29udGFpbmVyLmltYWdlLnYxK2pzb24iLCJzaXplIjoyMDI3LCJkaWdlc3QiOiJzaGEyNTY6N2JlMTgxNDg3YjRjZDJmNWU2ODBjOGFkMGYxYmMxNjlkNzFhZjhmZWE3YzEzNzI1YzAyYThlZDg1MGVjNDJmMCJ9LCJsYXllcnMiOlt7Im1lZGlhVHlwZSI6ImFwcGxpY2F0aW9uL3ZuZC5kb2NrZXIuaW1hZ2Uucm9vdGZzLmRpZmYudGFyLmd6aXAiLCJzaXplIjozNjc2MTYwLCJkaWdlc3QiOiJzaGEyNTY6Y2I2MGZiOWI4NjJjNmE4OWY5MmU0ODRiYzNiNzJiYmMwMzUyYjQxMTY2ZGY1YzRhNjhiZmI1MmY1MjUwNGE3ZCJ9LHsibWVkaWFUeXBlIjoiYXBwbGljYXRpb24vdm5kLmRvY2tlci5pbWFnZS5yb290ZnMuZGlmZi50YXIuZ3ppcCIsInNpemUiOjcwMDY3MjAsImRpZ2VzdCI6InNoYTI1Njo3NjA2MTc5YTY1MTRiNzgxZTM4OWI2YjdlYzFmZmY3YTQxMGE2ZDEzNTM3YTc4ZDA4YTI5NzBkN2M0ZGVkMTU5In1dfQ==",
+            "config": "eyJhcmNoaXRlY3R1cmUiOiJhbWQ2NCIsImNvbmZpZyI6eyJIb3N0bmFtZSI6IiIsIkRvbWFpbm5hbWUiOiIiLCJVc2VyIjoiNjU1MzIiLCJBdHRhY2hTdGRpbiI6ZmFsc2UsIkF0dGFjaFN0ZG91dCI6ZmFsc2UsIkF0dGFjaFN0ZGVyciI6ZmFsc2UsIlR0eSI6ZmFsc2UsIk9wZW5TdGRpbiI6ZmFsc2UsIlN0ZGluT25jZSI6ZmFsc2UsIkVudiI6WyJQQVRIPS91c3IvbG9jYWwvc2JpbjovdXNyL2xvY2FsL2JpbjovdXNyL3NiaW46L3Vzci9iaW46L3NiaW46L2JpbiIsIlNTTF9DRVJUX0ZJTEU9L2V0Yy9zc2wvY2VydHMvY2EtY2VydGlmaWNhdGVzLmNydCJdLCJDbWQiOm51bGwsIkltYWdlIjoic2hhMjU2OjdlOTNiY2I5Yzc3Y2VmMTM3NzA0NTI1ZjBlMDJmYWMwYmViNjg0MDRlMjYxMzRjYzE1ODc1MzNmNmI0NDFjMTQiLCJWb2x1bWVzIjpudWxsLCJXb3JraW5nRGlyIjoiL2FwcCIsIkVudHJ5cG9pbnQiOlsiLi9hcHAiXSwiT25CdWlsZCI6bnVsbCwiTGFiZWxzIjp7ImRldm8udmVyc2lvbiI6IiJ9fSwiY29udGFpbmVyIjoiYjcyMDEzYzUyODk5YjUyNWNlNGE3NTJmYzI3NjdhMjFhZjE3ZWJkM2ZlMDFhZmFmMDg1NzdiODYwMTA4MjdhYSIsImNvbnRhaW5lcl9jb25maWciOnsiSG9zdG5hbWUiOiJiNzIwMTNjNTI4OTkiLCJEb21haW5uYW1lIjoiIiwiVXNlciI6IjY1NTMyIiwiQXR0YWNoU3RkaW4iOmZhbHNlLCJBdHRhY2hTdGRvdXQiOmZhbHNlLCJBdHRhY2hTdGRlcnIiOmZhbHNlLCJUdHkiOmZhbHNlLCJPcGVuU3RkaW4iOmZhbHNlLCJTdGRpbk9uY2UiOmZhbHNlLCJFbnYiOlsiUEFUSD0vdXNyL2xvY2FsL3NiaW46L3Vzci9sb2NhbC9iaW46L3Vzci9zYmluOi91c3IvYmluOi9zYmluOi9iaW4iLCJTU0xfQ0VSVF9GSUxFPS9ldGMvc3NsL2NlcnRzL2NhLWNlcnRpZmljYXRlcy5jcnQiXSwiQ21kIjpbIi9iaW4vc2giLCItYyIsIiMobm9wKSAiLCJFTlRSWVBPSU5UIFtcIi4vYXBwXCJdIl0sIkltYWdlIjoic2hhMjU2OjdlOTNiY2I5Yzc3Y2VmMTM3NzA0NTI1ZjBlMDJmYWMwYmViNjg0MDRlMjYxMzRjYzE1ODc1MzNmNmI0NDFjMTQiLCJWb2x1bWVzIjpudWxsLCJXb3JraW5nRGlyIjoiL2FwcCIsIkVudHJ5cG9pbnQiOlsiLi9hcHAiXSwiT25CdWlsZCI6bnVsbCwiTGFiZWxzIjp7ImRldm8udmVyc2lvbiI6IiJ9fSwiY3JlYXRlZCI6IjIwMjMtMDMtMDJUMTI6MDc6MjkuNjg5NDc1MDUzWiIsImRvY2tlcl92ZXJzaW9uIjoiMjAuMTAuMjMiLCJoaXN0b3J5IjpbeyJjcmVhdGVkIjoiMjAyMy0wMi0wNFQxNzoxMjoxMVoiLCJhdXRob3IiOiJCYXplbCIsImNyZWF0ZWRfYnkiOiJiYXplbCBidWlsZCAuLi4ifSx7ImNyZWF0ZWQiOiIyMDIzLTAzLTAyVDEyOjA3OjI5LjA3NzM4NzU0N1oiLCJjcmVhdGVkX2J5IjoiL2Jpbi9zaCAtYyAjKG5vcCkgIExBQkVMIGRldm8udmVyc2lvbj0iLCJlbXB0eV9sYXllciI6dHJ1ZX0seyJjcmVhdGVkIjoiMjAyMy0wMy0wMlQxMjowNzoyOS4zNDg5MzE2MzdaIiwiY3JlYXRlZF9ieSI6Ii9iaW4vc2ggLWMgIyhub3ApIENPUFkgZmlsZTo2Y2QyZTljZWFmMzE0MzI5YTc0NDU5YzRmNGRiZWIxZTlmZTJiMzE2NGYwMGIyYjZlOTQ3OTRkOGZkZTAwZTcxIGluIC9hcHAvICJ9LHsiY3JlYXRlZCI6IjIwMjMtMDMtMDJUMTI6MDc6MjkuNTM3ODkxNjQzWiIsImNyZWF0ZWRfYnkiOiIvYmluL3NoIC1jICMobm9wKSBXT1JLRElSIC9hcHAiLCJlbXB0eV9sYXllciI6dHJ1ZX0seyJjcmVhdGVkIjoiMjAyMy0wMy0wMlQxMjowNzoyOS42ODk0NzUwNTNaIiwiY3JlYXRlZF9ieSI6Ii9iaW4vc2ggLWMgIyhub3ApICBFTlRSWVBPSU5UIFtcIi4vYXBwXCJdIiwiZW1wdHlfbGF5ZXIiOnRydWV9XSwib3MiOiJsaW51eCIsInJvb3RmcyI6eyJ0eXBlIjoibGF5ZXJzIiwiZGlmZl9pZHMiOlsic2hhMjU2OmNiNjBmYjliODYyYzZhODlmOTJlNDg0YmMzYjcyYmJjMDM1MmI0MTE2NmRmNWM0YTY4YmZiNTJmNTI1MDRhN2QiLCJzaGEyNTY6NzYwNjE3OWE2NTE0Yjc4MWUzODliNmI3ZWMxZmZmN2E0MTBhNmQxMzUzN2E3OGQwOGEyOTcwZDdjNGRlZDE1OSJdfX0=",
+            "repoDigests": [
+                "us-west1-docker.pkg.dev/cloudy-demos/cloudbuild-demo/hello@sha256:397d453545170bf8a92f3525a554fefb9af466724f62a8889bc45aa986e8e518"
+            ],
+            "architecture": "amd64",
+            "os": "linux"
+        }
+    },
+    "distro": {
+        "name": "debian",
+        "version": "11",
+        "idLike": []
+    },
+    "descriptor": {
+        "name": "grype",
+        "version": "0.58.0",
+        "configuration": {
+            "configPath": "",
+            "verbosity": 0,
+            "output": "json",
+            "file": "data/grype-json.json",
+            "distro": "",
+            "add-cpes-if-none": true,
+            "output-template-file": "",
+            "quiet": true,
+            "check-for-app-update": true,
+            "only-fixed": false,
+            "only-notfixed": false,
+            "platform": "",
+            "search": {
+                "scope": "AllLayers",
+                "unindexed-archives": false,
+                "indexed-archives": true
+            },
+            "ignore": null,
+            "exclude": [],
+            "db": {
+                "cache-dir": "/Users/mchmarny/Library/Caches/grype/db",
+                "update-url": "https://toolbox-data.anchore.io/grype/databases/listing.json",
+                "ca-cert": "",
+                "auto-update": true,
+                "validate-by-hash-on-start": false,
+                "validate-age": true,
+                "max-allowed-built-age": 432000000000000
+            },
+            "externalSources": {
+                "enable": false,
+                "maven": {
+                    "searchUpstreamBySha1": true,
+                    "baseUrl": "https://search.maven.org/solrsearch/select"
+                }
+            },
+            "match": {
+                "java": {
+                    "using-cpes": true
+                },
+                "dotnet": {
+                    "using-cpes": true
+                },
+                "golang": {
+                    "using-cpes": true
+                },
+                "javascript": {
+                    "using-cpes": true
+                },
+                "python": {
+                    "using-cpes": true
+                },
+                "ruby": {
+                    "using-cpes": true
+                },
+                "stock": {
+                    "using-cpes": true
+                }
+            },
+            "dev": {
+                "profile-cpu": false,
+                "profile-mem": false
+            },
+            "fail-on-severity": "",
+            "registry": {
+                "insecure-skip-tls-verify": false,
+                "insecure-use-http": false,
+                "auth": []
+            },
+            "log": {
+                "structured": false,
+                "level": "",
+                "file": ""
+            },
+            "show-suppressed": false,
+            "by-cve": false
+        },
+        "db": {
+            "built": "2023-03-03T08:14:15Z",
+            "schemaVersion": 5,
+            "location": "/Users/mchmarny/Library/Caches/grype/db/5",
+            "checksum": "sha256:a7dc01b8f1325e7ef1a0f350c7f200b6953d0b8fec8a86bcb37a8c29a7b03c86",
+            "error": null
+        }
+    }
+}
