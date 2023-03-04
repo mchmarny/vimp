@@ -3,7 +3,12 @@ on:
   push:
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
+
+permissions:
+  contents: read
+
 jobs:
+
   test:
     uses: ./.github/workflows/test.yaml
     permissions:
@@ -12,6 +17,7 @@ jobs:
     with:
       go-version: ^1.20.1
       scan-severity: 'CRITICAL,HIGH,MEDIUM'
+  
   release-cli:
     runs-on: ubuntu-latest
     needs:
