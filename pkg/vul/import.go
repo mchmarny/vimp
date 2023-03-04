@@ -27,17 +27,19 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.Wrap(err, "error getting converter")
 	}
 
-	vuls, err := c(ctx, s)
+	list, err := c(ctx, s)
 	if err != nil {
 		return errors.Wrap(err, "error converting source")
 	}
 
-	if vuls == nil {
+	if list == nil {
 		return errors.New("expected non-nil result")
 	}
 
-	for _, v := range vuls {
-		log.Debug().Interface("vul", v).Msg("vulnerabilities")
+	for _, o := range list {
+		log.Info().Msgf("Resource: %s", o.ResourceUri)
+		log.Info().Msgf("Type: %s", o.Vulnerability.Type)
+		log.Info().Msgf("Severity: %s", o.Vulnerability.Severity)
 	}
 
 	return nil

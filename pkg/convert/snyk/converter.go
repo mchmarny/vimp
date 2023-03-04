@@ -27,8 +27,8 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Occurrence, error) {
 			Vulnerability: &aa.VulnerabilityOccurrence{
 				EffectiveSeverity: toSeverity(v.Search("severity").Data().(string)),
 				FixAvailable:      v.Search("isPatchable").Data().(bool),
-				Severity:          toSeverity(v.Search("cvssDetails", "severity").Data().(string)),
-				Type:              v.Search("artifact", "type").Data().(string),
+				Severity:          toSeverity(v.Search("severity").Data().(string)),
+				Type:              v.Search("name").Data().(string),
 				PackageIssue:      make([]*aa.PackageIssue, 0),
 			},
 		}
