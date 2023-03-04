@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
-      id-token: write
     steps:
     - name: Setup Go
       uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568  # v3.5.0
