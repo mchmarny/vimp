@@ -3,59 +3,26 @@ package vul
 import (
 	"context"
 
-	"github.com/mchmarny/vulctl/pkg/converter"
+	"github.com/mchmarny/vulctl/pkg/convert"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	ErrMissingFormat    = errors.New("missing format")
-	ErrMissingPath      = errors.New("missing path")
-	ErrMissingProjectID = errors.New("missing project ID")
-)
-
-type ImportOptions struct {
-	// ProjectID is the ID of the project to import into
-	ProjectID string
-
-	// File path to the file to import
-	File string
-
-	// Format of the file to import
-	Format types.SourceFormat
-
-	// Quiet suppresses output
-	Quiet bool
-}
-
-func (i *ImportOptions) Validate() error {
-	if i.ProjectID == "" {
-		return ErrMissingProjectID
-	}
-	if i.File == "" {
-		return ErrMissingPath
-	}
-	if i.Format == types.SourceFormatUnknown {
-		return ErrMissingFormat
-	}
-	return nil
-}
-
-func Import(ctx context.Context, opt *ImportOptions) error {
+func Import(ctx context.Context, opt *types.ImportOptions) error {
 	if opt == nil {
 		return errors.New("options required")
 	}
 	if err := opt.Validate(); err != nil {
 		return errors.Wrap(err, "error validating options")
 	}
-	s, err := src.NewSource(opt.File)
+	s, err := src.NewSource(opt)
 	if err != nil {
 		return errors.Wrap(err, "error creating source")
 	}
 
-	c, err := converter.GetConverter(opt.Format)
+	c, err := convert.GetConverter(opt.Format)
 	if err != nil {
 		return errors.Wrap(err, "error getting converter")
 	}

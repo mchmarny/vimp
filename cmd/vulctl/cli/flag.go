@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	projectIDFlag = &c.StringFlag{
-		Name:    "project",
-		Aliases: []string{"p"},
-		Usage:   "project ID",
+	uriFlag = &c.StringFlag{
+		Name:    "image",
+		Aliases: []string{"i"},
+		Usage:   "image URI (e.g. us-docker.pkg.dev/project/repo/img@sha256:f6efe...)",
 	}
 
 	fileFlag = &c.StringFlag{
@@ -22,7 +22,7 @@ var (
 	}
 
 	srcFlag = &c.StringFlag{
-		Name:    "src",
+		Name:    "source",
 		Aliases: []string{"s"},
 		Usage:   fmt.Sprintf("file source (e.g. %s, etc.)", strings.Join(types.GetSourceFormatNames(), ", ")),
 	}
