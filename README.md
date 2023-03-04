@@ -1,0 +1,2 @@
+# vulctl
+Vulnerability management CLI
