@@ -9,21 +9,18 @@ import (
 )
 
 var (
-	uriFlag = &c.StringFlag{
-		Name:    "image",
-		Aliases: []string{"i"},
-		Usage:   "image URI (e.g. us-docker.pkg.dev/project/repo/img@sha256:f6efe...)",
+	sourceFlag = &c.StringFlag{
+		Name:  "source",
+		Usage: "uri of the image from which the report was generated (e.g. us-docker.pkg.dev/project/repo/img@sha256:f6efe...)",
 	}
 
 	fileFlag = &c.StringFlag{
-		Name:    "file",
-		Aliases: []string{"f"},
-		Usage:   "path to file to import",
+		Name:  "file",
+		Usage: "path to vulnerability report to import",
 	}
 
-	srcFlag = &c.StringFlag{
-		Name:    "source",
-		Aliases: []string{"s"},
-		Usage:   fmt.Sprintf("file source (e.g. %s, etc.)", strings.Join(types.GetSourceFormatNames(), ", ")),
+	formatFlag = &c.StringFlag{
+		Name:  "format",
+		Usage: fmt.Sprintf("file type (e.g. %s, etc.)", strings.Join(types.GetSourceFormatNames(), ", ")),
 	}
 )

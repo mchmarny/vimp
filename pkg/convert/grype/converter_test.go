@@ -11,9 +11,9 @@ import (
 
 func TestConverter(t *testing.T) {
 	opt := &types.ImportOptions{
-		File:     "../../../data/grype.json",
-		Format:   types.SourceFormatGrypeJSON,
-		ImageURI: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
+		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
+		File:   "../../../data/grype.json",
+		Format: types.SourceFormatGrypeJSON,
 	}
 	s, err := src.NewSource(opt)
 	assert.NoError(t, err)
