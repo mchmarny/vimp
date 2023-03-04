@@ -9164,7 +9164,7 @@
    "configPath": "",
    "verbosity": 0,
    "output": "json",
-   "file": "data/grype-json.json",
+   "file": "data/grype.json",
    "distro": "",
    "add-cpes-if-none": true,
    "output-template-file": "",

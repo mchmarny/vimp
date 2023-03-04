@@ -2,31 +2,37 @@ package src
 
 import (
 	"github.com/Jeffail/gabs/v2"
+	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 )
 
 // NewSource returns a new Source from the given path.
-func NewSource(path string) (*Source, error) {
-	if path == "" {
+func NewSource(opt *types.ImportOptions) (*Source, error) {
+	if opt == nil {
+		return nil, errors.New("options required")
+	}
+
+	if opt.File == "" {
 		return nil, errors.New("file is required")
 	}
 
-	c, err := gabs.ParseJSONFile(path)
+	c, err := gabs.ParseJSONFile(opt.File)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse file: %s", path)
+		return nil, errors.Wrapf(err, "unable to parse file: %s", opt.File)
 	}
 
 	s := &Source{
-		Path: path,
-		Data: c,
+		ImageURI: opt.ImageURI,
+		Data:     c,
 	}
 
 	return s, nil
 }
 
 type Source struct {
-	// Path is the path to the source file.
-	Path string
+	// ImageURI is the image URI.
+	ImageURI string
 
+	// Data is the source data.
 	Data *gabs.Container
 }

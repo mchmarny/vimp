@@ -63,9 +63,10 @@ func GetSourceFormats() []SourceFormat {
 
 // GetSourceFormatNames returns the names of the supported source formats.
 func GetSourceFormatNames() []string {
-	var names []string
-	for _, f := range GetSourceFormats() {
-		names = append(names, f.String())
+	return []string{
+		SourceFormatGrypeJSONName,
+		SourceFormatTrivyJSONName,
+		SourceFormatSnykJSONName,
+		SourceFormatOVSName,
 	}
-	return names
 }
