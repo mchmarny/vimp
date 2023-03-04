@@ -3,19 +3,19 @@ package types
 import "errors"
 
 var (
-	ErrMissingFormat   = errors.New("missing format")
-	ErrMissingPath     = errors.New("missing path")
-	ErrMissingImageURI = errors.New("missing image URI")
+	ErrMissingFormat = errors.New("missing format")
+	ErrMissingPath   = errors.New("missing path")
+	ErrMissingSource = errors.New("missing source")
 )
 
 type ImportOptions struct {
-	// ImageURI is the ID of the project to import into
-	ImageURI string
+	// Source is the URI of the image from which the report was generated.
+	Source string
 
-	// File path to the file to import
+	// File path to the vulnerability report to import.
 	File string
 
-	// Format of the file to import
+	// Format of the file to import.
 	Format SourceFormat
 
 	// Quiet suppresses output
@@ -23,8 +23,8 @@ type ImportOptions struct {
 }
 
 func (i *ImportOptions) Validate() error {
-	if i.ImageURI == "" {
-		return ErrMissingImageURI
+	if i.Source == "" {
+		return ErrMissingSource
 	}
 	if i.File == "" {
 		return ErrMissingPath

@@ -14,25 +14,25 @@ var (
 		Usage:   "import vulnerabilities from file",
 		Action:  importCmd,
 		Flags: []c.Flag{
-			uriFlag,
+			sourceFlag,
 			fileFlag,
-			srcFlag,
+			formatFlag,
 		},
 	}
 )
 
 func importCmd(c *c.Context) error {
-	opt := &types.ImportOptions{
-		ImageURI: c.String(uriFlag.Name),
-		File:     c.String(fileFlag.Name),
-		Quiet:    isQuiet(c),
-	}
-
-	f, err := types.ParseSourceFormat(c.String(srcFlag.Name))
+	f, err := types.ParseSourceFormat(c.String(formatFlag.Name))
 	if err != nil {
 		return errors.Wrap(err, "error parsing source format")
 	}
-	opt.Format = f
+
+	opt := &types.ImportOptions{
+		Source: c.String(sourceFlag.Name),
+		File:   c.String(fileFlag.Name),
+		Format: f,
+		Quiet:  isQuiet(c),
+	}
 
 	printVersion(c)
 

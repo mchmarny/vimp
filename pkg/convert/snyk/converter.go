@@ -23,7 +23,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Occurrence, error) {
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
 		oc := &aa.Occurrence{
 			Kind:        "VULNERABILITY",
-			ResourceUri: s.ImageURI,
+			ResourceUri: s.URI,
 			Vulnerability: &aa.VulnerabilityOccurrence{
 				EffectiveSeverity: toSeverity(v.Search("severity").Data().(string)),
 				FixAvailable:      v.Search("isPatchable").Data().(bool),
