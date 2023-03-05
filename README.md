@@ -9,7 +9,11 @@
 
 Vulnerability management tool.
 
-## Google Container Analysis (GCA)
+## Features 
+
+The `vulctl` CLI currently only supports Google Container Analysis import operations. Other operations will be added in the future. 
+
+### Google Container Analysis (GCA)
 
 Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). 
 
@@ -26,14 +30,14 @@ The currently supported scanners/formats include:
 * [snyk](https://github.com/snyk/cli) (`snyk container test --json-file-output=report.json $image`)
 * [trivy](https://github.com/aquasecurity/trivy) (`trivy image --format json --output report.json $image`)
 
-## CLI Installation 
+## Installation 
 
 You can install `vulctl` CLI using one of the following ways:
 
+* [Go](#go)
 * [Homebrew](#homebrew)
 * [RHEL/CentOS](#rhelcentos)
 * [Debian/Ubuntu](#debianubuntu)
-* [Go](#go)
 * [Binary](#binary)
 
 See the [release section](https://github.com/mchmarny/vulctl/releases/latest) for `vulctl` checksums and SBOMs.
