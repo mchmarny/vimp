@@ -2,6 +2,7 @@ package snyk
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -24,14 +25,13 @@ func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
 	list := make(map[string]aa.Note, 0)
 
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
-		cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
-		pkg := v.Search("packageName").Data().(string)
-		vID := v.Search("id").Data().(string)
+		ids := fmt.Sprintf("%s--%s", s.URI, v.Search("id").Data().(string))
+		vID := fmt.Sprintf("%x", sha256.Sum256([]byte(ids)))
 
 		// create note
 		n := aa.Note{
 			Kind:             "VULNERABILITY",
-			Name:             cve,
+			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
 			ShortDescription: v.Search("title").Data().(string),
 			LongDescription:  v.Search("description").Data().(string),
 			RelatedUrl: []*aa.RelatedUrl{
@@ -50,7 +50,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
 				Details: []*aa.Detail{
 					{
 						AffectedCpeUri:  makeCPE(v),
-						AffectedPackage: pkg,
+						AffectedPackage: v.Search("packageName").Data().(string),
 						AffectedVersionStart: &aa.Version{
 							Name:      v.Search("version").Data().(string),
 							Inclusive: true,
