@@ -14,7 +14,3 @@ msg "import"
 bin/vulctl import --source us-docker.pkg.dev/project/repo/img@sha256:f6efe \
                   --file data/snyk.json \
                   --format snyk
-
-bin/vulctl import --source us-docker.pkg.dev/project/repo/img@sha256:f6efe \
-                  --file data/grype.json \
-                  --format grype

@@ -2,6 +2,7 @@ package snyk
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/mchmarny/vulctl/pkg/src"
@@ -9,7 +10,7 @@ import (
 	aa "google.golang.org/api/containeranalysis/v1"
 )
 
-func Convert(ctx context.Context, s *src.Source) ([]*aa.Occurrence, error) {
+func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
 	}
@@ -18,63 +19,117 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Occurrence, error) {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make([]*aa.Occurrence, 0)
+	list := make([]*aa.Note, 0)
 
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
-		oc := &aa.Occurrence{
-			Kind:        "VULNERABILITY",
-			ResourceUri: s.URI,
-			Vulnerability: &aa.VulnerabilityOccurrence{
-				EffectiveSeverity: toSeverity(v.Search("severity").Data().(string)),
-				FixAvailable:      v.Search("isPatchable").Data().(bool),
-				Severity:          toSeverity(v.Search("severity").Data().(string)),
-				Type:              v.Search("name").Data().(string),
-				PackageIssue:      make([]*aa.PackageIssue, 0),
+		n := &aa.Note{
+			Kind:             "VULNERABILITY",
+			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
+			ShortDescription: v.Search("title").Data().(string),
+			LongDescription:  v.Search("description").Data().(string),
+			RelatedUrl: []*aa.RelatedUrl{
+				{
+					Label: "Registry",
+					Url:   s.URI,
+				},
 			},
+			CreateTime: v.Search("creationTime").Data().(string),
+			UpdateTime: v.Search("modificationTime").Data().(string),
+			Vulnerability: &aa.VulnerabilityNote{
+				CvssScore: toFloat(v.Search("cvssScore").Data()),
+				CvssV3: &aa.CVSSv3{
+					BaseScore: toFloat(v.Search("cvssScore").Data()),
+				},
+				Details: []*aa.Detail{
+					{
+						// AffectedCpeUri:  v.Search("identifiers", "cpes").Index(0).Data().(string),
+						AffectedPackage: v.Search("packageName").Data().(string),
+						AffectedVersionStart: &aa.Version{
+							Name:      v.Search("version").Data().(string),
+							Inclusive: true,
+							Kind:      "MINIMUM",
+						},
+						Description:      v.Search("name").Data().(string),
+						SeverityName:     v.Search("severity").Data().(string),
+						Source:           "NVD",
+						SourceUpdateTime: v.Search("disclosureTime").Data().(string),
+						Vendor:           v.Search("packageManager").Data().(string),
+					},
+				},
+				Severity: toSeverity(v.Search("severity").Data().(string)),
+			},
+		} // end note
+
+		// CVSS
+		if v.Search("CVSSv3").Exists() {
+			// CVSSv3 errs with .(string)
+			vec := toString(v.Search("CVSSv3").Data())
+			n.Vulnerability.CvssV3.AttackComplexity = getAttackComplexity(vec)
+			n.Vulnerability.CvssV3.AttackVector = getAttackVector(vec)
+			n.Vulnerability.CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
+			n.Vulnerability.CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
+			n.Vulnerability.CvssV3.IntegrityImpact = getIntegrityImpact(vec)
+			n.Vulnerability.CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
+			n.Vulnerability.CvssV3.Scope = getScope(vec)
+			n.Vulnerability.CvssV3.UserInteraction = getUserInteraction(vec)
 		}
 
-		for _, rvs := range v.Search("relatedVulnerabilities").Children() {
-			for _, cvss := range rvs.Search("cvss").Children() {
-				vec := cvss.Search("vector").Data().(string)
-				ver := cvss.Search("version").Data().(string)
-				if ver == "2.0" {
-					// "AV:N/AC:L/Au:N/C:N/I:P/A:N"
-					oc.Vulnerability.CvssV2 = &aa.CVSS{
-						BaseScore:             cvss.Search("metrics", "baseScore").Data().(float64),
-						ExploitabilityScore:   cvss.Search("metrics", "exploitabilityScore").Data().(float64),
-						ImpactScore:           cvss.Search("metrics", "impactScore").Data().(float64),
-						AttackComplexity:      getAttackComplexity(vec),
-						AttackVector:          getAttackVector(vec),
-						Authentication:        getAuthentication(vec),
-						ConfidentialityImpact: getConfidentialityImpact(vec),
-						IntegrityImpact:       getIntegrityImpact(vec),
-						AvailabilityImpact:    getAvailabilityImpact(vec),
-					}
-				}
-				if ver == "3.0" {
-					// "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N"
-					oc.Vulnerability.Cvssv3 = &aa.CVSS{
-						BaseScore:             cvss.Search("metrics", "baseScore").Data().(float64),
-						ExploitabilityScore:   cvss.Search("metrics", "exploitabilityScore").Data().(float64),
-						ImpactScore:           cvss.Search("metrics", "impactScore").Data().(float64),
-						AttackComplexity:      getAttackComplexity(vec),
-						AttackVector:          getAttackVector(vec),
-						Authentication:        getAuthentication(vec),
-						ConfidentialityImpact: getConfidentialityImpact(vec),
-						IntegrityImpact:       getIntegrityImpact(vec),
-						AvailabilityImpact:    getAvailabilityImpact(vec),
-						PrivilegesRequired:    getPrivilegesRequired(vec),
-						UserInteraction:       getUserInteraction(vec),
-						Scope:                 getScope(vec),
-					}
-				}
-			}
+		// References
+		for _, r := range v.Search("references").Children() {
+			n.RelatedUrl = append(n.RelatedUrl, &aa.RelatedUrl{
+				Url:   r.Search("url").Data().(string),
+				Label: r.Search("title").Data().(string),
+			})
 		}
 
-		list = append(list, oc)
+		// don't add notes with no CVSS score
+		if n.Vulnerability.CvssScore == 0 {
+			continue
+		}
+
+		list = append(list, n)
 	}
 
 	return list, nil
+}
+
+func toString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+
+	s, ok := v.(string)
+	if ok {
+		return s
+	}
+
+	return fmt.Sprintf("%v", v)
+}
+
+func toFloat(v interface{}) float64 {
+	if v == nil {
+		return 0
+	}
+
+	switch v := v.(type) {
+	case float64:
+		return v
+	case float32:
+		return float64(v)
+	case int:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	}
+	return 0
 }
 
 // toSeverity converts grype severity to CVSS severity.
@@ -89,7 +144,6 @@ func toSeverity(v string) string {
 const expectedVectorParts = 2
 
 func getVectorPart(val, part string) string {
-	// v2 - AV:N/AC:L/Au:N/C:N/I:P/A:N
 	// v3 - AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N
 	vectorParts := strings.Split(val, "/")
 	for _, p := range vectorParts {
@@ -126,18 +180,6 @@ func getAttackComplexity(v string) string {
 		return "ATTACK_COMPLEXITY_HIGH"
 	}
 	return "ATTACK_COMPLEXITY_UNSPECIFIED"
-}
-
-func getAuthentication(v string) string {
-	switch getVectorPart(v, "Au") {
-	case "M":
-		return "AUTHENTICATION_MULTIPLE"
-	case "S":
-		return "AUTHENTICATION_SINGLE"
-	case "N":
-		return "AUTHENTICATION_NONE"
-	}
-	return "AUTHENTICATION_UNSPECIFIED"
 }
 
 const (
