@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	scopeDefault = "https://www.googleapis.com/auth/cloud-platform"
+	scopeDefault    = "https://www.googleapis.com/auth/cloud-platform"
+	serviceEndpoint = "https://containeranalysis.googleapis.com/v1/"
 )
 
 var (
@@ -36,18 +37,18 @@ func Get(ctx context.Context, url string, resp any) error {
 	return Exec(ctx, req, resp)
 }
 
-func Submit(ctx context.Context, url string, content, resp any) error {
+func Post(ctx context.Context, url string, content, resp any) error {
 	if url == "" {
 		return errors.New("url is empty")
 	}
 
-	if content == nil {
-		return errors.New("content is nil")
-	}
-
-	b, err := json.Marshal(content)
-	if err != nil {
-		return errors.Wrap(err, "error marshaling content")
+	var b []byte
+	if content != nil {
+		var err error
+		b, err = json.Marshal(content)
+		if err != nil {
+			return errors.Wrap(err, "error marshaling content")
+		}
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(b))
