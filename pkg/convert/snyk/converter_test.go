@@ -11,9 +11,10 @@ import (
 
 func TestConverter(t *testing.T) {
 	opt := &types.ImportOptions{
-		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:   "../../../data/snyk.json",
-		Format: types.SourceFormatSnykJSON,
+		Project: types.TestProjectID,
+		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
+		File:    "../../../data/snyk.json",
+		Format:  types.SourceFormatSnykJSON,
 	}
 	s, err := src.NewSource(opt)
 	assert.NoError(t, err)

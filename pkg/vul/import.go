@@ -2,12 +2,14 @@ package vul
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/mchmarny/vulctl/pkg/convert"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	aa "google.golang.org/api/containeranalysis/v1"
 )
 
 func Import(ctx context.Context, opt *types.ImportOptions) error {
@@ -36,11 +38,48 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.New("expected non-nil result")
 	}
 
-	for _, o := range list {
-		log.Info().Msgf("Name: %s", o.Name)
-		log.Info().Msgf("Description: %s", o.ShortDescription)
-		log.Info().Msgf("CvssScore: %f", o.Vulnerability.CvssScore)
-		log.Info().Msgf("CvssScore: %s", o.Vulnerability.Details[0].AffectedPackage)
+	if err := postNotes(ctx, opt.Project, list); err != nil {
+		return errors.Wrap(err, "error posting notes")
+	}
+
+	return nil
+}
+
+func postNotes(ctx context.Context, projectID string, notes []*aa.Note) error {
+	s, err := aa.NewService(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error creating service")
+	}
+
+	r := &aa.BatchCreateNotesRequest{
+		Notes: make(map[string]aa.Note, 0),
+	}
+
+	for _, n := range notes {
+		r.Notes["string"] = *n
+		log.Info().Msgf("Name: %s", n.Name)
+		log.Info().Msgf("Description: %s", n.ShortDescription)
+		log.Info().Msgf("CvssScore: %f", n.Vulnerability.CvssScore)
+		log.Info().Msgf("CvssScore: %s", n.Vulnerability.Details[0].AffectedPackage)
+	}
+
+	p := fmt.Sprintf("projects/%s", projectID)
+
+	cc := s.Projects.Notes.BatchCreate(p, r)
+
+	// don't submit end-to-end
+	if projectID == types.TestProjectID {
+		return nil
+	}
+
+	nr, err := cc.Do()
+	if err != nil {
+		return errors.Wrap(err, "error posting notes")
+	}
+
+	log.Info().Msgf("Notes created: %d", len(nr.Notes))
+	for _, n := range nr.Notes {
+		log.Info().Msgf("Created: %s", n.Name)
 	}
 
 	return nil
