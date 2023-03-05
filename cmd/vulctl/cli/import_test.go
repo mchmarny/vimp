@@ -16,8 +16,8 @@ func TestImport(t *testing.T) {
 	assert.Error(t, err)
 
 	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
-	set.String(fileFlag.Name, "../../../data/grype.json", "")
-	set.String(formatFlag.Name, "grype", "")
+	set.String(fileFlag.Name, "../../../data/snyk.json", "")
+	set.String(formatFlag.Name, "snyk", "")
 
 	c = cli.NewContext(newTestApp(t), set, nil)
 	err = importCmd(c)
