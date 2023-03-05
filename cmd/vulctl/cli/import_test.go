@@ -9,14 +9,18 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func TestImportCmd(t *testing.T) {
+func TestImport(t *testing.T) {
 	set := flag.NewFlagSet("", flag.ContinueOnError)
+	c := cli.NewContext(newTestApp(t), set, nil)
+	err := importCmd(c)
+	assert.Error(t, err)
+
 	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
 	set.String(fileFlag.Name, "../../../data/grype.json", "")
 	set.String(formatFlag.Name, "grype", "")
 
-	c := cli.NewContext(newTestApp(t), set, nil)
-	err := importCmd(c)
+	c = cli.NewContext(newTestApp(t), set, nil)
+	err = importCmd(c)
 	assert.NoError(t, err)
 }
 
