@@ -9,6 +9,8 @@
 
 Vulnerability management tool.
 
+> WIP: this repo is in a midst of significant refactoring. Expect stable release around v0.1
+
 ## Features 
 
 The `vulctl` CLI currently only supports Google Container Analysis import operations. Other operations will be added in the future. 

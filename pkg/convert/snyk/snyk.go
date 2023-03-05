@@ -33,7 +33,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
 			Kind:             "VULNERABILITY",
 			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
 			ShortDescription: v.Search("title").Data().(string),
-			LongDescription:  v.Search("description").Data().(string),
+			LongDescription:  toString(v.Search("CVSSv3").Data()),
 			RelatedUrl: []*aa.RelatedUrl{
 				{
 					Label: "Registry",
