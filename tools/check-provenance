@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+
+slsa-verifier verify-artifact --provenance-path "multiple.intoto.jsonl" \
+                              --source-uri "github.com/mchmarny/vulctl" \
+                              --source-tag "v0.0.17" \
+                              vulctl-0.0.17_linux-amd64.rpm
