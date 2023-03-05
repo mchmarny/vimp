@@ -18,7 +18,9 @@ jobs:
       go-version: ^1.20.1
       scan-severity: 'CRITICAL,HIGH,MEDIUM'
 
-  release-cli:
+  release:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     runs-on: ubuntu-latest
     needs:
     - test
@@ -41,14 +43,13 @@ jobs:
           ${{ runner.os }}-go-
     - name: Checkout Code
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
-      with:
-        fetch-depth: 2
     - name: Install Syft
       uses: anchore/sbom-action/download-syft@07978da4bdb4faa726e52dfc6b1bed63d4b56479  # v0.13.3
       with:
         version: v0.13.1
     - name: Build CLI
       uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b  # v4.2.0
+      id: releaser
       with:
         distribution: goreleaser
         version: latest
@@ -56,3 +57,56 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+    - name: Gen Hashes
+      id: hashes
+      env:
+        ARTIFACTS: "${{ steps.releaser.outputs.artifacts }}"
+      run: |
+        set -euo pipefail
+        checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+        echo "hashes=$(cat $checksum_file | base64 -w0)" >> $GITHUB_OUTPUT
+
+  provenance:
+    needs:
+    - release
+    permissions:
+      actions: read    # To read the workflow path.
+      id-token: write  # To sign the provenance.
+      contents: write  # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.5.0
+    with:
+      base64-subjects: "${{ needs.release.outputs.hashes }}"
+      upload-assets: true
+      compile-generator: true
+
+  verify:
+    needs:
+    - releaser
+    - provenance
+    runs-on: ubuntu-latest
+    permissions: read-all
+    steps:
+      - name: Install SLSA Verifier
+        uses: slsa-framework/slsa-verifier/actions/installer@v2.0.1
+      - name: Download Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "*.tar.gz"
+          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "attestation.intoto.jsonl"
+      - name: Verify Assets
+        env:
+          CHECKSUMS: ${{ needs.releaser.outputs.hashes }}
+          PROVENANCE: "${{ needs.provenance.outputs.attestation-name }}"
+        run: |
+          set -euo pipefail
+          checksums=$(echo "$CHECKSUMS" | base64 -d)
+          while read -r line; do
+              fn=$(echo $line | cut -d ' ' -f2)
+              echo "Verifying $fn"
+              ./slsa-verifier-linux-amd64 -artifact-path "$fn" \
+                                          -provenance "$PROVENANCE" \
+                                          -source "github.com/$GITHUB_REPOSITORY" \
+                                          -tag "$GITHUB_REF_NAME"
+          done <<<"$checksums"
