@@ -11,7 +11,15 @@ Vulnerability management tool.
 
 ## Google Container Analysis (GCA)
 
-Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). The currently supported scanners/formats include:
+Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). 
+
+```shell
+vulctl import --source $image --file report.json --format snyk
+```
+
+> The $image variable in the above example is the fully qualified URI of the image including its digest (e.g. `us-docker.pkg.dev/project/repo/image@sha256:397d453...`).
+
+The currently supported scanners/formats include:
 
 * [grype](https://github.com/anchore/grype) (`grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`)
 * [ovs](https://github.com/google/osv-scanner) (`osv-scanner --json --docker redis > report.json`)
