@@ -43,6 +43,8 @@ jobs:
           ${{ runner.os }}-go-
     - name: Checkout Code
       uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+    - name: Prune Git History
+      run: git fetch --prune --unshallow
     - name: Install Syft
       uses: anchore/sbom-action/download-syft@07978da4bdb4faa726e52dfc6b1bed63d4b56479  # v0.13.3
       with:
@@ -53,7 +55,7 @@ jobs:
       with:
         distribution: goreleaser
         version: latest
-        args: release --rm-dist
+        args: release --clean
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
