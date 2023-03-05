@@ -57,10 +57,8 @@ func postNotes(ctx context.Context, projectID string, notes []*aa.Note) error {
 
 	for _, n := range notes {
 		r.Notes["string"] = *n
-		log.Info().Msgf("Name: %s", n.Name)
-		log.Info().Msgf("Description: %s", n.ShortDescription)
-		log.Info().Msgf("CvssScore: %f", n.Vulnerability.CvssScore)
-		log.Info().Msgf("CvssScore: %s", n.Vulnerability.Details[0].AffectedPackage)
+		log.Info().Msgf("%s - %s: %f - %s", n.Name, n.Vulnerability.Details[0].AffectedPackage,
+			n.Vulnerability.CvssScore, n.ShortDescription)
 	}
 
 	p := fmt.Sprintf("projects/%s", projectID)
