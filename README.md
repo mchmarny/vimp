@@ -7,8 +7,16 @@
 
 # vulctl
 
-Vulnerability management tool
+Vulnerability management tool.
 
+## Google Container Analysis (GCA)
+
+Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). The currently supported scanners/formats include:
+
+* [grype](https://github.com/anchore/grype) (`grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`)
+* [ovs](https://github.com/google/osv-scanner) (`osv-scanner --json --docker redis > report.json`)
+* [snyk](https://github.com/snyk/cli) (`snyk container test --json-file-output=report.json $image`)
+* [trivy](https://github.com/aquasecurity/trivy) (`trivy image --format json --output report.json $image`)
 
 ## CLI Installation 
 
