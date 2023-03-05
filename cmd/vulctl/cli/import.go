@@ -14,6 +14,7 @@ var (
 		Usage:   "import vulnerabilities from file",
 		Action:  importCmd,
 		Flags: []c.Flag{
+			projectFlag,
 			sourceFlag,
 			fileFlag,
 			formatFlag,
@@ -28,10 +29,11 @@ func importCmd(c *c.Context) error {
 	}
 
 	opt := &types.ImportOptions{
-		Source: c.String(sourceFlag.Name),
-		File:   c.String(fileFlag.Name),
-		Format: f,
-		Quiet:  isQuiet(c),
+		Project: c.String(projectFlag.Name),
+		Source:  c.String(sourceFlag.Name),
+		File:    c.String(fileFlag.Name),
+		Format:  f,
+		Quiet:   isQuiet(c),
 	}
 
 	printVersion(c)
