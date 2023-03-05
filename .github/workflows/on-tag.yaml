@@ -81,7 +81,7 @@ jobs:
 
   verify:
     needs:
-    - releaser
+    - release
     - provenance
     runs-on: ubuntu-latest
     permissions: read-all
@@ -97,7 +97,7 @@ jobs:
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "attestation.intoto.jsonl"
       - name: Verify Assets
         env:
-          CHECKSUMS: ${{ needs.releaser.outputs.hashes }}
+          CHECKSUMS: ${{ needs.release.outputs.hashes }}
           PROVENANCE: "${{ needs.provenance.outputs.attestation-name }}"
         run: |
           set -euo pipefail
