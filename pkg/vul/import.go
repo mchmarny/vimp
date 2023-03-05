@@ -37,9 +37,10 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 	}
 
 	for _, o := range list {
-		log.Info().Msgf("Resource: %s", o.ResourceUri)
-		log.Info().Msgf("Type: %s", o.Vulnerability.Type)
-		log.Info().Msgf("Severity: %s", o.Vulnerability.Severity)
+		log.Info().Msgf("Name: %s", o.Name)
+		log.Info().Msgf("Description: %s", o.ShortDescription)
+		log.Info().Msgf("CvssScore: %f", o.Vulnerability.CvssScore)
+		log.Info().Msgf("CvssScore: %s", o.Vulnerability.Details[0].AffectedPackage)
 	}
 
 	return nil
