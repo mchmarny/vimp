@@ -42,6 +42,14 @@ You can install `vulctl` CLI using one of the following ways:
 
 See the [release section](https://github.com/mchmarny/vulctl/releases/latest) for `vulctl` checksums and SBOMs.
 
+## Go
+
+If you have Go 1.17 or newer, you can install latest `vulctl` using:
+
+```shell
+go install github.com/mchmarny/vulctl/cmd/vulctl@latest
+```
+
 ## Homebrew
 
 On Mac or Linux, you can install `vulctl` with [Homebrew](https://brew.sh/):
@@ -64,14 +72,6 @@ rpm -ivh https://github.com/mchmarny/vulctl/releases/download/v$VERSION/vulctl-$
 ```shell
 wget https://github.com/aquasecurity/vulctl/releases/download/v$VERSION/vulctl-$VERSION_Linux-amd64.deb
 sudo dpkg -i vulctl-$VERSION_Linux-64bit.deb
-```
-
-## Go
-
-If you have Go 1.17 or newer, you can install latest `vulctl` using:
-
-```shell
-go install github.com/mchmarny/vulctl/cmd/vulctl@latest
 ```
 
 ## Binary 
