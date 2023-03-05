@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/pkg/errors"
 	aa "google.golang.org/api/containeranalysis/v1"
@@ -54,7 +55,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 				},
 				Details: []*aa.Detail{
 					{
-						AffectedCpeUri:  v.Search("identifiers", "cpes").Index(0).Data().(string),
+						AffectedCpeUri:  makeCPE(v),
 						AffectedPackage: pkg,
 						AffectedVersionStart: &aa.Version{
 							Name:      v.Search("version").Data().(string),
@@ -103,6 +104,20 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 	}
 
 	return list, nil
+}
+
+// makeCPE creates CPE from Snyk data as the OSS CLI does not generate CPEs
+// NOTE: This is for demo purposes only and is not a complete CPE generator
+// Ref: https://en.wikipedia.org/wiki/Common_Platform_Enumeration
+// Schema: cpe:2.3:a:<vendor>:<product>:<version>:<update>:<edition>:<language>:<sw_edition>:<target_sw>:<target_hw>:<other>
+func makeCPE(v *gabs.Container) string {
+	pkgName := v.Search("name").Data().(string)
+	pkgVersion := v.Search("version").Data().(string)
+
+	return fmt.Sprintf("cpe:2.3:a:%s:%s:%s:*:*:*:*:*:*:*",
+		pkgName,
+		pkgName,
+		pkgVersion)
 }
 
 func toString(v interface{}) string {
