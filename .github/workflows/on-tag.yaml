@@ -20,7 +20,7 @@ jobs:
 
   release:
     outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
+      hashes: ${{ steps.checksum.outputs.hashes }}
     runs-on: ubuntu-latest
     needs:
     - test
@@ -60,7 +60,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
     - name: Gen Hashes
-      id: hashes
+      id: checksum
       env:
         ARTIFACTS: "${{ steps.releaser.outputs.artifacts }}"
       run: |
