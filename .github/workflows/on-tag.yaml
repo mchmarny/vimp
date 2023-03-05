@@ -106,9 +106,9 @@ jobs:
           checksums=$(echo "$CHECKSUMS" | base64 -d)
           while read -r line; do
               fn=$(echo $line | cut -d ' ' -f2)
-              echo "Verifying $fn"
-              slsa-verifier -artifact-path "$fn" \
-                            -provenance "$PROVENANCE" \
-                            -source "github.com/$GITHUB_REPOSITORY" \
-                            -tag "$GITHUB_REF_NAME"
+              echo "Verifying $fn using $PROVENANCE"
+              slsa-verifier verify-artifact --provenance-path "$PROVENANCE" \
+                                            --source-uri "github.com/$GITHUB_REPOSITORY" \
+                                            --source-tag "$GITHUB_REF_NAME" \
+                                            "$fn"
           done <<<"$checksums"
