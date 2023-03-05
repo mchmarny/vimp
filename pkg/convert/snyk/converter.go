@@ -20,11 +20,23 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 	}
 
 	list := make([]*aa.Note, 0)
+	uniqueCVEs := make(map[string]bool, 0)
 
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
+		cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
+		pkg := v.Search("packageName").Data().(string)
+
+		// skip duplicates
+		uniqueCVE := fmt.Sprintf("%s--%s", cve, pkg)
+		if _, ok := uniqueCVEs[uniqueCVE]; ok {
+			continue
+		}
+		uniqueCVEs[uniqueCVE] = true
+
+		// create note
 		n := &aa.Note{
 			Kind:             "VULNERABILITY",
-			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
+			Name:             cve,
 			ShortDescription: v.Search("title").Data().(string),
 			LongDescription:  v.Search("description").Data().(string),
 			RelatedUrl: []*aa.RelatedUrl{
@@ -42,8 +54,8 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 				},
 				Details: []*aa.Detail{
 					{
-						// AffectedCpeUri:  v.Search("identifiers", "cpes").Index(0).Data().(string),
-						AffectedPackage: v.Search("packageName").Data().(string),
+						AffectedCpeUri:  v.Search("identifiers", "cpes").Index(0).Data().(string),
+						AffectedPackage: pkg,
 						AffectedVersionStart: &aa.Version{
 							Name:      v.Search("version").Data().(string),
 							Inclusive: true,
@@ -51,7 +63,7 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 						},
 						Description:      v.Search("name").Data().(string),
 						SeverityName:     v.Search("severity").Data().(string),
-						Source:           "NVD",
+						Source:           v.Search("id").Data().(string),
 						SourceUpdateTime: v.Search("disclosureTime").Data().(string),
 						Vendor:           v.Search("packageManager").Data().(string),
 					},

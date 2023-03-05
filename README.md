@@ -27,7 +27,7 @@ The currently supported scanners/formats include:
 
 * [grype](https://github.com/anchore/grype) (`grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`)
 * [ovs](https://github.com/google/osv-scanner) (`osv-scanner --json --docker redis > report.json`)
-* [snyk](https://github.com/snyk/cli) (`snyk container test --json-file-output=report.json $image`)
+* [snyk](https://github.com/snyk/cli) (`snyk container test --app-vulns --json-file-output=report.json $image`)
 * [trivy](https://github.com/aquasecurity/trivy) (`trivy image --format json --output report.json $image`)
 
 ## Installation 
