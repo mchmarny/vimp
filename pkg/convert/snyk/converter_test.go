@@ -24,25 +24,26 @@ func TestConverter(t *testing.T) {
 	assert.NoErrorf(t, err, "failed to convert: %v", err)
 	assert.NotNil(t, list)
 
-	for _, o := range list {
-		assert.NotEmpty(t, o.Kind)
-		assert.NotEmpty(t, o.Name)
-		assert.NotEmpty(t, o.ShortDescription)
-		assert.NotEmpty(t, o.LongDescription)
-		assert.NotEmpty(t, o.RelatedUrl)
-		for _, u := range o.RelatedUrl {
+	for id, n := range list {
+		assert.NotEmpty(t, id)
+		assert.NotEmpty(t, n.Kind)
+		assert.NotEmpty(t, n.Name)
+		assert.NotEmpty(t, n.ShortDescription)
+		assert.NotEmpty(t, n.LongDescription)
+		assert.NotEmpty(t, n.RelatedUrl)
+		for _, u := range n.RelatedUrl {
 			assert.NotEmpty(t, u.Label)
 			assert.NotEmpty(t, u.Url)
 		}
-		assert.NotEmpty(t, o.CreateTime)
-		assert.NotEmpty(t, o.UpdateTime)
-		assert.NotNil(t, o.Vulnerability)
-		assert.NotEmpty(t, o.Vulnerability.CvssScore)
-		assert.NotNil(t, o.Vulnerability.CvssV3)
-		assert.NotEmpty(t, o.Vulnerability.CvssV3.BaseScore)
-		assert.NotEmpty(t, o.Vulnerability.Severity)
-		assert.NotEmpty(t, o.Vulnerability.Details)
-		for _, d := range o.Vulnerability.Details {
+		assert.NotEmpty(t, n.CreateTime)
+		assert.NotEmpty(t, n.UpdateTime)
+		assert.NotNil(t, n.Vulnerability)
+		assert.NotEmpty(t, n.Vulnerability.CvssScore)
+		assert.NotNil(t, n.Vulnerability.CvssV3)
+		assert.NotEmpty(t, n.Vulnerability.CvssV3.BaseScore)
+		assert.NotEmpty(t, n.Vulnerability.Severity)
+		assert.NotEmpty(t, n.Vulnerability.Details)
+		for _, d := range n.Vulnerability.Details {
 			assert.NotEmpty(t, d.AffectedPackage)
 			assert.NotNil(t, d.AffectedVersionStart)
 			assert.NotEmpty(t, d.AffectedVersionStart.Name)

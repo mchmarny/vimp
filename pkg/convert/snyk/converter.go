@@ -8,10 +8,11 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	aa "google.golang.org/api/containeranalysis/v1"
 )
 
-func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
+func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
 	}
@@ -20,22 +21,15 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make([]*aa.Note, 0)
-	uniqueCVEs := make(map[string]bool, 0)
+	list := make(map[string]aa.Note, 0)
 
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
 		cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
 		pkg := v.Search("packageName").Data().(string)
-
-		// skip duplicates
-		uniqueCVE := fmt.Sprintf("%s--%s", cve, pkg)
-		if _, ok := uniqueCVEs[uniqueCVE]; ok {
-			continue
-		}
-		uniqueCVEs[uniqueCVE] = true
+		vID := v.Search("id").Data().(string)
 
 		// create note
-		n := &aa.Note{
+		n := aa.Note{
 			Kind:             "VULNERABILITY",
 			Name:             cve,
 			ShortDescription: v.Search("title").Data().(string),
@@ -100,7 +94,10 @@ func Convert(ctx context.Context, s *src.Source) ([]*aa.Note, error) {
 			continue
 		}
 
-		list = append(list, n)
+		log.Debug().Msgf("%s - %s: %f - %s", n.Name, n.Vulnerability.Details[0].AffectedPackage,
+			n.Vulnerability.CvssScore, n.ShortDescription)
+
+		list[vID] = n
 	}
 
 	return list, nil

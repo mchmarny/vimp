@@ -45,30 +45,28 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 	return nil
 }
 
-func postNotes(ctx context.Context, projectID string, notes []*aa.Note) error {
+func postNotes(ctx context.Context, projectID string, notes map[string]aa.Note) error {
+	if projectID == "" {
+		return errors.New("projectID required")
+	}
+
+	// don't submit end-to-end test or empty notes
+	if projectID == types.TestProjectID || len(notes) == 0 {
+		return nil
+	}
+
 	s, err := aa.NewService(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error creating service")
 	}
 
 	r := &aa.BatchCreateNotesRequest{
-		Notes: make(map[string]aa.Note, 0),
-	}
-
-	for _, n := range notes {
-		r.Notes["string"] = *n
-		log.Info().Msgf("%s - %s: %f - %s", n.Name, n.Vulnerability.Details[0].AffectedPackage,
-			n.Vulnerability.CvssScore, n.ShortDescription)
+		Notes: notes,
 	}
 
 	p := fmt.Sprintf("projects/%s", projectID)
 
 	cc := s.Projects.Notes.BatchCreate(p, r)
-
-	// don't submit end-to-end
-	if projectID == types.TestProjectID {
-		return nil
-	}
 
 	nr, err := cc.Do()
 	if err != nil {
