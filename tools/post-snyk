@@ -11,5 +11,6 @@ bin/vulctl import --project cloudy-labz \
 
 
 gcloud artifacts docker images describe $digest \
+    --project cloudy-labz \
     --show-all-metadata \
     --format json | jq -r .
