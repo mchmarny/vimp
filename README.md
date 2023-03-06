@@ -114,6 +114,16 @@ If you experience any issues, you can see the project level policy using followi
 gcloud projects get-iam-policy $PROJECT_ID --format=json > policy.json
 ```
 
+### Credentials
+
+When running locally, `vulctl` will look for Google account credentials in one of the well-known locations. To ensure your Application Default Credentials (ADC) are used by the `vulctl` run this `gcloud` command and follow the prompts:
+
+```shell
+gcloud auth application-default login
+```
+
+> More about ADC [here](https://cloud.google.com/docs/authentication/provide-credentials-adc)
+
 ## Disclaimer
 
 This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
