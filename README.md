@@ -92,9 +92,7 @@ Since you are interested in `vulctl`, you probably already have GCP account and 
 
 ```shell
 gcloud services enable \
-  artifactregistry.googleapis.com \
-  containeranalysis.googleapis.com \
-  containerregistry.googleapis.com
+  containeranalysis.googleapis.com
 ```
 
 ### Roles
