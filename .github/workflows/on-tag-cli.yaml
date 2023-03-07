@@ -1,4 +1,4 @@
-name: tag
+name: tag-cli
 on:
   push:
     tags:
@@ -8,46 +8,6 @@ permissions:
   contents: read
 
 jobs:
-
-
-  conf:
-    env:
-      IMG_NAME: vulctl
-      PROVIDER_ID: projects/689738033528/locations/global/workloadIdentityPools/vulctl-github-pool/providers/github-provider
-      REG_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl
-      SA_EMAIL: vulctl-github-actions-user@cloudy-build.iam.gserviceaccount.com
-
-      # Defaults
-      BUILDER_VERSION: v1.4.0
-      COSIGN_VERSION: v1.13.1
-      ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
-      GO_VERSION: ^1.20.1
-
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      builder_version: ${{ steps.conf.outputs.builder_version }}
-      cosign_version: ${{ steps.conf.outputs.cosign_version }}
-      err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
-      go_version: ${{ steps.conf.outputs.go_version }}
-      image_name: ${{ steps.conf.outputs.image_name }}
-      provider_id: ${{ steps.conf.outputs.provider_id }}
-      registry_uri: ${{ steps.conf.outputs.registry_uri }}
-      service_account: ${{ steps.conf.outputs.service_account }}
-    steps:
-
-    - name: Export Config
-      id: conf
-      run: |
-        echo "builder_version=${{ env.BUILDER_VERSION }}" >> $GITHUB_OUTPUT
-        echo "cosign_version=${{ env.COSIGN_VERSION }}" >> $GITHUB_OUTPUT
-        echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
-        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
-        echo "image_name=${{ env.IMG_NAME }}" >> $GITHUB_OUTPUT
-        echo "provider_id=${{ env.PROVIDER_ID }}" >> $GITHUB_OUTPUT
-        echo "registry_uri=${{ env.REG_URI }}" >> $GITHUB_OUTPUT
-        echo "service_account=${{ env.SA_EMAIL }}" >> $GITHUB_OUTPUT
 
   test:
     needs:
@@ -60,9 +20,8 @@ jobs:
       go-version: ${{ needs.conf.outputs.go_version }}
       scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
-  cli-release:
+  release:
     needs:
-    - conf
     - test
     outputs:
       hashes: ${{ steps.checksum.outputs.hashes }}
@@ -111,57 +70,9 @@ jobs:
         checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
         echo "hashes=$(cat $checksum_file | base64 -w0)" >> $GITHUB_OUTPUT
 
-  build-image:
+  provenance:
     needs:
-    - conf
-    - test
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/build.yaml
-    with:
-      auth_provider: ${{ needs.conf.outputs.provider_id }}
-      auth_user: ${{ needs.conf.outputs.service_account }}
-      go_version: ${{ needs.conf.outputs.go_version }}
-      image_name: ${{ needs.conf.outputs.image_name }}
-      image_repo: ${{ needs.conf.outputs.registry_uri }}
-
-  sign-image:
-    needs:
-    - conf
-    - build-image
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-    uses: ./.github/workflows/sign.yaml
-    with:
-      auth_provider: ${{ needs.conf.outputs.provider_id }}
-      auth_user: ${{ needs.conf.outputs.service_account }}
-      cosign_version: ${{ needs.conf.outputs.cosign_version }}
-      image_digest: ${{ needs.build.outputs.digest }}
-      scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
-
-  image-provenance:
-    needs:
-    - conf
-    - sign-image
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/slsa.yaml
-    with:
-      auth_provider: ${{ needs.conf.outputs.provider_id }}
-      auth_user: ${{ needs.conf.outputs.service_account }}
-      image_digest: ${{ needs.build.outputs.digest }}
-
-  cli-provenance:
-    needs:
-    - cli-release
+    - release
     permissions:
       actions: read    # To read the workflow path.
       id-token: write  # To sign the provenance.
@@ -172,12 +83,11 @@ jobs:
       upload-assets: true
       compile-generator: true
 
-  cli-verify:
+  verify:
     env:
       ATT_FILE_NAME: "multiple.intoto.jsonl"
     needs:
-    - cli-release
-    - cli-provenance
+    - provenance
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
