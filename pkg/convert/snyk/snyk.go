@@ -3,15 +3,13 @@ package snyk
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
+	"github.com/mchmarny/vulctl/pkg/utils"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	g "google.golang.org/genproto/googleapis/grafeas/v1"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Convert converts Snyk JSON to Grafeas Note/Occurrence format.
@@ -47,10 +45,6 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 		list[cve] = nocc
 	}
 
-	for cve, v := range list {
-		log.Debug().Msgf("CVE %s: Instances (%d)", cve, len(v.Occurrences))
-	}
-
 	return list, nil
 }
 
@@ -60,7 +54,7 @@ func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
 		NoteName:    "",
 		Details: &g.Occurrence_Vulnerability{
 			Vulnerability: &g.VulnerabilityOccurrence{
-				CvssScore: toFloat32(v.Search("cvssScore").Data()),
+				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
 					AffectedCpeUri:  makeCPE(v),
 					AffectedPackage: v.Search("packageName").Data().(string),
@@ -85,20 +79,20 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	n := g.Note{
 		Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
 		ShortDescription: v.Search("title").Data().(string),
-		LongDescription:  toString(v.Search("CVSSv3").Data()),
+		LongDescription:  utils.ToString(v.Search("CVSSv3").Data()),
 		RelatedUrl: []*g.RelatedUrl{
 			{
 				Label: "Registry",
 				Url:   s.URI,
 			},
 		},
-		CreateTime: toTime(v.Search("creationTime").Data().(string)),
-		UpdateTime: toTime(v.Search("modificationTime").Data().(string)),
+		CreateTime: utils.ToGRPCTime(v.Search("creationTime").Data().(string)),
+		UpdateTime: utils.ToGRPCTime(v.Search("modificationTime").Data().(string)),
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
-				CvssScore: toFloat32(v.Search("cvssScore").Data()),
+				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
 				CvssV3: &g.CVSSv3{
-					BaseScore: toFloat32(v.Search("cvssScore").Data()),
+					BaseScore: utils.ToFloat32(v.Search("cvssScore").Data()),
 				},
 				Details: []*g.VulnerabilityNote_Detail{
 					{
@@ -112,7 +106,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 						Description:      v.Search("name").Data().(string),
 						SeverityName:     v.Search("severity").Data().(string),
 						Source:           v.Search("id").Data().(string),
-						SourceUpdateTime: toTime(v.Search("disclosureTime").Data().(string)),
+						SourceUpdateTime: utils.ToGRPCTime(v.Search("disclosureTime").Data().(string)),
 						Vendor:           v.Search("packageManager").Data().(string),
 					},
 				},
@@ -145,48 +139,4 @@ func makeCPE(v *gabs.Container) string {
 		pkgName,
 		pkgName,
 		pkgVersion)
-}
-
-func toString(v interface{}) string {
-	if v == nil {
-		return ""
-	}
-
-	s, ok := v.(string)
-	if ok {
-		return s
-	}
-
-	return fmt.Sprintf("%v", v)
-}
-
-func toFloat32(v interface{}) float32 {
-	if v == nil {
-		return 0
-	}
-
-	switch v := v.(type) {
-	case float32:
-		return v
-	case float64: // TODO: handle overflow
-		return float32(v)
-	case int:
-		return float32(v)
-	case int32:
-		return float32(v)
-	case int64:
-		return float32(v)
-	case uint:
-		return float32(v)
-	case uint32:
-		return float32(v)
-	case uint64:
-		return float32(v)
-	}
-	return 0
-}
-
-func toTime(v string) *timestamppb.Timestamp {
-	t, _ := time.Parse("2006-01-02T15:04:05.999999Z", v)
-	return timestamppb.New(t)
 }
