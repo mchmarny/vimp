@@ -131,7 +131,7 @@ jobs:
   sign-image:
     needs:
     - conf
-    - build
+    - build-image
     permissions:
       contents: read
       actions: read
@@ -147,7 +147,6 @@ jobs:
   image-provenance:
     needs:
     - conf
-    - build-image
     - sign-image
     permissions:
       contents: read
