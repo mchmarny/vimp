@@ -90,6 +90,4 @@ jobs:
     - name: Export Digest
       id: image
       run: |
-        echo "DIGEST=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_ENV
-        echo "DIGEST=$DIGEST" >> $GITHUB_ENV
-        echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+        echo "digest=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_OUTPUT
