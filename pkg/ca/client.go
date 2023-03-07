@@ -14,6 +14,7 @@ const (
 	errAlreadyExists = "alreadyExists"
 )
 
+// New creates a new Container Analysis client for the given project and image.
 func New(ctx context.Context, projectID, imageURI string) (*Client, error) {
 	s, err := api.NewService(ctx)
 	if err != nil {
@@ -83,6 +84,8 @@ func (c *Client) CreateOccurrence(o *api.Occurrence, id string) error {
 	return nil
 }
 
+// TODO: @mchmarny - use header to check for 409 status code
+// rather than the content of the error message.
 func existsError(err error) bool {
 	return strings.Contains(err.Error(), errAlreadyExists)
 }
