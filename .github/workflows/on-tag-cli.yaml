@@ -28,7 +28,7 @@ jobs:
       run: |
         echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
         echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
-        
+
   test:
     needs:
     - conf
