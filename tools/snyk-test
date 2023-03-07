@@ -15,5 +15,5 @@ bin/vulctl --debug import --project cloudy-labz \
 
 gcloud artifacts docker images describe $digest \
     --project $project \
-    --show-all-metadata \
+    --show-package-vulnerability \
     --format json | jq -r .
