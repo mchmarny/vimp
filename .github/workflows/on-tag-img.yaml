@@ -89,13 +89,14 @@ jobs:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
-      image_digest: ${{ needs.build.outputs.digest }}
+      image_digest: ${{ needs.image.outputs.digest }}
       scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   provenance:
     needs:
     - conf
     - sign
+    - image
     permissions:
       contents: read
       actions: read
@@ -105,4 +106,4 @@ jobs:
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
-      image_digest: ${{ needs.build.outputs.digest }}
+      image_digest: ${{ needs.image.outputs.digest }}
