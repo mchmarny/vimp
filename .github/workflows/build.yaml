@@ -81,10 +81,14 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          RELEASE_VERSION=${{ env.RELEASE_VERSION }}
+          COMMIT=${{ env.GITHUB_SHA }}
+          CURRENT_DATE=$(date '+%Y-%m-%dT%H:%M:%SZ')
 
     - name: Export Digest
       id: image
       run: |
-        echo "IMAGE_DIGEST=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_ENV
-        echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
-        echo "digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
+        echo "DIGEST=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_ENV
+        echo "DIGEST=$DIGEST" >> $GITHUB_ENV
+        echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
