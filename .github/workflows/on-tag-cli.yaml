@@ -10,8 +10,6 @@ permissions:
 jobs:
 
   test:
-    needs:
-    - conf
     uses: ./.github/workflows/test.yaml
     permissions:
       contents: read
