@@ -60,6 +60,13 @@ build: tidy ## Builds CLI binary
 	-extldflags '-static'" \
     -a -mod vendor -o bin/vulctl cmd/vulctl/main.go
 
+.PHONY: image
+image: ## Builds the docker image
+	docker build \
+		-f cmd/builder/Dockerfile \
+		-t vulctl:$(RELEASE_VERSION) \
+		.
+
 .PHONY: setup
 setup: ## Creates the GCP resources 
 	terraform -chdir=./setup init
