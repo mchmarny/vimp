@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func TestImport(t *testing.T) {
+func TestSnykImport(t *testing.T) {
 	set := flag.NewFlagSet("", flag.ContinueOnError)
 	c := cli.NewContext(newTestApp(t), set, nil)
 	err := importCmd(c)
@@ -19,6 +19,22 @@ func TestImport(t *testing.T) {
 	set.String(projectFlag.Name, types.TestProjectID, "")
 	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
 	set.String(fileFlag.Name, "../../../data/snyk.json", "")
+	set.String(formatFlag.Name, "snyk", "")
+
+	c = cli.NewContext(newTestApp(t), set, nil)
+	err = importCmd(c)
+	assert.NoError(t, err)
+}
+
+func TestTrivyImport(t *testing.T) {
+	set := flag.NewFlagSet("", flag.ContinueOnError)
+	c := cli.NewContext(newTestApp(t), set, nil)
+	err := importCmd(c)
+	assert.Error(t, err)
+
+	set.String(projectFlag.Name, types.TestProjectID, "")
+	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
+	set.String(fileFlag.Name, "../../../data/trivy.json", "")
 	set.String(formatFlag.Name, "snyk", "")
 
 	c = cli.NewContext(newTestApp(t), set, nil)
