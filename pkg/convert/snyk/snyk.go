@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// Convert converts Snyk JSON to Grafeas Note/Occurrence format.
 func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrences, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
