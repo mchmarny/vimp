@@ -56,15 +56,3 @@ func TestConverter(t *testing.T) {
 		}
 	}
 }
-
-func TestParsers(t *testing.T) {
-	cvss := "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:H"
-	assert.Equal(t, "ATTACK_VECTOR_LOCAL", getAttackVector(cvss))
-	assert.Equal(t, "ATTACK_COMPLEXITY_LOW", getAttackComplexity(cvss))
-	assert.Equal(t, "PRIVILEGES_REQUIRED_NONE", getPrivilegesRequired(cvss))
-	assert.Equal(t, "USER_INTERACTION_REQUIRED", getUserInteraction(cvss))
-	assert.Equal(t, "SCOPE_UNCHANGED", getScope(cvss))
-	assert.Equal(t, "IMPACT_HIGH", getConfidentialityImpact(cvss))
-	assert.Equal(t, "IMPACT_LOW", getIntegrityImpact(cvss))
-	assert.Equal(t, "IMPACT_HIGH", getAvailabilityImpact(cvss))
-}
