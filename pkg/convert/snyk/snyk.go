@@ -2,18 +2,20 @@ package snyk
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
+	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	aa "google.golang.org/api/containeranalysis/v1"
+	g "google.golang.org/genproto/googleapis/grafeas/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
+func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrences, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
 	}
@@ -22,85 +24,130 @@ func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make(map[string]aa.Note, 0)
+	list := make(map[string]types.NoteOccurrences, 0)
 
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
-		ids := fmt.Sprintf("%s--%s", s.URI, v.Search("id").Data().(string))
-		vID := fmt.Sprintf("%x", sha256.Sum256([]byte(ids)))
+		cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
 
 		// create note
-		n := aa.Note{
-			Kind:             "VULNERABILITY",
-			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
-			ShortDescription: v.Search("title").Data().(string),
-			LongDescription:  toString(v.Search("CVSSv3").Data()),
-			RelatedUrl: []*aa.RelatedUrl{
-				{
-					Label: "Registry",
-					Url:   s.URI,
-				},
+		n := convertNote(s, v)
+
+		// don't add notes with no CVSS score
+		if n.GetVulnerability().CvssScore == 0 {
+			continue
+		}
+
+		// If cve is not found, add to map
+		if _, ok := list[cve]; !ok {
+			list[cve] = types.NoteOccurrences{Note: n}
+		}
+		nocc := list[cve]
+		occ := convertOccurrence(s, v)
+		nocc.Occurrences = append(nocc.Occurrences, occ)
+		list[cve] = nocc
+	}
+
+	for cve, v := range list {
+		log.Debug().Msgf("CVE %s: Instances (%d)", cve, len(v.Occurrences))
+	}
+
+	return list, nil
+}
+
+func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
+	o := g.Occurrence{
+		ResourceUri: s.URI,
+		NoteName:    "",
+		Details: &g.Occurrence_Vulnerability{
+			Vulnerability: &g.VulnerabilityOccurrence{
+				CvssScore: toFloat32(v.Search("cvssScore").Data()),
+				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
+					AffectedCpeUri:  makeCPE(v),
+					AffectedPackage: v.Search("packageName").Data().(string),
+					AffectedVersion: &g.Version{
+						Name: v.Search("version").Data().(string),
+						Kind: g.Version_MINIMUM,
+					},
+					FixedCpeUri:  makeCPE(v),                              // TODO: This is same as affected
+					FixedPackage: v.Search("packageName").Data().(string), // TODO: This is same as affected
+					FixedVersion: &g.Version{
+						Name: v.Search("version").Data().(string), // TODO: This is same as affected
+						Kind: g.Version_MINIMUM,
+					},
+				}},
+			}},
+	}
+	return &o
+}
+
+func convertNote(s *src.Source, v *gabs.Container) *g.Note {
+	// create note
+	n := g.Note{
+		Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
+		ShortDescription: v.Search("title").Data().(string),
+		LongDescription:  toString(v.Search("CVSSv3").Data()),
+		RelatedUrl: []*g.RelatedUrl{
+			{
+				Label: "Registry",
+				Url:   s.URI,
 			},
-			CreateTime: v.Search("creationTime").Data().(string),
-			UpdateTime: v.Search("modificationTime").Data().(string),
-			Vulnerability: &aa.VulnerabilityNote{
-				CvssScore: toFloat(v.Search("cvssScore").Data()),
-				CvssV3: &aa.CVSSv3{
-					BaseScore: toFloat(v.Search("cvssScore").Data()),
+		},
+		CreateTime: toTime(v.Search("creationTime").Data().(string)),
+		UpdateTime: toTime(v.Search("modificationTime").Data().(string)),
+		Type: &g.Note_Vulnerability{
+			Vulnerability: &g.VulnerabilityNote{
+				CvssScore: toFloat32(v.Search("cvssScore").Data()),
+				CvssV3: &g.CVSSv3{
+					BaseScore: toFloat32(v.Search("cvssScore").Data()),
 				},
-				Details: []*aa.Detail{
+				Details: []*g.VulnerabilityNote_Detail{
 					{
 						AffectedCpeUri:  makeCPE(v),
 						AffectedPackage: v.Search("packageName").Data().(string),
-						AffectedVersionStart: &aa.Version{
+						AffectedVersionStart: &g.Version{
 							Name:      v.Search("version").Data().(string),
 							Inclusive: true,
-							Kind:      "MINIMUM",
+							Kind:      g.Version_MINIMUM,
 						},
 						Description:      v.Search("name").Data().(string),
 						SeverityName:     v.Search("severity").Data().(string),
 						Source:           v.Search("id").Data().(string),
-						SourceUpdateTime: v.Search("disclosureTime").Data().(string),
+						SourceUpdateTime: toTime(v.Search("disclosureTime").Data().(string)),
 						Vendor:           v.Search("packageManager").Data().(string),
 					},
 				},
-				Severity: toSeverity(v.Search("severity").Data().(string)),
+				//TODO: Severity: toSeverity(v.Search("severity").Data().(string)),
+				Severity: g.Severity_CRITICAL,
 			},
-		} // end note
+		},
+	} // end note
 
-		// CVSS
+	// CVSS
+	/*
+		TODO:
 		if v.Search("CVSSv3").Exists() {
 			// CVSSv3 errs with .(string)
 			vec := toString(v.Search("CVSSv3").Data())
-			n.Vulnerability.CvssV3.AttackComplexity = getAttackComplexity(vec)
-			n.Vulnerability.CvssV3.AttackVector = getAttackVector(vec)
-			n.Vulnerability.CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
-			n.Vulnerability.CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
-			n.Vulnerability.CvssV3.IntegrityImpact = getIntegrityImpact(vec)
-			n.Vulnerability.CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
-			n.Vulnerability.CvssV3.Scope = getScope(vec)
-			n.Vulnerability.CvssV3.UserInteraction = getUserInteraction(vec)
+			n.GetVulnerability().CvssV3.AttackComplexity = getAttackComplexity(vec)
+			n.GetVulnerability().CvssV3.AttackVector = getAttackVector(vec)
+			n.GetVulnerability().CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
+			n.GetVulnerability().CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
+			n.GetVulnerability().CvssV3.IntegrityImpact = getIntegrityImpact(vec)
+			n.GetVulnerability().CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
+			n.GetVulnerability().CvssV3.Scope = getScope(vec)
+			n.GetVulnerability().CvssV3.UserInteraction = getUserInteraction(vec)
 		}
+	*/
 
-		// References
-		for _, r := range v.Search("references").Children() {
-			n.RelatedUrl = append(n.RelatedUrl, &aa.RelatedUrl{
-				Url:   r.Search("url").Data().(string),
-				Label: r.Search("title").Data().(string),
-			})
-		}
-
-		// don't add notes with no CVSS score
-		if n.Vulnerability.CvssScore == 0 {
-			continue
-		}
-
-		log.Debug().Msgf("%s - %s: %f - %s", n.Name, n.Vulnerability.Details[0].AffectedPackage,
-			n.Vulnerability.CvssScore, n.ShortDescription)
-
-		list[vID] = n
+	// References
+	for _, r := range v.Search("references").Children() {
+		n.RelatedUrl = append(n.RelatedUrl, &g.RelatedUrl{
+			Url:   r.Search("url").Data().(string),
+			Label: r.Search("title").Data().(string),
+		})
 	}
 
-	return list, nil
+	return &n
 }
 
 // makeCPE creates CPE from Snyk data as the OSS CLI does not generate CPEs
@@ -130,39 +177,35 @@ func toString(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
-func toFloat(v interface{}) float64 {
+func toFloat32(v interface{}) float32 {
 	if v == nil {
 		return 0
 	}
 
 	switch v := v.(type) {
-	case float64:
-		return v
 	case float32:
-		return float64(v)
+		return v
+	case float64: // TODO: handle overflow
+		return float32(v)
 	case int:
-		return float64(v)
+		return float32(v)
 	case int32:
-		return float64(v)
+		return float32(v)
 	case int64:
-		return float64(v)
+		return float32(v)
 	case uint:
-		return float64(v)
+		return float32(v)
 	case uint32:
-		return float64(v)
+		return float32(v)
 	case uint64:
-		return float64(v)
+		return float32(v)
 	}
 	return 0
 }
 
-// toSeverity converts grype severity to CVSS severity.
-func toSeverity(v string) string {
-	if v == "" {
-		return "SEVERITY_UNSPECIFIED"
-	}
-
-	return strings.ToUpper(v)
+func toTime(v string) *timestamppb.Timestamp {
+	t, _ := time.Parse("2006-01-02T15:04:05.999999Z", v)
+	return timestamppb.New(t)
 }
 
 const expectedVectorParts = 2
