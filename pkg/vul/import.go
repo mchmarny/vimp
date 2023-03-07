@@ -80,14 +80,13 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 	_, err = c.GetGrafeasClient().CreateNote(ctx, req)
 	if err != nil {
 		// If note already exists, skip
-		if status.Code(err) == codes.AlreadyExists {
-			log.Info().Msgf("Already Exists: %s", noteName)
-		} else {
+		if status.Code(err) != codes.AlreadyExists {
 			return errors.Wrap(err, "error posting note")
 		}
-	} else {
-		log.Info().Msgf("Created: %s", noteName)
+		log.Info().Msgf("Already Exists: %s", noteName)
 	}
+
+	log.Info().Msgf("Created: %s", noteName)
 
 	// Create Occurrences
 	for _, o := range nocc.Occurrences {
@@ -99,16 +98,14 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 		occ, err := c.GetGrafeasClient().CreateOccurrence(ctx, req)
 		if err != nil {
 			// If occurrence already exists, skip
-			if status.Code(err) == codes.AlreadyExists {
-				log.Info().Msgf("Already Exists: Occurrence %s-%s",
-					o.GetVulnerability().PackageIssue[0].AffectedPackage,
-					o.GetVulnerability().PackageIssue[0].AffectedVersion.Name)
-			} else {
+			if status.Code(err) != codes.AlreadyExists {
 				return errors.Wrap(err, "error posting occurrence")
 			}
-		} else {
-			log.Info().Msgf("Created: %s", occ.Name)
+			log.Info().Msgf("Already Exists: Occurrence %s-%s",
+				o.GetVulnerability().PackageIssue[0].AffectedPackage,
+				o.GetVulnerability().PackageIssue[0].AffectedVersion.Name)
 		}
+		log.Info().Msgf("Created: %s", occ.Name)
 	}
 
 	/*
