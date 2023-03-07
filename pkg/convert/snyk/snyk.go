@@ -2,105 +2,138 @@ package snyk
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/mchmarny/vulctl/pkg/ca"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	aa "google.golang.org/api/containeranalysis/v1"
 )
 
-func Convert(ctx context.Context, s *src.Source) (map[string]aa.Note, error) {
+func Convert(ctx context.Context, s *src.Source, t *ca.Client) error {
 	if s == nil || s.Data == nil {
-		return nil, errors.New("valid source required")
+		return errors.New("valid source required")
 	}
 
 	if !s.Data.Search("vulnerabilities").Exists() {
-		return nil, errors.New("unable to find vulnerabilities in source data")
+		return errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make(map[string]aa.Note, 0)
-
 	for _, v := range s.Data.Search("vulnerabilities").Children() {
-		ids := fmt.Sprintf("%s--%s", s.URI, v.Search("id").Data().(string))
-		vID := fmt.Sprintf("%x", sha256.Sum256([]byte(ids)))
-
-		// create note
-		n := aa.Note{
-			Kind:             "VULNERABILITY",
-			Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
-			ShortDescription: v.Search("title").Data().(string),
-			LongDescription:  toString(v.Search("CVSSv3").Data()),
-			RelatedUrl: []*aa.RelatedUrl{
-				{
-					Label: "Registry",
-					Url:   s.URI,
-				},
-			},
-			CreateTime: v.Search("creationTime").Data().(string),
-			UpdateTime: v.Search("modificationTime").Data().(string),
-			Vulnerability: &aa.VulnerabilityNote{
-				CvssScore: toFloat(v.Search("cvssScore").Data()),
-				CvssV3: &aa.CVSSv3{
-					BaseScore: toFloat(v.Search("cvssScore").Data()),
-				},
-				Details: []*aa.Detail{
-					{
-						AffectedCpeUri:  makeCPE(v),
-						AffectedPackage: v.Search("packageName").Data().(string),
-						AffectedVersionStart: &aa.Version{
-							Name:      v.Search("version").Data().(string),
-							Inclusive: true,
-							Kind:      "MINIMUM",
-						},
-						Description:      v.Search("name").Data().(string),
-						SeverityName:     v.Search("severity").Data().(string),
-						Source:           v.Search("id").Data().(string),
-						SourceUpdateTime: v.Search("disclosureTime").Data().(string),
-						Vendor:           v.Search("packageManager").Data().(string),
-					},
-				},
-				Severity: toSeverity(v.Search("severity").Data().(string)),
-			},
-		} // end note
-
-		// CVSS
-		if v.Search("CVSSv3").Exists() {
-			// CVSSv3 errs with .(string)
-			vec := toString(v.Search("CVSSv3").Data())
-			n.Vulnerability.CvssV3.AttackComplexity = getAttackComplexity(vec)
-			n.Vulnerability.CvssV3.AttackVector = getAttackVector(vec)
-			n.Vulnerability.CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
-			n.Vulnerability.CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
-			n.Vulnerability.CvssV3.IntegrityImpact = getIntegrityImpact(vec)
-			n.Vulnerability.CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
-			n.Vulnerability.CvssV3.Scope = getScope(vec)
-			n.Vulnerability.CvssV3.UserInteraction = getUserInteraction(vec)
-		}
-
-		// References
-		for _, r := range v.Search("references").Children() {
-			n.RelatedUrl = append(n.RelatedUrl, &aa.RelatedUrl{
-				Url:   r.Search("url").Data().(string),
-				Label: r.Search("title").Data().(string),
-			})
-		}
-
-		// don't add notes with no CVSS score
-		if n.Vulnerability.CvssScore == 0 {
+		if !v.Search("identifiers", "CVE").Exists() {
 			continue
 		}
 
-		log.Debug().Msgf("%s - %s: %f - %s", n.Name, n.Vulnerability.Details[0].AffectedPackage,
-			n.Vulnerability.CvssScore, n.ShortDescription)
+		cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
+		n := makeNote(v)
 
-		list[vID] = n
+		id, err := t.CreateNote(n, cve)
+		if err != nil {
+			return errors.Wrap(err, "error creating note")
+		}
+
+		o := makeOccurrence(v, *id, s.URI)
+		if err := t.CreateOccurrence(o, *id); err != nil {
+			return errors.Wrap(err, "error creating occurrence")
+		}
+
+		log.Info().
+			Str("note", *id).
+			Str("occurrence", o.Name).
+			Msg("created")
 	}
 
-	return list, nil
+	return nil
+}
+
+func makeNote(v *gabs.Container) *aa.Note {
+	n := &aa.Note{
+		Kind:             "VULNERABILITY",
+		Name:             v.Search("title").Data().(string),
+		ShortDescription: v.Search("identifiers", "CVE").Index(0).Data().(string),
+		Vulnerability: &aa.VulnerabilityNote{
+			Severity:  toSeverity(v.Search("severity").Data().(string)),
+			CvssScore: toFloat(v.Search("cvssScore").Data()),
+			Details: []*aa.Detail{
+				{
+					AffectedPackage: v.Search("packageName").Data().(string),
+					AffectedCpeUri:  makeCPE(v),
+					AffectedVersionStart: &aa.Version{
+						Name:      v.Search("version").Data().(string),
+						Inclusive: true,
+						Kind:      "MINIMUM",
+					},
+					AffectedVersionEnd: &aa.Version{
+						Name:      v.Search("version").Data().(string),
+						Inclusive: true,
+						Kind:      "MAXIMUM",
+					},
+					FixedPackage: v.Search("packageName").Data().(string),
+					Description:  v.Search("name").Data().(string),
+				},
+			},
+		},
+	} // end note
+
+	// references
+	for _, r := range v.Search("references").Children() {
+		n.RelatedUrl = append(n.RelatedUrl, &aa.RelatedUrl{
+			Url:   r.Search("url").Data().(string),
+			Label: r.Search("title").Data().(string),
+		})
+	}
+	return n
+}
+
+func makeOccurrence(v *gabs.Container, noteName, imageURI string) *aa.Occurrence {
+	o := &aa.Occurrence{
+		Kind:        "VULNERABILITY",
+		NoteName:    noteName,
+		ResourceUri: imageURI,
+		Vulnerability: &aa.VulnerabilityOccurrence{
+			CvssScore: toFloat(v.Search("cvssScore").Data()),
+			Severity:  toSeverity(v.Search("severity").Data().(string)),
+			PackageIssue: []*aa.PackageIssue{
+				{
+					AffectedCpeUri:  makeCPE(v),
+					AffectedPackage: v.Search("packageName").Data().(string),
+					AffectedVersion: &aa.Version{
+						Name:      v.Search("version").Data().(string),
+						Inclusive: true,
+						Kind:      "MINIMUM",
+					},
+					FixedCpeUri:  makeCPE(v),
+					FixedPackage: v.Search("packageName").Data().(string),
+					FixedVersion: &aa.Version{
+						Name:      v.Search("version").Data().(string),
+						Inclusive: true,
+						Kind:      "MINIMUM",
+					},
+				},
+			},
+		},
+	} // end note
+
+	// CVSS
+	if v.Search("CVSSv3").Exists() {
+		// CVSSv3 errs with .(string)
+		vec := toString(v.Search("CVSSv3").Data())
+		o.Vulnerability.Cvssv3 = &aa.CVSS{
+			AttackComplexity:      getAttackComplexity(vec),
+			AttackVector:          getAttackVector(vec),
+			AvailabilityImpact:    getAvailabilityImpact(vec),
+			ConfidentialityImpact: getConfidentialityImpact(vec),
+			IntegrityImpact:       getIntegrityImpact(vec),
+			PrivilegesRequired:    getPrivilegesRequired(vec),
+			Scope:                 getScope(vec),
+			UserInteraction:       getUserInteraction(vec),
+		}
+	}
+
+	return o
 }
 
 // makeCPE creates CPE from Snyk data as the OSS CLI does not generate CPEs

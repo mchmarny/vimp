@@ -22,14 +22,18 @@ func NewSource(opt *types.ImportOptions) (*Source, error) {
 	}
 
 	s := &Source{
-		URI:  opt.Source,
-		Data: c,
+		ProjectID: opt.Project,
+		URI:       opt.Source,
+		Data:      c,
 	}
 
 	return s, nil
 }
 
 type Source struct {
+	// ProjectID is the project ID.
+	ProjectID string
+
 	// URI is the image URI.
 	URI string
 

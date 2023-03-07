@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-digest="us-west1-docker.pkg.dev/cloudy-labz/builders/sbominator@sha256:cdcd67d7e7b444eb38d67ee6078f6f01d98d3ad9252d94a99cfce7eee2107a87"
+digest="us-west1-docker.pkg.dev/cloudy-labz/hello/hello@sha256:a30db8a25a48a19ff1e92ef3a56a3b4ce8b70955a7d6b6add7461c1ea54ce083"
 
 bin/vulctl import --project cloudy-labz \
                   --source $digest \
-                  --file data/test.json \
+                  --file data/snyk.json \
                   --format snyk
 
 
