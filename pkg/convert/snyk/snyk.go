@@ -8,11 +8,11 @@ import (
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
+	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/mchmarny/vulctl/pkg/types"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	g "google.golang.org/genproto/googleapis/grafeas/v1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrences, error) {
@@ -55,11 +55,11 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 }
 
 func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
-	o:= g.Occurrence{
+	o := g.Occurrence{
 		ResourceUri: s.URI,
 		NoteName:    "",
 		Details: &g.Occurrence_Vulnerability{
-			&g.VulnerabilityOccurrence{
+			Vulnerability: &g.VulnerabilityOccurrence{
 				CvssScore: toFloat32(v.Search("cvssScore").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
 					AffectedCpeUri:  makeCPE(v),
@@ -68,10 +68,10 @@ func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
 						Name: v.Search("version").Data().(string),
 						Kind: g.Version_MINIMUM,
 					},
-					FixedCpeUri:  makeCPE(v), // TODO: This is same as affected
-					FixedPackage: v.Search("packageName").Data().(string),  // TODO: This is same as affected
+					FixedCpeUri:  makeCPE(v),                              // TODO: This is same as affected
+					FixedPackage: v.Search("packageName").Data().(string), // TODO: This is same as affected
 					FixedVersion: &g.Version{
-						Name: v.Search("version").Data().(string),  // TODO: This is same as affected
+						Name: v.Search("version").Data().(string), // TODO: This is same as affected
 						Kind: g.Version_MINIMUM,
 					},
 				}},
@@ -124,19 +124,19 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 
 	// CVSS
 	/*
-	TODO:
-	if v.Search("CVSSv3").Exists() {
-		// CVSSv3 errs with .(string)
-		vec := toString(v.Search("CVSSv3").Data())
-		n.GetVulnerability().CvssV3.AttackComplexity = getAttackComplexity(vec)
-		n.GetVulnerability().CvssV3.AttackVector = getAttackVector(vec)
-		n.GetVulnerability().CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
-		n.GetVulnerability().CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
-		n.GetVulnerability().CvssV3.IntegrityImpact = getIntegrityImpact(vec)
-		n.GetVulnerability().CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
-		n.GetVulnerability().CvssV3.Scope = getScope(vec)
-		n.GetVulnerability().CvssV3.UserInteraction = getUserInteraction(vec)
-	}
+		TODO:
+		if v.Search("CVSSv3").Exists() {
+			// CVSSv3 errs with .(string)
+			vec := toString(v.Search("CVSSv3").Data())
+			n.GetVulnerability().CvssV3.AttackComplexity = getAttackComplexity(vec)
+			n.GetVulnerability().CvssV3.AttackVector = getAttackVector(vec)
+			n.GetVulnerability().CvssV3.AvailabilityImpact = getAvailabilityImpact(vec)
+			n.GetVulnerability().CvssV3.ConfidentialityImpact = getConfidentialityImpact(vec)
+			n.GetVulnerability().CvssV3.IntegrityImpact = getIntegrityImpact(vec)
+			n.GetVulnerability().CvssV3.PrivilegesRequired = getPrivilegesRequired(vec)
+			n.GetVulnerability().CvssV3.Scope = getScope(vec)
+			n.GetVulnerability().CvssV3.UserInteraction = getUserInteraction(vec)
+		}
 	*/
 
 	// References
@@ -177,32 +177,6 @@ func toString(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
-func toFloat(v interface{}) float64 {
-	if v == nil {
-		return 0
-	}
-
-	switch v := v.(type) {
-	case float64:
-		return v
-	case float32:
-		return float64(v)
-	case int:
-		return float64(v)
-	case int32:
-		return float64(v)
-	case int64:
-		return float64(v)
-	case uint:
-		return float64(v)
-	case uint32:
-		return float64(v)
-	case uint64:
-		return float64(v)
-	}
-	return 0
-}
-
 func toFloat32(v interface{}) float32 {
 	if v == nil {
 		return 0
@@ -211,7 +185,7 @@ func toFloat32(v interface{}) float32 {
 	switch v := v.(type) {
 	case float32:
 		return v
-	case float64:	// TODO: handle overflow
+	case float64: // TODO: handle overflow
 		return float32(v)
 	case int:
 		return float32(v)
@@ -232,15 +206,6 @@ func toFloat32(v interface{}) float32 {
 func toTime(v string) *timestamppb.Timestamp {
 	t, _ := time.Parse("2006-01-02T15:04:05.999999Z", v)
 	return timestamppb.New(t)
-}
-
-// toSeverity converts grype severity to CVSS severity.
-func toSeverity(v string) string {
-	if v == "" {
-		return "SEVERITY_UNSPECIFIED"
-	}
-
-	return strings.ToUpper(v)
 }
 
 const expectedVectorParts = 2
