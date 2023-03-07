@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	containeranalysis "cloud.google.com/go/containeranalysis/apiv1"
 	"github.com/mchmarny/vulctl/pkg/convert"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/status"
-	"google.golang.org/grpc/codes"
-	containeranalysis "cloud.google.com/go/containeranalysis/apiv1"
 	g "google.golang.org/genproto/googleapis/grafeas/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func Import(ctx context.Context, opt *types.ImportOptions) error {
@@ -41,11 +41,11 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.New("expected non-nil result")
 	}
 
-    for noteID, nocc := range list {
+	for noteID, nocc := range list {
 		if err := postNoteOccurrences(ctx, opt.Project, noteID, nocc); err != nil {
 			return errors.Wrap(err, "error posting notes")
 		}
-    }
+	}
 
 	return nil
 }
@@ -74,7 +74,7 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 	req := &g.CreateNoteRequest{
 		Parent: p,
 		NoteId: noteID,
-		Note: nocc.Note,
+		Note:   nocc.Note,
 	}
 	noteName := fmt.Sprintf("%s/notes/%s", p, noteID)
 	_, err = c.GetGrafeasClient().CreateNote(ctx, req)
@@ -88,20 +88,20 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 	} else {
 		log.Info().Msgf("Created: %s", noteName)
 	}
-	
+
 	// Create Occurrences
 	for _, o := range nocc.Occurrences {
 		o.NoteName = noteName
 		req := &g.CreateOccurrenceRequest{
-			Parent: p,
+			Parent:     p,
 			Occurrence: o,
 		}
 		occ, err := c.GetGrafeasClient().CreateOccurrence(ctx, req)
 		if err != nil {
 			// If occurrence already exists, skip
 			if status.Code(err) == codes.AlreadyExists {
-				log.Info().Msgf("Already Exists: Occurrence %s-%s", 
-					o.GetVulnerability().PackageIssue[0].AffectedPackage, 
+				log.Info().Msgf("Already Exists: Occurrence %s-%s",
+					o.GetVulnerability().PackageIssue[0].AffectedPackage,
 					o.GetVulnerability().PackageIssue[0].AffectedVersion.Name)
 			} else {
 				return errors.Wrap(err, "error posting occurrence")
@@ -112,23 +112,23 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 	}
 
 	/*
-	// Batch create Occurrences
-	// TODO: Batch create is slower by a signifant margin than individually creating Occurrences. Why?
-	for _, o := range nocc.Occurrences {
-		o.NoteName = noteName
-	}
+		// Batch create Occurrences
+		// TODO: Batch create is slower by a signifant margin than individually creating Occurrences. Why?
+		for _, o := range nocc.Occurrences {
+			o.NoteName = noteName
+		}
 
-	oreq := &g.BatchCreateOccurrencesRequest{
-		Parent: p,
-		Occurrences: nocc.Occurrences,
-	}
-	bres, err := c.GetGrafeasClient().BatchCreateOccurrences(ctx, oreq)
-	if err != nil {
-		// TODO: figure out how to handle batch errors
-		log.Debug().Msgf("BatchCreateOccurrences error ignored: %s", err)
-	} else {
-		log.Info().Msgf("Created: %s Occurrences", len(bres.Occurrences))
-	}
+		oreq := &g.BatchCreateOccurrencesRequest{
+			Parent: p,
+			Occurrences: nocc.Occurrences,
+		}
+		bres, err := c.GetGrafeasClient().BatchCreateOccurrences(ctx, oreq)
+		if err != nil {
+			// TODO: figure out how to handle batch errors
+			log.Debug().Msgf("BatchCreateOccurrences error ignored: %s", err)
+		} else {
+			log.Info().Msgf("Created: %s Occurrences", len(bres.Occurrences))
+		}
 	*/
 
 	return nil
