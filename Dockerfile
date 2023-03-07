@@ -1,16 +1,16 @@
 FROM golang:buster AS build-env
 WORKDIR /src/
 COPY . /src/
-ARG VERSION=v0.0.1-default
-ARG COMMIT=12345notset
-ARG CURRENT_DATE=2023-03-07T09:36:58Z
-ENV RELEASE_VERSION=$VERSION
-ENV RELEASE_COMMIT=$COMMIT
-ENV RELEASE_DATE=$CURRENT_DATE
+ARG VERSION
+ARG COMMIT
+ARG DATE
+ENV VERSION=$VERSION
+ENV COMMIT=$COMMIT
+ENV DATE=$DATE
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
-    -w -s -X main.version=$RELEASE_VERSION \
+    -w -s -X main.version=$VERSION \
 	-w -s -X main.commit=$COMMIT \
-	-w -s -X main.date=$CURRENT_DATE \
+	-w -s -X main.date=$DATE \
 	-extldflags '-static'" \
     -a -mod vendor -o vulctl cmd/vulctl/main.go
 
