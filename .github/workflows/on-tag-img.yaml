@@ -61,6 +61,7 @@ jobs:
 
   image:
     needs:
+    - conf
     - test
     permissions:
       contents: read
@@ -77,6 +78,7 @@ jobs:
 
   sign:
     needs:
+    - conf
     - image
     permissions:
       contents: read
@@ -92,6 +94,7 @@ jobs:
 
   provenance:
     needs:
+    - conf
     - sign
     permissions:
       contents: read
