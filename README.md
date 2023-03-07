@@ -20,7 +20,7 @@ The `vulctl` CLI currently only supports Google Container Analysis import operat
 Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). 
 
 ```shell
-vulctl import --source $image --file report.json --format snyk
+vulctl import --project $project --source $image --file report.json --format snyk
 ```
 
 > The $image variable in the above example is the fully qualified URI of the image including its digest (e.g. `us-docker.pkg.dev/project/repo/image@sha256:397d453...`).
@@ -92,9 +92,7 @@ Since you are interested in `vulctl`, you probably already have GCP account and 
 
 ```shell
 gcloud services enable \
-  artifactregistry.googleapis.com \
-  containeranalysis.googleapis.com \
-  containerregistry.googleapis.com
+  containeranalysis.googleapis.com
 ```
 
 ### Roles
