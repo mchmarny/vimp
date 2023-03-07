@@ -63,7 +63,9 @@ build: tidy ## Builds CLI binary
 .PHONY: image
 image: ## Builds the docker image
 	docker build \
-		-f cmd/builder/Dockerfile \
+		--build-arg RELEASE_VERSION=$(RELEASE_VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
+		--build-arg CURRENT_DATE=$(CURRENT_DATE) \
 		-t vulctl:$(RELEASE_VERSION) \
 		.
 
