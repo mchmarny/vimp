@@ -60,7 +60,7 @@ jobs:
       go-version: ${{ needs.conf.outputs.go_version }}
       scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
-  release:
+  cli-release:
     needs:
     - conf
     - test
@@ -161,7 +161,7 @@ jobs:
 
   cli-provenance:
     needs:
-    - release
+    - cli-release
     permissions:
       actions: read    # To read the workflow path.
       id-token: write  # To sign the provenance.
@@ -172,13 +172,12 @@ jobs:
       upload-assets: true
       compile-generator: true
 
-  verify:
+  cli-verify:
     env:
       ATT_FILE_NAME: "multiple.intoto.jsonl"
     needs:
-    - release
+    - cli-release
     - cli-provenance
-    - image-provenance
     runs-on: ubuntu-latest
     permissions: read-all
     steps:
