@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -euo pipefail
+
+project=$1
+digest=$2
+
+# snyk container test --app-vulns \
+#                     --json-file-output=report.json $digest
+
+bin/vulctl import --project cloudy-labz \
+                  --source $digest \
+                  --file report.json \
+                  --format snyk
+
+gcloud artifacts docker images describe $digest \
+    --project $project \
+    --show-all-metadata \
+    --format json | jq -r .
