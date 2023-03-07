@@ -40,10 +40,7 @@ func Convert(ctx context.Context, s *src.Source, t *ca.Client) error {
 			return errors.Wrap(err, "error creating occurrence")
 		}
 
-		log.Info().
-			Str("note", *id).
-			Str("occurrence", o.Name).
-			Msg("created")
+		log.Info().Msgf("note and occurrence created: %s - %s", *id, s.URI)
 	}
 
 	return nil

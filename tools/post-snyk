@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-digest="us-west1-docker.pkg.dev/cloudy-labz/hello/hello@sha256:a30db8a25a48a19ff1e92ef3a56a3b4ce8b70955a7d6b6add7461c1ea54ce083"
+digest="us-west1-docker.pkg.dev/cloudy-labz/cloudbuild-demo/hello@sha256:1ea4ce8b8cbc3c5c44a2edc059ebf91e6f9c067588386855df4c88fc0036d9fc"
 
 bin/vulctl import --project cloudy-labz \
                   --source $digest \
