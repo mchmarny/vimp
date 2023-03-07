@@ -9,7 +9,29 @@ permissions:
 
 jobs:
 
+
+  conf:
+    env:
+      ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
+      GO_VERSION: ^1.20.1
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
+      go_version: ${{ steps.conf.outputs.go_version }}
+    steps:
+
+    - name: Export Config
+      id: conf
+      run: |
+        echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
+        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
+        
   test:
+    needs:
+    - conf
     uses: ./.github/workflows/test.yaml
     permissions:
       contents: read
