@@ -1,0 +1,91 @@
+name: build_image
+
+on:
+  workflow_call:
+    inputs:
+      image_repo:
+        description: 'Fully-qualified image repo (registry/project/repo)'
+        required: true
+        type: string
+      image_name:
+        description: 'Image name (e.g. my-image)'
+        required: true
+        type: string
+      auth_provider:
+        description: 'OIDC provider ID'
+        required: true
+        type: string
+      auth_user:
+        description: 'OIDC user ID'
+        required: true
+        type: string
+      go_version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.20.1'
+    outputs:
+      digest:
+        value: ${{ jobs.build.outputs.digest }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      id-token: write
+    steps:
+
+    - name: Checkout Code
+      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+
+    - name: Get Version
+      run: |
+        set -euo pipefail
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ inputs.auth_provider }}
+        service_account: ${{ inputs.auth_user }}
+
+    - name: Define Metadata
+      id: meta
+      uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96  # v4.3.0
+      with:
+        images: |
+          ${{ inputs.image_repo }}/${{ inputs.image_name }}
+        tags: |
+          type=raw,enable=true,value=${{ env.RELEASE_VERSION }}
+          type=raw,enable=true,value=${{ env.GITHUB_SHA }}
+
+    - name: Registry Auth
+      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
+      with:
+        registry: ${{ env.REG_URI }}
+        username: oauth2accesstoken
+        password: ${{ steps.auth.outputs.access_token }}
+
+    - name: Image Push
+      id: push
+      uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671  # v4.0.0
+      with:
+        file: cmd/builder/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+    - name: Export Digest
+      id: image
+      run: |
+        echo "IMAGE_DIGEST=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_ENV
+        echo "IMAGE_DIGEST=$IMAGE_DIGEST" >> $GITHUB_ENV
+        echo "digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
