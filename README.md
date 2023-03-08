@@ -32,15 +32,15 @@ The currently supported scanners/formats include:
 
 * [grype](https://github.com/anchore/grype)
 
-`grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
+  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
 
 * [snyk](https://github.com/snyk/cli)
 
-`snyk container test --app-vulns --json-file-output=report.json $image`
+  `snyk container test --app-vulns --json-file-output=report.json $image`
 
 * [trivy](https://github.com/aquasecurity/trivy)
 
-`trivy image --format json --output report.json $image`
+  `trivy image --format json --output report.json $image`
 
 To review the imported vulnerabilities: 
 
