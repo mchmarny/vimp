@@ -61,8 +61,8 @@ func convertNote(v *gabs.Container, cve string) *g.Note {
 				Url:   v.Search("PrimaryURL").Data().(string),
 			},
 		},
-		CreateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data().(string)),
-		UpdateTime: utils.ToGRPCTime(v.Search("LastModifiedDate").Data().(string)),
+		CreateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data()),
+		UpdateTime: utils.ToGRPCTime(v.Search("LastModifiedDate").Data()),
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
 				CvssScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V2Score").Data()),
@@ -81,7 +81,7 @@ func convertNote(v *gabs.Container, cve string) *g.Note {
 						Description:      v.Search("Description").Data().(string),
 						SeverityName:     v.Search("Severity").Data().(string),
 						Source:           v.Search("SeveritySource").Data().(string),
-						SourceUpdateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data().(string)),
+						SourceUpdateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data()),
 						Vendor:           v.Search("SeveritySource").Data().(string),
 					},
 				},
