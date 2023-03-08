@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSnykConverter(t *testing.T) {
+func TestGrypeConverter(t *testing.T) {
 	opt := &types.ImportOptions{
 		Project: types.TestProjectID,
 		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
 		File:    "../../../data/snyk.json",
-		Format:  types.SourceFormatSnykJSON,
+		Format:  types.SourceFormatGrypeJSON,
 	}
 	s, err := src.NewSource(opt)
 	assert.NoError(t, err)
