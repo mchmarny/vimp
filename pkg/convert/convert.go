@@ -3,6 +3,7 @@ package convert
 import (
 	"context"
 
+	"github.com/mchmarny/vulctl/pkg/convert/grype"
 	"github.com/mchmarny/vulctl/pkg/convert/snyk"
 	"github.com/mchmarny/vulctl/pkg/convert/trivy"
 	"github.com/mchmarny/vulctl/pkg/src"
@@ -20,6 +21,8 @@ func GetConverter(format types.SourceFormat) (VulnerabilityConverter, error) {
 		return snyk.Convert, nil
 	case types.SourceFormatTrivyJSON:
 		return trivy.Convert, nil
+	case types.SourceFormatGrypeJSON:
+		return grype.Convert, nil
 	default:
 		return nil, errors.Errorf("unimplemented conversion format: %s", format)
 	}
