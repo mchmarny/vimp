@@ -1,6 +1,10 @@
 package types
 
-import "errors"
+import (
+	"net/url"
+
+	"github.com/pkg/errors"
+)
 
 const (
 	TestProjectID = "test"
@@ -11,6 +15,7 @@ var (
 	ErrMissingFormat  = errors.New("missing format")
 	ErrMissingPath    = errors.New("missing path")
 	ErrMissingSource  = errors.New("missing source")
+	ErrInvalidSource  = errors.New("invalid source")
 )
 
 type ImportOptions struct {
@@ -34,9 +39,20 @@ func (i *ImportOptions) Validate() error {
 	if i.Project == "" {
 		return ErrMissingProject
 	}
+
+	// Validate URL and ensure that scheme is specified
 	if i.Source == "" {
 		return ErrMissingSource
 	}
+	u, err := url.Parse(i.Source)
+	if err != nil {
+		return errors.Wrap(ErrInvalidSource, err.Error())
+	}
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
+	i.Source = u.String()
+
 	if i.File == "" {
 		return ErrMissingPath
 	}
