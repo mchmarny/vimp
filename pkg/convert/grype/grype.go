@@ -162,8 +162,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 						Vendor:       match.Search("searchedBy", "distro", "type").String(),
 					},
 				},
-				//TODO: Severity: toSeverity(v.Search("severity").Data().(string)),
-				Severity: g.Severity_CRITICAL,
+				Severity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
 			},
 		},
 	} // end note
