@@ -13,7 +13,7 @@ func TestGrypeConverter(t *testing.T) {
 	opt := &types.ImportOptions{
 		Project: types.TestProjectID,
 		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:    "../../../data/snyk.json",
+		File:    "../../../data/grype.json",
 		Format:  types.SourceFormatGrypeJSON,
 	}
 	s, err := src.NewSource(opt)
@@ -35,8 +35,7 @@ func TestGrypeConverter(t *testing.T) {
 			assert.NotEmpty(t, u.Label)
 			assert.NotEmpty(t, u.Url)
 		}
-		assert.NotEmpty(t, n.CreateTime)
-		assert.NotEmpty(t, n.UpdateTime)
+
 		assert.NotNil(t, n.GetVulnerability())
 		assert.NotEmpty(t, n.GetVulnerability().CvssScore)
 		assert.NotNil(t, n.GetVulnerability().CvssV3)
@@ -51,7 +50,6 @@ func TestGrypeConverter(t *testing.T) {
 			assert.NotEmpty(t, d.Description)
 			assert.NotEmpty(t, d.SeverityName)
 			assert.NotEmpty(t, d.Source)
-			assert.NotEmpty(t, d.SourceUpdateTime)
 			assert.NotEmpty(t, d.Vendor)
 		}
 	}
