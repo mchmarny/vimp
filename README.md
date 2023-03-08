@@ -45,7 +45,10 @@ The currently supported scanners/formats include:
 To review the imported vulnerabilities: 
 
 ```shell
-gcloud artifacts docker images describe $image --show-package-vulnerability
+gcloud artifacts docker images list $repo \
+  --show-occurrences \
+  --format=json \
+  --occurrence-filter='kind="VULNERABILITY" AND noteProjectId="$project" AND resource_url="$image" AND noteId="CVE-2005-2541"'
 ```
 
 ## Installation 
