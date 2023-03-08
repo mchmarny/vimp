@@ -20,17 +20,33 @@ The `vulctl` CLI currently only supports Google Container Analysis import operat
 Import data from vulnerability scanner reports into [Container Analysis service](https://cloud.google.com/container-analysis/docs/container-analysis) using its [REST API](https://cloud.google.com/container-analysis/docs/reference/rest). 
 
 ```shell
-vulctl import --project $project --source $image --file report.json --format snyk
+vulctl import --project $project \
+              --source $image \
+              --file report.json \
+              --format snyk
 ```
 
 > The $image variable in the above example is the fully qualified URI of the image including its digest (e.g. `us-docker.pkg.dev/project/repo/image@sha256:397d453...`).
 
 The currently supported scanners/formats include:
 
-* [grype](https://github.com/anchore/grype) (`grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`)
-* [ovs](https://github.com/google/osv-scanner) (`osv-scanner --json --docker redis > report.json`)
-* [snyk](https://github.com/snyk/cli) (`snyk container test --app-vulns --json-file-output=report.json $image`)
-* [trivy](https://github.com/aquasecurity/trivy) (`trivy image --format json --output report.json $image`)
+* [grype](https://github.com/anchore/grype)
+
+  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
+
+* [snyk](https://github.com/snyk/cli)
+
+  `snyk container test --app-vulns --json-file-output=report.json $image`
+
+* [trivy](https://github.com/aquasecurity/trivy)
+
+  `trivy image --format json --output report.json $image`
+
+To review the imported vulnerabilities: 
+
+```shell
+gcloud artifacts docker images describe $image --show-package-vulnerability
+```
 
 ## Installation 
 
@@ -91,8 +107,7 @@ Since you are interested in `vulctl`, you probably already have GCP account and 
 `vulctl` also depends on a few GCP service APIs. To enable these, run:
 
 ```shell
-gcloud services enable \
-  containeranalysis.googleapis.com
+gcloud services enable containeranalysis.googleapis.com
 ```
 
 ### Roles

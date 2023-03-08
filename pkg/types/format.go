@@ -7,13 +7,11 @@ const (
 	SourceFormatGrypeJSON              // grype JSON format
 	SourceFormatTrivyJSON              // trivy JSON format
 	SourceFormatSnykJSON               // snyk JSON format
-	SourceFormatOVS                    // OVS format
 
 	SourceFormatUnknownName   = "unknown"
 	SourceFormatGrypeJSONName = "grype"
 	SourceFormatTrivyJSONName = "trivy"
 	SourceFormatSnykJSONName  = "snyk"
-	SourceFormatOVSName       = "ovs"
 )
 
 // SourceFormat represents the source format.
@@ -28,8 +26,6 @@ func (f SourceFormat) String() string {
 		return SourceFormatTrivyJSONName
 	case SourceFormatSnykJSON:
 		return SourceFormatSnykJSONName
-	case SourceFormatOVS:
-		return SourceFormatOVSName
 	default:
 		return SourceFormatUnknownName
 	}
@@ -44,8 +40,6 @@ func ParseSourceFormat(s string) (SourceFormat, error) {
 		return SourceFormatTrivyJSON, nil
 	case SourceFormatSnykJSONName:
 		return SourceFormatSnykJSON, nil
-	case SourceFormatOVSName:
-		return SourceFormatOVS, nil
 	default:
 		return SourceFormatUnknown, fmt.Errorf("unknown format: %s", s)
 	}
@@ -57,7 +51,6 @@ func GetSourceFormats() []SourceFormat {
 		SourceFormatGrypeJSON,
 		SourceFormatTrivyJSON,
 		SourceFormatSnykJSON,
-		SourceFormatOVS,
 	}
 }
 
@@ -67,6 +60,5 @@ func GetSourceFormatNames() []string {
 		SourceFormatGrypeJSONName,
 		SourceFormatTrivyJSONName,
 		SourceFormatSnykJSONName,
-		SourceFormatOVSName,
 	}
 }
