@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	containeranalysis "cloud.google.com/go/containeranalysis/apiv1"
+	ca "cloud.google.com/go/containeranalysis/apiv1"
 	"github.com/mchmarny/vulctl/pkg/convert"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
@@ -65,7 +65,7 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 		return nil
 	}
 
-	c, err := containeranalysis.NewClient(ctx)
+	c, err := ca.NewClient(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error creating client")
 	}
@@ -113,26 +113,6 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 			log.Info().Msgf("Created: %s", occ.Name)
 		}
 	}
-
-	/*
-		// Batch create Occurrences
-		// TODO: Batch create is slower by a signifant margin than individually creating Occurrences. Why?
-		for _, o := range nocc.Occurrences {
-			o.NoteName = noteName
-		}
-
-		oreq := &g.BatchCreateOccurrencesRequest{
-			Parent: p,
-			Occurrences: nocc.Occurrences,
-		}
-		bres, err := c.GetGrafeasClient().BatchCreateOccurrences(ctx, oreq)
-		if err != nil {
-			// TODO: figure out how to handle batch errors
-			log.Debug().Msgf("BatchCreateOccurrences error ignored: %s", err)
-		} else {
-			log.Info().Msgf("Created: %s Occurrences", len(bres.Occurrences))
-		}
-	*/
 
 	return nil
 }
