@@ -18,9 +18,8 @@ func TestImport(t *testing.T) {
 	err := importCmd(c)
 	assert.Error(t, err)
 
-	formats := []string{"snyk", "trivy", "grype"}
-
-	for _, f := range formats {
+	// test all formats
+	for _, f := range types.GetSourceFormatNames() {
 		set = flag.NewFlagSet("", flag.ContinueOnError)
 		set.String(projectFlag.Name, types.TestProjectID, "")
 		set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
