@@ -42,6 +42,12 @@ The currently supported scanners/formats include:
 
 `trivy image --format json --output report.json $image`
 
+To review the imported vulnerabilities: 
+
+```shell
+gcloud artifacts docker images describe $image --show-package-vulnerability
+```
+
 ## Installation 
 
 You can install `vulctl` CLI using one of the following ways:
@@ -101,8 +107,7 @@ Since you are interested in `vulctl`, you probably already have GCP account and 
 `vulctl` also depends on a few GCP service APIs. To enable these, run:
 
 ```shell
-gcloud services enable \
-  containeranalysis.googleapis.com
+gcloud services enable containeranalysis.googleapis.com
 ```
 
 ### Roles
