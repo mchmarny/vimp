@@ -60,8 +60,8 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 				Url:   s.URI,
 			},
 		},
-		CreateTime: utils.ToGRPCTime(v.Search("creationTime").Data().(string)),
-		UpdateTime: utils.ToGRPCTime(v.Search("modificationTime").Data().(string)),
+		CreateTime: utils.ToGRPCTime(v.Search("creationTime").Data()),
+		UpdateTime: utils.ToGRPCTime(v.Search("modificationTime").Data()),
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
 				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
@@ -80,7 +80,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 						Description:      v.Search("name").Data().(string),
 						SeverityName:     v.Search("severity").Data().(string),
 						Source:           v.Search("id").Data().(string),
-						SourceUpdateTime: utils.ToGRPCTime(v.Search("disclosureTime").Data().(string)),
+						SourceUpdateTime: utils.ToGRPCTime(v.Search("disclosureTime").Data()),
 						Vendor:           v.Search("packageManager").Data().(string),
 					},
 				},
