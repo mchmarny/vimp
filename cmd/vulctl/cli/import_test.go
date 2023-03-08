@@ -2,6 +2,7 @@ package cli
 
 import (
 	"flag"
+	"fmt"
 	"testing"
 	"time"
 
@@ -10,36 +11,26 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func TestSnykImport(t *testing.T) {
+func TestImport(t *testing.T) {
+	// test no arg import
 	set := flag.NewFlagSet("", flag.ContinueOnError)
 	c := cli.NewContext(newTestApp(t), set, nil)
 	err := importCmd(c)
 	assert.Error(t, err)
 
-	set.String(projectFlag.Name, types.TestProjectID, "")
-	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
-	set.String(fileFlag.Name, "../../../data/snyk.json", "")
-	set.String(formatFlag.Name, "snyk", "")
+	formats := []string{"snyk", "trivy", "grype"}
 
-	c = cli.NewContext(newTestApp(t), set, nil)
-	err = importCmd(c)
-	assert.NoError(t, err)
-}
+	for _, f := range formats {
+		set = flag.NewFlagSet("", flag.ContinueOnError)
+		set.String(projectFlag.Name, types.TestProjectID, "")
+		set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
+		set.String(fileFlag.Name, fmt.Sprintf("../../../data/%s.json", f), "")
+		set.String(formatFlag.Name, f, "")
 
-func TestTrivyImport(t *testing.T) {
-	set := flag.NewFlagSet("", flag.ContinueOnError)
-	c := cli.NewContext(newTestApp(t), set, nil)
-	err := importCmd(c)
-	assert.Error(t, err)
-
-	set.String(projectFlag.Name, types.TestProjectID, "")
-	set.String(sourceFlag.Name, "us-docker.pkg.dev/project/repo/img@sha256:f6efe...", "")
-	set.String(fileFlag.Name, "../../../data/trivy.json", "")
-	set.String(formatFlag.Name, "snyk", "")
-
-	c = cli.NewContext(newTestApp(t), set, nil)
-	err = importCmd(c)
-	assert.NoError(t, err)
+		c = cli.NewContext(newTestApp(t), set, nil)
+		err = importCmd(c)
+		assert.NoError(t, err)
+	}
 }
 
 func newTestApp(t *testing.T) *cli.App {
