@@ -37,11 +37,14 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.Wrap(err, "error converting source")
 	}
 
+	log.Info().Msgf("Found %d vulnerabilities", len(list))
+
 	if list == nil {
 		return errors.New("expected non-nil result")
 	}
 
 	for noteID, nocc := range list {
+		log.Debug().Msgf("Note: %s, Occurrences: %d", noteID, len(nocc.Occurrences))
 		if err := postNoteOccurrences(ctx, opt.Project, noteID, nocc); err != nil {
 			return errors.Wrap(err, "error posting notes")
 		}
