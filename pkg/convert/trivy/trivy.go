@@ -85,8 +85,7 @@ func convertNote(v *gabs.Container, cve string) *g.Note {
 						Vendor:           v.Search("SeveritySource").Data().(string),
 					},
 				},
-				//TODO: Severity: toSeverity(v.Search("severity").Data().(string)),
-				Severity: g.Severity_CRITICAL,
+				Severity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
 			},
 		},
 	} // end note

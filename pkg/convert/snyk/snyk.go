@@ -48,32 +48,6 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 	return list, nil
 }
 
-func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
-	o := g.Occurrence{
-		ResourceUri: s.URI,
-		NoteName:    "",
-		Details: &g.Occurrence_Vulnerability{
-			Vulnerability: &g.VulnerabilityOccurrence{
-				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
-				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
-					AffectedCpeUri:  makeCPE(v),
-					AffectedPackage: v.Search("packageName").Data().(string),
-					AffectedVersion: &g.Version{
-						Name: v.Search("version").Data().(string),
-						Kind: g.Version_MINIMUM,
-					},
-					FixedCpeUri:  makeCPE(v),                              // TODO: This is same as affected
-					FixedPackage: v.Search("packageName").Data().(string), // TODO: This is same as affected
-					FixedVersion: &g.Version{
-						Name: v.Search("version").Data().(string), // TODO: This is same as affected
-						Kind: g.Version_MINIMUM,
-					},
-				}},
-			}},
-	}
-	return &o
-}
-
 func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	// create note
 	n := g.Note{
@@ -110,8 +84,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 						Vendor:           v.Search("packageManager").Data().(string),
 					},
 				},
-				//TODO: Severity: toSeverity(v.Search("severity").Data().(string)),
-				Severity: g.Severity_CRITICAL,
+				Severity: utils.ToGrafeasSeverity(v.Search("severity").Data().(string)),
 			},
 		},
 	} // end note
@@ -125,6 +98,32 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	}
 
 	return &n
+}
+
+func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
+	o := g.Occurrence{
+		ResourceUri: s.URI,
+		NoteName:    "",
+		Details: &g.Occurrence_Vulnerability{
+			Vulnerability: &g.VulnerabilityOccurrence{
+				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
+				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
+					AffectedCpeUri:  makeCPE(v),
+					AffectedPackage: v.Search("packageName").Data().(string),
+					AffectedVersion: &g.Version{
+						Name: v.Search("version").Data().(string),
+						Kind: g.Version_MINIMUM,
+					},
+					FixedCpeUri:  makeCPE(v),                              // TODO: This is same as affected
+					FixedPackage: v.Search("packageName").Data().(string), // TODO: This is same as affected
+					FixedVersion: &g.Version{
+						Name: v.Search("version").Data().(string), // TODO: This is same as affected
+						Kind: g.Version_MINIMUM,
+					},
+				}},
+			}},
+	}
+	return &o
 }
 
 // makeCPE creates CPE from Snyk data as the OSS CLI does not generate CPEs
