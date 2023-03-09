@@ -12,7 +12,7 @@ import (
 	g "google.golang.org/genproto/googleapis/grafeas/v1"
 )
 
-// Convert converts Snyk JSON to Grafeas Note/Occurrence format.
+// Convert converts Trivy JSON to Grafeas Note/Occurrence format.
 func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrences, error) {
 	if s == nil || s.Data == nil {
 		return nil, errors.New("valid source required")
@@ -29,10 +29,10 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 			cve := v.Search("VulnerabilityID").Data().(string)
 
 			// create note
-			n := convertNote(v, cve)
+			n := convertNote(s, v, cve)
 
 			// don't add notes with no CVSS score
-			if n.GetVulnerability().CvssScore == 0 {
+			if n == nil || n.GetVulnerability().CvssScore == 0 {
 				continue
 			}
 
@@ -50,45 +50,57 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 	return list, nil
 }
 
-func convertNote(v *gabs.Container, cve string) *g.Note {
+func convertNote(s *src.Source, v *gabs.Container, cve string) *g.Note {
+	if v.Search("CVSS", "nvd").Data() == nil {
+		return nil
+	}
+	nvd := v.Search("CVSS", "nvd")
+
 	n := g.Note{
 		Name:             cve,
-		ShortDescription: v.Search("Title").Data().(string),
-		LongDescription:  utils.ToString(v.Search("CVSS", "nvd", "V3Vector").Data()),
+		ShortDescription: cve,
 		RelatedUrl: []*g.RelatedUrl{
+			{
+				Label: "Registry",
+				Url:   s.URI,
+			},
 			{
 				Label: "PrimaryURL",
 				Url:   v.Search("PrimaryURL").Data().(string),
 			},
 		},
-		CreateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data()),
-		UpdateTime: utils.ToGRPCTime(v.Search("LastModifiedDate").Data()),
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
-				CvssScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V2Score").Data()),
-				CvssV3: &g.CVSSv3{
-					BaseScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V3Score").Data()),
-				},
+				// Details in Notes are not populated since we will never see the full list
 				Details: []*g.VulnerabilityNote_Detail{
 					{
-						AffectedCpeUri:  makeCPE(v),
-						AffectedPackage: v.Search("PkgName").Data().(string),
-						AffectedVersionStart: &g.Version{
-							Name:      v.Search("InstalledVersion").Data().(string),
-							Inclusive: true,
-							Kind:      g.Version_MINIMUM,
-						},
-						Description:      v.Search("Description").Data().(string),
-						SeverityName:     v.Search("Severity").Data().(string),
-						Source:           v.Search("SeveritySource").Data().(string),
-						SourceUpdateTime: utils.ToGRPCTime(v.Search("PublishedDate").Data()),
-						Vendor:           v.Search("SeveritySource").Data().(string),
+						AffectedCpeUri:  "N/A",
+						AffectedPackage: "N/A",
 					},
 				},
-				Severity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
+				Severity:         utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
+				SourceUpdateTime: utils.ToGRPCTime(v.Search("LastModifiedDate").Data()),
 			},
 		},
 	} // end note
+
+	// CVSSv2
+	if nvd.Search("V2Vector").Data() != nil {
+		n.LongDescription = nvd.Search("V2Vector").Data().(string)
+		n.GetVulnerability().CvssVersion = g.CVSSVersion_CVSS_VERSION_2
+		n.GetVulnerability().CvssScore = utils.ToFloat32(nvd.Search("V2Score").Data())
+	}
+
+	// CVSSv3, will override v2 values
+	if nvd.Search("V3Vector").Data() != nil {
+		n.LongDescription = nvd.Search("V3Vector").Data().(string)
+		n.GetVulnerability().CvssVersion = g.CVSSVersion_CVSS_VERSION_3
+		n.GetVulnerability().CvssScore = utils.ToFloat32(nvd.Search("V3Score").Data())
+		n.GetVulnerability().CvssV3 = utils.ToCVSSv3(
+			utils.ToFloat32(nvd.Search("V3Score").Data()),
+			nvd.Search("V3Vector").Data().(string),
+		)
+	}
 
 	// References
 	for _, r := range v.Search("References").Children() {
