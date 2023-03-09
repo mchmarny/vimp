@@ -4,8 +4,6 @@
 locals {
   services = [
     "artifactregistry.googleapis.com",
-    "binaryauthorization.googleapis.com",
-    "cloudkms.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "container.googleapis.com",
     "containerregistry.googleapis.com",
