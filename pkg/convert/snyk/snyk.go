@@ -77,10 +77,6 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 			Vulnerability: &g.VulnerabilityNote{
 				CvssVersion: g.CVSSVersion_CVSS_VERSION_3,
 				CvssScore:   utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
-				CvssV3: utils.ToCVSSv3(
-					utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
-					cvss3.Search("cvssV3Vector").Data().(string),
-				),
 				// Details in Notes are not populated since we will never see the full list
 				Details: []*g.VulnerabilityNote_Detail{
 					{
@@ -93,6 +89,14 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 			},
 		},
 	} // end note
+
+	// CVSSv3
+	if cvss3.Search("cvssV3Vector").Data() != nil {
+		n.GetVulnerability().CvssV3 = utils.ToCVSSv3(
+			utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
+			cvss3.Search("cvssV3Vector").Data().(string),
+		)
+	}
 
 	// References
 	for _, r := range v.Search("references").Children() {
