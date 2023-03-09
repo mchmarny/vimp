@@ -11,7 +11,7 @@ steps:
     args: ['--format', 'json', '--output', 'report.json', '${_IMAGE_URI}']
 
   - id: import
-    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@v0.2.4
+    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@sha256:9caf1268d6bb47b2aa76dcb07a9c27da6c80751855c27e0efb2ac7a2f1ac005d
     waitFor:
     - scan
     args: ['import', '--project', '${$PROJECT_ID}', '--source', '${_IMAGE_URI}', '--file', 'report.json', '--format', 'snyk']
