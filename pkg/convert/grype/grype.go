@@ -104,27 +104,29 @@ func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
 func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	// create note
 
-	// relatedVulnerabilities
+	// nvd vulnerability
 	rvList := v.Search("relatedVulnerabilities").Children()
-	if len(rvList) == 0 {
+	var rv *gabs.Container
+	for _, rvNode := range rvList {
+		if rvNode.Search("namespace").Data().(string) == "nvd:cpe" {
+			rv = rvNode
+			break
+		}
+	}
+	if rv == nil {
 		return nil
 	}
-	rv := rvList[0]
 	cve := rv.Search("id").Data().(string)
 
-	// match
-	matchList := v.Search("matchDetails").Children()
-	if len(matchList) == 0 {
-		return nil
-	}
-	match := matchList[0] // TODO: Create a detail per match
-
-	// cvss
+	// cvssv2
 	cvssList := rv.Search("cvss").Children()
-	var cvss2 *gabs.Container
+	var cvss2, cvss3 *gabs.Container
 	for _, cvss := range cvssList {
-		if cvss.Search("version").Data().(string) == "2.0" {
+		switch cvss.Search("version").Data().(string) {
+		case "2.0":
 			cvss2 = cvss
+		case "3.0", "3.1":
+			cvss3 = cvss
 		}
 	}
 	if cvss2 == nil {
@@ -143,23 +145,13 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 		},
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
-				CvssScore: utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
-				CvssV3: &g.CVSSv3{
-					BaseScore: utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
-				},
+				CvssVersion: g.CVSSVersion_CVSS_VERSION_2,
+				CvssScore:   utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
+				// Details in Notes are not populated since we will never see the full list
 				Details: []*g.VulnerabilityNote_Detail{
 					{
-						AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string), // TODO: How do we show a list of CPEs?
-						AffectedPackage: match.Search("searchedBy", "package", "name").String(),
-						AffectedVersionStart: &g.Version{
-							Name:      match.Search("searchedBy", "package", "version").String(),
-							Inclusive: true,
-							Kind:      g.Version_MINIMUM,
-						},
-						Description:  rv.Search("description").Data().(string),
-						SeverityName: rv.Search("severity").Data().(string),
-						Source:       rv.Search("namespace").Data().(string),
-						Vendor:       match.Search("searchedBy", "distro", "type").String(),
+						AffectedCpeUri:  "N/A",
+						AffectedPackage: "N/A",
 					},
 				},
 				Severity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
@@ -167,11 +159,19 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 		},
 	} // end note
 
+	// CVSSv3
+	if cvss3 != nil {
+		n.GetVulnerability().CvssV3 = utils.ToCVSSv3(
+			utils.ToFloat32(cvss3.Search("metrics", "baseScore").Data()),
+			cvss3.Search("vector").Data().(string),
+		)
+	}
+
 	// References
-	for _, r := range v.Search("references").Children() {
+	for _, r := range rv.Search("urls").Children() {
 		n.RelatedUrl = append(n.RelatedUrl, &g.RelatedUrl{
-			Url:   r.Search("url").Data().(string),
-			Label: r.Search("title").Data().(string),
+			Url:   r.Data().(string),
+			Label: "Url",
 		})
 	}
 

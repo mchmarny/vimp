@@ -73,6 +73,14 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 
 	p := fmt.Sprintf("projects/%s", projectID)
 
+	/*
+		// TODO: Remove: debug code
+		dr := &g.DeleteNoteRequest{
+			Name: fmt.Sprintf("%s/notes/%s", p, noteID),
+		}
+		c.GetGrafeasClient().DeleteNote(ctx, dr)
+	*/
+
 	// Create Note
 	req := &g.CreateNoteRequest{
 		Parent: p,

@@ -31,7 +31,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 		n := convertNote(s, v)
 
 		// don't add notes with no CVSS score
-		if n.GetVulnerability().CvssScore == 0 {
+		if n == nil || n.GetVulnerability().CvssScore == 0 {
 			continue
 		}
 
@@ -49,10 +49,23 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 }
 
 func convertNote(s *src.Source, v *gabs.Container) *g.Note {
+	cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
+
+	// Get cvss3 details from NVD
+	var cvss3 *gabs.Container
+	for _, detail := range v.Search("cvssDetails").Children() {
+		if utils.ToString(detail.Search("assigner").Data()) == "NVD" {
+			cvss3 = detail
+		}
+	}
+	if cvss3 == nil {
+		return nil
+	}
+
 	// create note
 	n := g.Note{
-		Name:             v.Search("identifiers", "CVE").Index(0).Data().(string),
-		ShortDescription: v.Search("title").Data().(string),
+		Name:             cve,
+		ShortDescription: cve,
 		LongDescription:  utils.ToString(v.Search("CVSSv3").Data()),
 		RelatedUrl: []*g.RelatedUrl{
 			{
@@ -60,31 +73,23 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 				Url:   s.URI,
 			},
 		},
-		CreateTime: utils.ToGRPCTime(v.Search("creationTime").Data()),
-		UpdateTime: utils.ToGRPCTime(v.Search("modificationTime").Data()),
 		Type: &g.Note_Vulnerability{
 			Vulnerability: &g.VulnerabilityNote{
-				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
-				CvssV3: &g.CVSSv3{
-					BaseScore: utils.ToFloat32(v.Search("cvssScore").Data()),
-				},
+				CvssVersion: g.CVSSVersion_CVSS_VERSION_3,
+				CvssScore:   utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
+				CvssV3: utils.ToCVSSv3(
+					utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
+					cvss3.Search("cvssV3Vector").Data().(string),
+				),
+				// Details in Notes are not populated since we will never see the full list
 				Details: []*g.VulnerabilityNote_Detail{
 					{
-						AffectedCpeUri:  makeCPE(v),
-						AffectedPackage: v.Search("packageName").Data().(string),
-						AffectedVersionStart: &g.Version{
-							Name:      v.Search("version").Data().(string),
-							Inclusive: true,
-							Kind:      g.Version_MINIMUM,
-						},
-						Description:      v.Search("name").Data().(string),
-						SeverityName:     v.Search("severity").Data().(string),
-						Source:           v.Search("id").Data().(string),
-						SourceUpdateTime: utils.ToGRPCTime(v.Search("disclosureTime").Data()),
-						Vendor:           v.Search("packageManager").Data().(string),
+						AffectedCpeUri:  "N/A",
+						AffectedPackage: "N/A",
 					},
 				},
-				Severity: utils.ToGrafeasSeverity(v.Search("severity").Data().(string)),
+				Severity:         utils.ToGrafeasSeverity(v.Search("nvdSeverity").Data().(string)),
+				SourceUpdateTime: utils.ToGRPCTime(cvss3.Search("modificationTime").Data()),
 			},
 		},
 	} // end note
