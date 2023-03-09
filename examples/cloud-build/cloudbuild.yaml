@@ -3,13 +3,16 @@ substitutions:
 
 steps:
 
+  # - id: build
   # Build the container image and capture the image digest.
-  # For purposes of this demo, we're using a pre-built image.
+  # For purposes of this demo, this example is using a pre-built image.
 
   - id: scan
-    name: 'gcr.io/$PROJECT_ID/trivy'
-    args: ['--format', 'json', '--output', 'report.json', '${_IMAGE_URI}']
+    name: anchore/grype
+    args: ['--add-cpes-if-none', '-s', 'AllLayers', '-o', 'json', '--file', 'report.json', '${_IMAGE_URI}']
 
+  # The Dockerfile used to generate this image is located in the vulctl repo.
+  # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
   - id: import
     name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@sha256:9caf1268d6bb47b2aa76dcb07a9c27da6c80751855c27e0efb2ac7a2f1ac005d
     waitFor:
