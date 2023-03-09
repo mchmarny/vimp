@@ -1,0 +1,24 @@
+substitutions:
+  _IMAGE_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo@sha256:666b0f0498092184d635ac8fc53e30586f7bb8895e7ed8afba60632398c1af74
+
+steps:
+
+  # Build the container image and capture the image digest.
+  # For purposes of this demo, we're using a pre-built image.
+
+  - id: scan
+    name: 'gcr.io/$PROJECT_ID/trivy'
+    args: ['--format', 'json', '--output', 'report.json', '${_IMAGE_URI}']
+
+  - id: import
+    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@v0.2.4
+    waitFor:
+    - scan
+    args: ['import', '--project', '${$PROJECT_ID}', '--source', '${_IMAGE_URI}', '--file', 'report.json', '--format', 'snyk']
+
+
+options:
+  requestedVerifyOption: VERIFIED
+
+tags:
+- demo
