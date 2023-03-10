@@ -15,6 +15,7 @@ jobs:
       PROVIDER_ID: projects/689738033528/locations/global/workloadIdentityPools/vulctl-github-pool/providers/github-provider
       REG_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl
       SA_EMAIL: vulctl-github-actions-user@cloudy-build.iam.gserviceaccount.com
+      PROJECT_ID: cloudy-build
 
       # Defaults
       BUILDER_VERSION: v1.4.0
@@ -34,6 +35,7 @@ jobs:
       provider_id: ${{ steps.conf.outputs.provider_id }}
       registry_uri: ${{ steps.conf.outputs.registry_uri }}
       service_account: ${{ steps.conf.outputs.service_account }}
+      project_id: ${{ steps.conf.outputs.project_id }}
     steps:
 
     - name: Export Config
@@ -47,6 +49,7 @@ jobs:
         echo "provider_id=${{ env.PROVIDER_ID }}" >> $GITHUB_OUTPUT
         echo "registry_uri=${{ env.REG_URI }}" >> $GITHUB_OUTPUT
         echo "service_account=${{ env.SA_EMAIL }}" >> $GITHUB_OUTPUT
+        echo "project_id=${{ env.PROJECT_ID }}" >> $GITHUB_OUTPUT
 
   test:
     needs:
@@ -107,3 +110,18 @@ jobs:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
       image_digest: ${{ needs.image.outputs.digest }}
+
+  import:
+    needs:
+    - conf
+    - image
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    uses: ./.github/workflows/import.yaml
+    with:
+      auth_provider: ${{ needs.conf.outputs.provider_id }}
+      auth_user: ${{ needs.conf.outputs.service_account }}
+      image_digest: ${{ needs.image.outputs.digest }}
+      target_project: ${{ needs.conf.outputs.project_id }}
