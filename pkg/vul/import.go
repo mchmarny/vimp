@@ -122,6 +122,7 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 }
 
 // deleteNoteOccurrences deletes notes and occurrences. Used for debugging.
+// nolint:unused
 func deleteNoteOccurrences(ctx context.Context, opt *types.ImportOptions, list map[string]types.NoteOccurrences) error {
 	c, err := ca.NewClient(ctx)
 	if err != nil {
@@ -138,7 +139,7 @@ func deleteNoteOccurrences(ctx context.Context, opt *types.ImportOptions, list m
 		dr := &g.DeleteNoteRequest{
 			Name: noteName,
 		}
-		c.GetGrafeasClient().DeleteNote(ctx, dr)
+		_ = c.GetGrafeasClient().DeleteNote(ctx, dr)
 	}
 
 	// Delete Occurrences
@@ -150,7 +151,7 @@ func deleteNoteOccurrences(ctx context.Context, opt *types.ImportOptions, list m
 	it := c.GetGrafeasClient().ListOccurrences(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
+		if errors.Is(err, iterator.Done) {
 			break
 		}
 		if err != nil {
@@ -160,7 +161,7 @@ func deleteNoteOccurrences(ctx context.Context, opt *types.ImportOptions, list m
 		dr := &g.DeleteOccurrenceRequest{
 			Name: resp.Name,
 		}
-		c.GetGrafeasClient().DeleteOccurrence(ctx, dr)
+		_ = c.GetGrafeasClient().DeleteOccurrence(ctx, dr)
 	}
 
 	return nil
