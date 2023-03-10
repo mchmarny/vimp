@@ -17,10 +17,10 @@ none
 
 Below example, shows how to import vulnerabilities from previously generated report.
 
-> Make sure to use the latest tag release (e.g. `v0.2.10`)
+> Make sure to use the latest tag release (e.g. `v0.2.14`)
 
 ```yaml
-uses: mchmarny/vulctl@v0.2.10
+uses: mchmarny/vulctl@v0.2.14
 with:
   project: ${{ env.PROJECT_ID }}
   digest: ${{ steps.build.outputs.digest }}
