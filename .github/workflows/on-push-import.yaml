@@ -1,0 +1,49 @@
+name: push-import
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_DIGEST: us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo:demo
+  PROVIDER_ID: projects/689738033528/locations/global/workloadIdentityPools/vulctl-github-pool/providers/github-provider
+  SA_EMAIL: vulctl-github-actions-user@cloudy-build.iam.gserviceaccount.com
+  PROJECT_ID: cloudy-build
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      id-token: write
+    steps:
+
+    - id: auth
+      name: Auth GCP
+      uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
+      with:
+        token_format: "access_token"
+        workload_identity_provider: ${{ env.PROVIDER_ID }}
+        service_account: ${{ env.SA_EMAIL }}
+
+    - id: scan
+      name: Vulnerability Scan
+      uses: anchore/scan-action@v3
+      with:
+        image: ${{ env.IMAGE_DIGEST }}
+        registry-username: oauth2accesstoken
+        registry-password: ${{ steps.auth.outputs.access_token }}
+        output-format: json
+
+    - uses: actions/vulctl@main
+      with:
+        project: ${{ env.PROJECT_ID }}
+        digest: ${{ env.IMAGE_DIGEST }}
+        file: ${{ steps.scan.outputs.json }}
+        format: grype

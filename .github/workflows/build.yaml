@@ -49,6 +49,7 @@ jobs:
         set -euo pipefail
         echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
         echo "CURRENT_DATE=$(date '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+        echo "RELEASE_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
 
     - id: auth
       name: Auth GCP
@@ -66,7 +67,8 @@ jobs:
           ${{ inputs.image_repo }}/${{ inputs.image_name }}
         tags: |
           type=raw,enable=true,value=${{ env.RELEASE_VERSION }}
-          type=raw,enable=true,value=${{ env.GITHUB_SHA }}
+          type=raw,enable=true,value=${{ env.RELEASE_COMMIT }}
+          type=raw,enable=true,value=latest
 
     - name: Registry Auth
       uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
@@ -84,7 +86,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           VERSION=${{ env.RELEASE_VERSION }}
-          COMMIT=${{ env.GITHUB_SHA }}
+          COMMIT=${{ env.RELEASE_COMMIT }}
           DATE=${{ env.CURRENT_DATE }}
 
     - name: Export Digest
