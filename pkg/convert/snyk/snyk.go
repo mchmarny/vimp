@@ -40,7 +40,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 			list[cve] = types.NoteOccurrences{Note: n}
 		}
 		nocc := list[cve]
-		occ := convertOccurrence(s, v)
+		occ := convertOccurrence(s, v, n.Name)
 		nocc.Occurrences = append(nocc.Occurrences, occ)
 		list[cve] = nocc
 	}
@@ -109,13 +109,36 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	return &n
 }
 
-func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
+func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occurrence {
+	cve := v.Search("identifiers", "CVE").Index(0).Data().(string)
+
+	// Get cvss3 details from NVD
+	var cvss3 *gabs.Container
+	for _, detail := range v.Search("cvssDetails").Children() {
+		if utils.ToString(detail.Search("assigner").Data()) == "NVD" {
+			cvss3 = detail
+		}
+	}
+	if cvss3 == nil {
+		return nil
+	}
+
+	// Create Occurrence
 	o := g.Occurrence{
 		ResourceUri: s.URI,
-		NoteName:    "",
+		NoteName:    noteName,
 		Details: &g.Occurrence_Vulnerability{
 			Vulnerability: &g.VulnerabilityOccurrence{
-				CvssScore: utils.ToFloat32(v.Search("cvssScore").Data()),
+				ShortDescription: cve,
+				LongDescription:  utils.ToString(v.Search("CVSSv3").Data()),
+				RelatedUrls: []*g.RelatedUrl{
+					{
+						Label: "Registry",
+						Url:   s.URI,
+					},
+				},
+				CvssVersion: g.CVSSVersion_CVSS_VERSION_3,
+				CvssScore:   utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
 					AffectedCpeUri:  makeCPE(v),
 					AffectedPackage: v.Search("packageName").Data().(string),
@@ -130,8 +153,28 @@ func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
 						Kind: g.Version_MINIMUM,
 					},
 				}},
+				Severity: utils.ToGrafeasSeverity(v.Search("nvdSeverity").Data().(string)),
+				// TODO: What is the difference between severity and effective severity?
+				EffectiveSeverity: utils.ToGrafeasSeverity(v.Search("nvdSeverity").Data().(string)),
 			}},
 	}
+
+	// CVSSv3
+	if cvss3.Search("cvssV3Vector").Data() != nil {
+		o.GetVulnerability().Cvssv3 = utils.ToCVSS(
+			utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
+			cvss3.Search("cvssV3Vector").Data().(string),
+		)
+	}
+
+	// References
+	for _, r := range v.Search("references").Children() {
+		o.GetVulnerability().RelatedUrls = append(o.GetVulnerability().RelatedUrls, &g.RelatedUrl{
+			Url:   r.Search("url").Data().(string),
+			Label: r.Search("title").Data().(string),
+		})
+	}
+
 	return &o
 }
 
