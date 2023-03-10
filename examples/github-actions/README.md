@@ -15,13 +15,17 @@ none
 
 ## usage
 
+Below example, shows how to import vulnerabilities from previously generated report.
+
+> Make sure to use the latest tag release (e.g. `v0.2.10`)
+
 ```yaml
-uses: actions/vulctl@main
+uses: mchmarny/vulctl@v0.2.10
 with:
-  project: cloudy-demo
-  digest: ${{ env.IMAGE_DIGEST }}
-  file: report.json
-  format: snyk
+  project: ${{ env.PROJECT_ID }}
+  digest: ${{ steps.build.outputs.digest }}
+  file: ${{ steps.scan.outputs.output }}
+  format: ${{ steps.scan.outputs.format }}
 ```
 
-> Fully working example can be found in [.github/workflows/on-push-import.yaml](../../.github/workflows/on-push-import.yaml).
+> Fully working example can be found in [.github/workflows/import.yaml](../../.github/workflows/import.yaml).
