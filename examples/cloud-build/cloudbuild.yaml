@@ -1,5 +1,5 @@
 substitutions:
-  _IMAGE_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo@sha256:666b0f0498092184d635ac8fc53e30586f7bb8895e7ed8afba60632398c1af74
+  _IMAGE_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo:demo
 
 steps:
 
@@ -14,14 +14,7 @@ steps:
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
   - id: import
-    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@sha256:b7a5357e60ec723159004d54d6973673d6a0125b0c5ebfa7005a82a3ad3116ce
+    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl
     waitFor:
     - scan
     args: ['import', '--project', '$PROJECT_ID', '--source', '${_IMAGE_URI}', '--file', 'report.json', '--format', 'grype']
-
-
-options:
-  requestedVerifyOption: VERIFIED
-
-tags:
-- demo
