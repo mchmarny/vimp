@@ -63,9 +63,17 @@ build: tidy ## Builds CLI binary
 .PHONY: image
 image: ## Builds the docker image
 	docker build \
+		-f examples/github-actions/Dockerfile \
 		--build-arg VERSION=$(RELEASE_VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg DATE=$(CURRENT_DATE) \
+		-t vulctl:$(RELEASE_VERSION) \
+		.
+
+.PHONY: example
+example: ## Builds the docker image from example
+	docker build \
+		-f examples/github-actions/Dockerfile \
 		-t vulctl:$(RELEASE_VERSION) \
 		.
 

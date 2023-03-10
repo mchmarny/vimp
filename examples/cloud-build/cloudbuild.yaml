@@ -1,0 +1,20 @@
+substitutions:
+  _IMAGE_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo:demo
+
+steps:
+
+  # - id: build
+  # Build the container image and capture the image digest.
+  # For purposes of this demo, this example is using a pre-built image.
+
+  - id: scan
+    name: anchore/grype
+    args: ['--add-cpes-if-none', '-s', 'AllLayers', '-o', 'json', '--file', 'report.json', '${_IMAGE_URI}']
+
+  # The Dockerfile used to generate this image is located in the vulctl repo.
+  # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
+  - id: import
+    name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl
+    waitFor:
+    - scan
+    args: ['import', '--project', '$PROJECT_ID', '--source', '${_IMAGE_URI}', '--file', 'report.json', '--format', 'grype']
