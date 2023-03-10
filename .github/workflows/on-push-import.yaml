@@ -15,6 +15,7 @@ env:
   PROVIDER_ID: projects/689738033528/locations/global/workloadIdentityPools/vulctl-github-pool/providers/github-provider
   SA_EMAIL: vulctl-github-actions-user@cloudy-build.iam.gserviceaccount.com
   PROJECT_ID: cloudy-build
+  REPORT_PATH: report.json
 
 jobs:
   import:
@@ -35,17 +36,28 @@ jobs:
         workload_identity_provider: ${{ env.PROVIDER_ID }}
         service_account: ${{ env.SA_EMAIL }}
 
+    # - id: scan
+    #   name: Vulnerability Scan
+    #   uses: anchore/scan-action@v3
+    #   with:
+    #     image: ${{ env.IMAGE_DIGEST }}
+    #     output-format: json
+    #     fail-build: false
+
     - id: scan
       name: Vulnerability Scan
-      uses: anchore/scan-action@v3
+      uses: aquasecurity/trivy-action@v0.9.2
       with:
-        image: ${{ env.IMAGE_DIGEST }}
-        fail-build: false
-        output-format: json
+        image-ref: ${{ env.IMAGE_DIGEST }}
+        scanners: vuln
+        format: json
+        output: ${{ env.REPORT_PATH }}
+        timeout: 5m
+        hide-progress: true
 
     - uses: mchmarny/vulctl@main
       with:
         project: ${{ env.PROJECT_ID }}
         digest: ${{ env.IMAGE_DIGEST }}
-        file: ${{ steps.scan.outputs.json }}
-        format: grype
+        file: ${{ env.REPORT_PATH }}
+        format: trivy
