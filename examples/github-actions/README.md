@@ -9,11 +9,11 @@ In addition to being used as a CLI, `vulctl` can also be used as a builder.
 * `file` - (required) Path to the vulnerability file
 * `format` - (required) Format of the vulnerability file
 
-## Outputs
+## outputs
 
 none
 
-## Example usage
+## usage
 
 ```yaml
 uses: actions/vulctl@main
@@ -23,3 +23,5 @@ with:
   file: report.json
   format: snyk
 ```
+
+> Fully working example can be found in [.github/workflows/on-push-import.yaml](../../.github/workflows/on-push-import.yaml).
