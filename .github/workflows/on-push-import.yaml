@@ -36,14 +36,6 @@ jobs:
         workload_identity_provider: ${{ env.PROVIDER_ID }}
         service_account: ${{ env.SA_EMAIL }}
 
-    # - id: scan
-    #   name: Vulnerability Scan
-    #   uses: anchore/scan-action@v3
-    #   with:
-    #     image: ${{ env.IMAGE_DIGEST }}
-    #     output-format: json
-    #     fail-build: false
-
     - id: scan
       name: Vulnerability Scan
       uses: aquasecurity/trivy-action@master
