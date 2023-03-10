@@ -9,6 +9,9 @@ inputs:
   digest:
     description: 'Image digest'
     required: true
+  file:
+    description: 'Path to the vulnerability file'
+    required: true
   format:
     description: 'Format of the vulnerability file'
     required: true
@@ -17,6 +20,12 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
+    - import
+    - --project
     - ${{ inputs.project }}
+    - --source
     - ${{ inputs.digest }}
+    - --file
+    - ${{ inputs.file }}
+    - --format
     - ${{ inputs.format }}
