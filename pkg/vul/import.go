@@ -10,6 +10,7 @@ import (
 	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/api/iterator"
 	g "google.golang.org/genproto/googleapis/grafeas/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -36,6 +37,9 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 	if err != nil {
 		return errors.Wrap(err, "error converting source")
 	}
+
+	// TODO: Debug code
+	//deleteNoteOccurrences(ctx, opt, list)
 
 	log.Info().Msgf("Found %d vulnerabilities", len(list))
 
@@ -72,14 +76,6 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 	defer c.Close()
 
 	p := fmt.Sprintf("projects/%s", projectID)
-
-	/*
-		// TODO: Remove: debug code
-		dr := &g.DeleteNoteRequest{
-			Name: fmt.Sprintf("%s/notes/%s", p, noteID),
-		}
-		c.GetGrafeasClient().DeleteNote(ctx, dr)
-	*/
 
 	// Create Note
 	req := &g.CreateNoteRequest{
@@ -120,6 +116,51 @@ func postNoteOccurrences(ctx context.Context, projectID string, noteID string, n
 		} else {
 			log.Info().Msgf("Created: %s", occ.Name)
 		}
+	}
+
+	return nil
+}
+
+// deleteNoteOccurrences deletes notes and occurrences. Used for debugging.
+func deleteNoteOccurrences(ctx context.Context, opt *types.ImportOptions, list map[string]types.NoteOccurrences) error {
+	c, err := ca.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "error creating client")
+	}
+	defer c.Close()
+
+	p := fmt.Sprintf("projects/%s", opt.Project)
+
+	// Delete Notes
+	for noteID := range list {
+		noteName := fmt.Sprintf("%s/notes/%s", p, noteID)
+
+		dr := &g.DeleteNoteRequest{
+			Name: noteName,
+		}
+		c.GetGrafeasClient().DeleteNote(ctx, dr)
+	}
+
+	// Delete Occurrences
+	req := &g.ListOccurrencesRequest{
+		Parent:   p,
+		Filter:   fmt.Sprintf("resource_url=\"%s\"", opt.Source),
+		PageSize: 1000,
+	}
+	it := c.GetGrafeasClient().ListOccurrences(ctx, req)
+	for {
+		resp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		dr := &g.DeleteOccurrenceRequest{
+			Name: resp.Name,
+		}
+		c.GetGrafeasClient().DeleteOccurrence(ctx, dr)
 	}
 
 	return nil
