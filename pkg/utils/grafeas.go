@@ -41,6 +41,20 @@ func toCVSSv3AttackVector(v string) g.CVSSv3_AttackVector {
 	return g.CVSSv3_ATTACK_VECTOR_UNSPECIFIED
 }
 
+func toCVSSAttackVector(v string) g.CVSS_AttackVector {
+	switch v {
+	case "N":
+		return g.CVSS_ATTACK_VECTOR_NETWORK
+	case "A":
+		return g.CVSS_ATTACK_VECTOR_ADJACENT
+	case "L":
+		return g.CVSS_ATTACK_VECTOR_LOCAL
+	case "P":
+		return g.CVSS_ATTACK_VECTOR_PHYSICAL
+	}
+	return g.CVSS_ATTACK_VECTOR_UNSPECIFIED
+}
+
 func toCVSSv3AttackComplexity(v string) g.CVSSv3_AttackComplexity {
 	switch v {
 	case "L":
@@ -49,6 +63,16 @@ func toCVSSv3AttackComplexity(v string) g.CVSSv3_AttackComplexity {
 		return g.CVSSv3_ATTACK_COMPLEXITY_HIGH
 	}
 	return g.CVSSv3_ATTACK_COMPLEXITY_UNSPECIFIED
+}
+
+func toCVSSAttackComplexity(v string) g.CVSS_AttackComplexity {
+	switch v {
+	case "L":
+		return g.CVSS_ATTACK_COMPLEXITY_LOW
+	case "H":
+		return g.CVSS_ATTACK_COMPLEXITY_HIGH
+	}
+	return g.CVSS_ATTACK_COMPLEXITY_UNSPECIFIED
 }
 
 func toCVSSv3PrivilegesRequired(v string) g.CVSSv3_PrivilegesRequired {
@@ -63,6 +87,18 @@ func toCVSSv3PrivilegesRequired(v string) g.CVSSv3_PrivilegesRequired {
 	return g.CVSSv3_PRIVILEGES_REQUIRED_UNSPECIFIED
 }
 
+func toCVSSPrivilegesRequired(v string) g.CVSS_PrivilegesRequired {
+	switch v {
+	case "L":
+		return g.CVSS_PRIVILEGES_REQUIRED_LOW
+	case "H":
+		return g.CVSS_PRIVILEGES_REQUIRED_HIGH
+	case "N":
+		return g.CVSS_PRIVILEGES_REQUIRED_NONE
+	}
+	return g.CVSS_PRIVILEGES_REQUIRED_UNSPECIFIED
+}
+
 func toCVSSv3UserInteraction(v string) g.CVSSv3_UserInteraction {
 	switch v {
 	case "N":
@@ -73,7 +109,17 @@ func toCVSSv3UserInteraction(v string) g.CVSSv3_UserInteraction {
 	return g.CVSSv3_USER_INTERACTION_UNSPECIFIED
 }
 
-func toCVSSv3S(v string) g.CVSSv3_Scope {
+func toCVSSUserInteraction(v string) g.CVSS_UserInteraction {
+	switch v {
+	case "N":
+		return g.CVSS_USER_INTERACTION_NONE
+	case "R":
+		return g.CVSS_USER_INTERACTION_REQUIRED
+	}
+	return g.CVSS_USER_INTERACTION_UNSPECIFIED
+}
+
+func toCVSSv3Scope(v string) g.CVSSv3_Scope {
 	switch v {
 	case "U":
 		return g.CVSSv3_SCOPE_UNCHANGED
@@ -81,6 +127,16 @@ func toCVSSv3S(v string) g.CVSSv3_Scope {
 		return g.CVSSv3_SCOPE_CHANGED
 	}
 	return g.CVSSv3_SCOPE_UNSPECIFIED
+}
+
+func toCVSSScope(v string) g.CVSS_Scope {
+	switch v {
+	case "U":
+		return g.CVSS_SCOPE_UNCHANGED
+	case "C":
+		return g.CVSS_SCOPE_CHANGED
+	}
+	return g.CVSS_SCOPE_UNSPECIFIED
 }
 
 func toCVSSv3Impact(v string) g.CVSSv3_Impact {
@@ -93,6 +149,18 @@ func toCVSSv3Impact(v string) g.CVSSv3_Impact {
 		return g.CVSSv3_IMPACT_NONE
 	}
 	return g.CVSSv3_IMPACT_UNSPECIFIED
+}
+
+func toCVSSImpact(v string) g.CVSS_Impact {
+	switch v {
+	case "H":
+		return g.CVSS_IMPACT_HIGH
+	case "L":
+		return g.CVSS_IMPACT_LOW
+	case "N":
+		return g.CVSS_IMPACT_NONE
+	}
+	return g.CVSS_IMPACT_UNSPECIFIED
 }
 
 func ToCVSSv3(baseScore float32, vector string) *g.CVSSv3 {
@@ -116,13 +184,47 @@ func ToCVSSv3(baseScore float32, vector string) *g.CVSSv3 {
 		case "UI":
 			c.UserInteraction = toCVSSv3UserInteraction(tokens[1])
 		case "S":
-			c.Scope = toCVSSv3S(tokens[1])
+			c.Scope = toCVSSv3Scope(tokens[1])
 		case "C":
 			c.ConfidentialityImpact = toCVSSv3Impact(tokens[1])
 		case "I":
 			c.IntegrityImpact = toCVSSv3Impact(tokens[1])
 		case "A":
 			c.AvailabilityImpact = toCVSSv3Impact(tokens[1])
+		}
+	}
+
+	return &c
+}
+
+func ToCVSS(baseScore float32, vector string) *g.CVSS {
+	c := g.CVSS{
+		BaseScore: baseScore,
+	}
+
+	for _, v := range strings.Split(vector, "/") {
+		tokens := strings.Split(v, ":")
+		if len(tokens) != 2 {
+			continue
+		}
+
+		switch tokens[0] {
+		case "AV":
+			c.AttackVector = toCVSSAttackVector(tokens[1])
+		case "AC":
+			c.AttackComplexity = toCVSSAttackComplexity(tokens[1])
+		case "PR":
+			c.PrivilegesRequired = toCVSSPrivilegesRequired(tokens[1])
+		case "UI":
+			c.UserInteraction = toCVSSUserInteraction(tokens[1])
+		case "S":
+			c.Scope = toCVSSScope(tokens[1])
+		case "C":
+			c.ConfidentialityImpact = toCVSSImpact(tokens[1])
+		case "I":
+			c.IntegrityImpact = toCVSSImpact(tokens[1])
+		case "A":
+			c.AvailabilityImpact = toCVSSImpact(tokens[1])
 		}
 	}
 

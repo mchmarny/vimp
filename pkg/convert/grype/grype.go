@@ -39,7 +39,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 			list[cve] = types.NoteOccurrences{Note: n}
 		}
 		nocc := list[cve]
-		occ := convertOccurrence(s, v)
+		occ := convertOccurrence(s, v, n.Name)
 		if occ != nil {
 			nocc.Occurrences = append(nocc.Occurrences, occ)
 		}
@@ -49,60 +49,13 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 	return list, nil
 }
 
-func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
-	// relatedVulnerabilities
-	rvList := v.Search("relatedVulnerabilities").Children()
-	if len(rvList) == 0 {
-		return nil
-	}
-	rv := rvList[0]
-
+func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occurrence {
 	// match
 	matchList := v.Search("matchDetails").Children()
 	if len(matchList) == 0 {
 		return nil
 	}
 	match := matchList[0] // TODO: Create a detail per match
-
-	// cvss
-	cvssList := rv.Search("cvss").Children()
-	var cvss2 *gabs.Container
-	for _, cvss := range cvssList {
-		if cvss.Search("version").Data().(string) == "2.0" {
-			cvss2 = cvss
-		}
-	}
-	if cvss2 == nil {
-		return nil
-	}
-
-	o := g.Occurrence{
-		ResourceUri: s.URI,
-		NoteName:    "",
-		Details: &g.Occurrence_Vulnerability{
-			Vulnerability: &g.VulnerabilityOccurrence{
-				CvssScore: utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
-				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
-					AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
-					AffectedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: Need to handle case where a node in the chain is nil. Use Data().(string) instead
-					AffectedVersion: &g.Version{
-						Name: match.Search("searchedBy", "package", "version").String(),
-						Kind: g.Version_MINIMUM,
-					},
-					FixedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),     // TODO: This is same as affected
-					FixedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
-					FixedVersion: &g.Version{
-						Name: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
-						Kind: g.Version_MINIMUM,
-					},
-				}},
-			}},
-	}
-	return &o
-}
-
-func convertNote(s *src.Source, v *gabs.Container) *g.Note {
-	// create note
 
 	// nvd vulnerability
 	rvList := v.Search("relatedVulnerabilities").Children()
@@ -133,6 +86,91 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 		return nil
 	}
 
+	// Create Occurrence
+	o := g.Occurrence{
+		ResourceUri: s.URI,
+		NoteName:    noteName,
+		Details: &g.Occurrence_Vulnerability{
+			Vulnerability: &g.VulnerabilityOccurrence{
+				ShortDescription: cve,
+				LongDescription:  rv.Search("description").Data().(string),
+				RelatedUrls: []*g.RelatedUrl{
+					{
+						Label: "Registry",
+						Url:   s.URI,
+					},
+				},
+				CvssVersion: g.CVSSVersion_CVSS_VERSION_2,
+				CvssScore:   utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
+				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
+					AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
+					AffectedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: Need to handle case where a node in the chain is nil. Use Data().(string) instead
+					AffectedVersion: &g.Version{
+						Name: match.Search("searchedBy", "package", "version").String(),
+						Kind: g.Version_MINIMUM,
+					},
+					FixedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),     // TODO: This is same as affected
+					FixedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
+					FixedVersion: &g.Version{
+						Name: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
+						Kind: g.Version_MINIMUM,
+					},
+				}},
+				Severity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
+				// TODO: What is the difference between severity and effective severity?
+				EffectiveSeverity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
+			}},
+	}
+
+	// CVSSv3
+	if cvss3 != nil {
+		o.GetVulnerability().Cvssv3 = utils.ToCVSS(
+			utils.ToFloat32(cvss3.Search("metrics", "baseScore").Data()),
+			cvss3.Search("vector").Data().(string),
+		)
+	}
+
+	// References
+	for _, r := range rv.Search("urls").Children() {
+		o.GetVulnerability().RelatedUrls = append(o.GetVulnerability().RelatedUrls, &g.RelatedUrl{
+			Url:   r.Data().(string),
+			Label: "Url",
+		})
+	}
+	return &o
+}
+
+func convertNote(s *src.Source, v *gabs.Container) *g.Note {
+	// nvd vulnerability
+	rvList := v.Search("relatedVulnerabilities").Children()
+	var rv *gabs.Container
+	for _, rvNode := range rvList {
+		if rvNode.Search("namespace").Data().(string) == "nvd:cpe" {
+			rv = rvNode
+			break
+		}
+	}
+	if rv == nil {
+		return nil
+	}
+	cve := rv.Search("id").Data().(string)
+
+	// cvssv2
+	cvssList := rv.Search("cvss").Children()
+	var cvss2, cvss3 *gabs.Container
+	for _, cvss := range cvssList {
+		switch cvss.Search("version").Data().(string) {
+		case "2.0":
+			cvss2 = cvss
+		case "3.0", "3.1":
+			cvss3 = cvss
+		}
+	}
+	if cvss2 == nil {
+		return nil
+	}
+
+	// create note
 	n := g.Note{
 		Name:             cve,
 		ShortDescription: cve,

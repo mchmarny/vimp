@@ -41,7 +41,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 				list[cve] = types.NoteOccurrences{Note: n}
 			}
 			nocc := list[cve]
-			occ := convertOccurrence(s, v)
+			occ := convertOccurrence(s, v, cve, n.Name)
 			nocc.Occurrences = append(nocc.Occurrences, occ)
 			list[cve] = nocc
 		}
@@ -113,12 +113,29 @@ func convertNote(s *src.Source, v *gabs.Container, cve string) *g.Note {
 	return &n
 }
 
-func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
+func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName string) *g.Occurrence {
+	if v.Search("CVSS", "nvd").Data() == nil {
+		return nil
+	}
+	nvd := v.Search("CVSS", "nvd")
+
+	// Create Occurrence
 	o := g.Occurrence{
 		ResourceUri: s.URI,
-		NoteName:    "",
+		NoteName:    noteName,
 		Details: &g.Occurrence_Vulnerability{
 			Vulnerability: &g.VulnerabilityOccurrence{
+				ShortDescription: cve,
+				RelatedUrls: []*g.RelatedUrl{
+					{
+						Label: "Registry",
+						Url:   s.URI,
+					},
+					{
+						Label: "PrimaryURL",
+						Url:   v.Search("PrimaryURL").Data().(string),
+					},
+				},
 				CvssScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V2Score").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
 					AffectedCpeUri:  makeCPE(v),
@@ -134,8 +151,38 @@ func convertOccurrence(s *src.Source, v *gabs.Container) *g.Occurrence {
 						Kind: g.Version_MINIMUM,
 					},
 				}},
+				Severity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
+				// TODO: What is the difference between severity and effective severity?
+				EffectiveSeverity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
 			}},
 	}
+
+	// CVSSv2
+	if nvd.Search("V2Vector").Data() != nil {
+		o.GetVulnerability().LongDescription = nvd.Search("V2Vector").Data().(string)
+		o.GetVulnerability().CvssVersion = g.CVSSVersion_CVSS_VERSION_2
+		o.GetVulnerability().CvssScore = utils.ToFloat32(nvd.Search("V2Score").Data())
+	}
+
+	// CVSSv3, will override v2 values
+	if nvd.Search("V3Vector").Data() != nil {
+		o.GetVulnerability().LongDescription = nvd.Search("V3Vector").Data().(string)
+		o.GetVulnerability().CvssVersion = g.CVSSVersion_CVSS_VERSION_3
+		o.GetVulnerability().CvssScore = utils.ToFloat32(nvd.Search("V3Score").Data())
+		o.GetVulnerability().Cvssv3 = utils.ToCVSS(
+			utils.ToFloat32(nvd.Search("V3Score").Data()),
+			nvd.Search("V3Vector").Data().(string),
+		)
+	}
+
+	// References
+	for _, r := range v.Search("References").Children() {
+		o.GetVulnerability().RelatedUrls = append(o.GetVulnerability().RelatedUrls, &g.RelatedUrl{
+			Url:   r.Data().(string),
+			Label: "Url",
+		})
+	}
+
 	return &o
 }
 
