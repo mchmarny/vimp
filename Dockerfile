@@ -1,12 +1,12 @@
 FROM golang:buster AS build-env
 WORKDIR /src/
 COPY . /src/
-ARG VERSION
-ARG COMMIT
-ARG DATE
-ENV VERSION=${VERSION:-v0.2.0-dirty}
-ENV COMMIT=${COMMIT:-c3536e5}
-ENV DATE=${DATE:-2023-03-09T18:52:01Z}
+ARG VERSION=v0.2.0-dirty
+ARG COMMIT=c3536e5
+ARG DATE=2023-03-09T18:52:01Z
+ENV VERSION=$VERSION
+ENV COMMIT=$COMMIT
+ENV DATE=$DATE
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
     -w -s -X main.version=$VERSION \
 	-w -s -X main.commit=$COMMIT \
