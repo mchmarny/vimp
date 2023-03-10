@@ -4,7 +4,7 @@ description: 'Import vulnerabilities to Google Container Analysis'
 
 inputs:
   project:
-    description: 'GCP Project ID'
+    description: GCP Project ID'
     required: true
   digest:
     description: 'Image digest'
@@ -17,8 +17,8 @@ inputs:
     required: true
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: docker
+  image: Dockerfile
   args:
     - import
     - --project
