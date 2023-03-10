@@ -24,6 +24,9 @@ jobs:
       id-token: write
     steps:
 
+    - name: Checkout Code
+      uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c  # v3.3.0
+
     - id: auth
       name: Auth GCP
       uses: google-github-actions/auth@ef5d53e30bbcd8d0836f4288f5e50ff3e086997d  # v1.0.0
@@ -37,8 +40,7 @@ jobs:
       uses: anchore/scan-action@v3
       with:
         image: ${{ env.IMAGE_DIGEST }}
-        registry-username: oauth2accesstoken
-        registry-password: ${{ steps.auth.outputs.access_token }}
+        fail-build: false
         output-format: json
 
     - uses: mchmarny/vulctl@main
