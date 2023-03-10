@@ -14,6 +14,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
 	-extldflags '-static'" \
     -a -mod vendor -o vulctl cmd/vulctl/main.go
 
-FROM gcr.io/distroless/base
+# chainguard's static seems to bring list of vulnerabilities
+FROM cgr.dev/chainguard/static:latest
 COPY --from=build-env /src/vulctl /
 ENTRYPOINT ["/vulctl"]
