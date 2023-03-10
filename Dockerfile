@@ -4,9 +4,9 @@ COPY . /src/
 ARG VERSION=v0.2.0-dirty
 ARG COMMIT=c3536e5
 ARG DATE=2023-03-09T18:52:01Z
-ENV VERSION=$VERSION
-ENV COMMIT=$COMMIT
-ENV DATE=$DATE
+ENV VERSION=${VERSION}
+ENV COMMIT=${COMMIT}
+ENV DATE=${DATE}
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
     -w -s -X main.version=$VERSION \
 	-w -s -X main.commit=$COMMIT \
