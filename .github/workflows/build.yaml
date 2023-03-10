@@ -84,7 +84,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
           VERSION=${{ env.RELEASE_VERSION }}
-          COMMIT=${{ env.GITHUB_SHA }}
+          COMMIT=${GITHUB_SHA}
           DATE=${{ env.CURRENT_DATE }}
 
     - name: Export Digest
