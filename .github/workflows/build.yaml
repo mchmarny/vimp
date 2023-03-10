@@ -67,7 +67,7 @@ jobs:
           ${{ inputs.image_repo }}/${{ inputs.image_name }}
         tags: |
           type=raw,enable=true,value=${{ env.RELEASE_VERSION }}
-          type=raw,enable=true,value=${{ env.GITHUB_SHA }}
+          type=raw,enable=true,value=${{ env.RELEASE_COMMIT }}
           type=raw,enable=true,value=latest
 
     - name: Registry Auth
