@@ -41,7 +41,7 @@ jobs:
         registry-password: ${{ steps.auth.outputs.access_token }}
         output-format: json
 
-    - uses: actions/vulctl@main
+    - uses: mchmarny/vulctl@main
       with:
         project: ${{ env.PROJECT_ID }}
         digest: ${{ env.IMAGE_DIGEST }}
