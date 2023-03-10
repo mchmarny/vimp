@@ -46,7 +46,7 @@ jobs:
 
     - id: scan
       name: Vulnerability Scan
-      uses: aquasecurity/trivy-action@v0.9.2
+      uses: aquasecurity/trivy-action@master
       with:
         image-ref: ${{ env.IMAGE_DIGEST }}
         scanners: vuln
