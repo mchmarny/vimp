@@ -14,9 +14,10 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
 	-extldflags '-static'" \
     -a -mod vendor -o vulctl cmd/vulctl/main.go
 
-# chainguard's static seems to provide best balance of size and vulnerabilities
-# gogole/distroless: 13.3 MB, 9 vulnerabilities (all low)
-# chainguard/static:   5.7 MB, 0 vulnerabilities
+# The base image from chainguard seems to provide best balance of 
+# size and vulnerabilities:
+# - gogole/distroless:  13.3 MB, 9 vulnerabilities (all low)
+# - chainguard/static:   5.7 MB, 0 vulnerabilities
 FROM cgr.dev/chainguard/static:latest
 COPY --from=build-env /src/vulctl /
 ENTRYPOINT ["/vulctl"]
