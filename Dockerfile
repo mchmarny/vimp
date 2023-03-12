@@ -15,8 +15,8 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
     -a -mod vendor -o vulctl cmd/vulctl/main.go
 
 # chainguard's static seems to bring list of vulnerabilities
-# gogole/distroless: 13.3 MB, 18 vulnerabilities (all low)
-# chainguard/static: 4.7 MB, 0 vulnerabilities
+# gogole/distroless: 13.3 MB, 9 vulnerabilities (all low)
+# chainguard/static:  5.7 MB, 0 vulnerabilities
 FROM cgr.dev/chainguard/static:latest
 COPY --from=build-env /src/vulctl /
 ENTRYPOINT ["/vulctl"]
