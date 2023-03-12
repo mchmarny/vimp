@@ -42,6 +42,10 @@ The currently supported scanners/formats include:
 
   `trivy image --format json --output report.json $image`
 
+* [osv](https://github.com/google/osv-scanner)
+
+  `osv-scanner --docker $image --json > report.json`
+
 To review the imported vulnerabilities: 
 
 ```shell
