@@ -7,11 +7,13 @@ const (
 	SourceFormatGrypeJSON              // grype JSON format
 	SourceFormatTrivyJSON              // trivy JSON format
 	SourceFormatSnykJSON               // snyk JSON format
+	SourceFormatOSVJSON                // osv-scanner JSON format
 
-	SourceFormatUnknownName   = "unknown"
-	SourceFormatGrypeJSONName = "grype"
-	SourceFormatTrivyJSONName = "trivy"
-	SourceFormatSnykJSONName  = "snyk"
+	SourceFormatUnknownName = "unknown"
+	SourceFormatGrypeName   = "grype"
+	SourceFormatTrivyName   = "trivy"
+	SourceFormatSnykName    = "snyk"
+	SourceFormatOSVName     = "osv"
 )
 
 // SourceFormat represents the source format.
@@ -21,11 +23,13 @@ type SourceFormat int64
 func (f SourceFormat) String() string {
 	switch f {
 	case SourceFormatGrypeJSON:
-		return SourceFormatGrypeJSONName
+		return SourceFormatGrypeName
 	case SourceFormatTrivyJSON:
-		return SourceFormatTrivyJSONName
+		return SourceFormatTrivyName
 	case SourceFormatSnykJSON:
-		return SourceFormatSnykJSONName
+		return SourceFormatSnykName
+	case SourceFormatOSVJSON:
+		return SourceFormatOSVName
 	default:
 		return SourceFormatUnknownName
 	}
@@ -34,11 +38,11 @@ func (f SourceFormat) String() string {
 // ParseSourceFormat parses the source format.
 func ParseSourceFormat(s string) (SourceFormat, error) {
 	switch s {
-	case SourceFormatGrypeJSONName:
+	case SourceFormatGrypeName:
 		return SourceFormatGrypeJSON, nil
-	case SourceFormatTrivyJSONName:
+	case SourceFormatTrivyName:
 		return SourceFormatTrivyJSON, nil
-	case SourceFormatSnykJSONName:
+	case SourceFormatSnykName:
 		return SourceFormatSnykJSON, nil
 	default:
 		return SourceFormatUnknown, fmt.Errorf("unknown format: %s", s)
@@ -57,8 +61,8 @@ func GetSourceFormats() []SourceFormat {
 // GetSourceFormatNames returns the names of the supported source formats.
 func GetSourceFormatNames() []string {
 	return []string{
-		SourceFormatGrypeJSONName,
-		SourceFormatTrivyJSONName,
-		SourceFormatSnykJSONName,
+		SourceFormatGrypeName,
+		SourceFormatTrivyName,
+		SourceFormatSnykName,
 	}
 }

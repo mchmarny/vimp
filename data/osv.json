@@ -1,0 +1,382 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo@sha256:666b0f0498092184d635ac8fc53e30586f7bb8895e7ed8afba60632398c1af74",
+        "type": "docker"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "curl",
+            "version": "7.74.0-1.3+deb11u3",
+            "ecosystem": "Debian"
+          },
+          "vulnerabilities": [
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5330-1",
+              "modified": "2023-01-28T09:23:16.430419Z",
+              "published": "2023-01-27T00:00:00Z",
+              "aliases": [
+                "CVE-2022-32221",
+                "CVE-2022-43552"
+              ],
+              "summary": "curl - security update",
+              "details": "\nTwo vulnerabilities were discovered in Curl, an easy-to-use client-side\nURL transfer library, which could result in denial of service or\ninformation disclosure.\n\n\nFor the stable distribution (bullseye), these problems have been fixed in\nversion 7.74.0-1.3+deb11u5. This update also revises the fix for\n[\\\nCVE-2022-27774](https://security-tracker.debian.org/tracker/CVE-2022-27774) released in DSA-5197-1.\n\n\nWe recommend that you upgrade your curl packages.\n\n\nFor the detailed security status of curl please refer to\nits security tracker page at:\n[\\\nhttps://security-tracker.debian.org/tracker/curl](https://security-tracker.debian.org/tracker/curl)\n\n\n",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "curl",
+                    "purl": "pkg:deb/debian/curl?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "7.74.0-1.3+deb11u5"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "7.74.0-1.3",
+                    "7.74.0-1.3+deb11u1",
+                    "7.74.0-1.3+deb11u2",
+                    "7.74.0-1.3+deb11u3",
+                    "7.74.0-1.3+deb11u4"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5330-1.json"
+                  }
+                }
+              ],
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://www.debian.org/security/2023/dsa-5330"
+                }
+              ]
+            },
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5365-1",
+              "modified": "2023-02-28T13:21:13.424373Z",
+              "published": "2023-02-27T00:00:00Z",
+              "aliases": [
+                "CVE-2023-23916"
+              ],
+              "summary": "curl - security update",
+              "details": "\nPatrick Monnerat discovered that Curl's support for chained HTTP\ncompression algorithms was susceptible to denial of service.\n\n\nFor the stable distribution (bullseye), this problem has been fixed in\nversion 7.74.0-1.3+deb11u7. This update also fixes a regression in\nthe previously released fix for\n[CVE-2022-27774](https://security-tracker.debian.org/tracker/CVE-2022-27774).\n\n\nWe recommend that you upgrade your curl packages.\n\n\nFor the detailed security status of curl please refer to\nits security tracker page at:\n[\\\nhttps://security-tracker.debian.org/tracker/curl](https://security-tracker.debian.org/tracker/curl)\n\n\n",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "curl",
+                    "purl": "pkg:deb/debian/curl?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "7.74.0-1.3+deb11u7"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "7.74.0-1.3",
+                    "7.74.0-1.3+deb11u1",
+                    "7.74.0-1.3+deb11u2",
+                    "7.74.0-1.3+deb11u3",
+                    "7.74.0-1.3+deb11u4",
+                    "7.74.0-1.3+deb11u5",
+                    "7.74.0-1.3+deb11u6"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5365-1.json"
+                  }
+                }
+              ],
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://www.debian.org/security/2023/dsa-5365"
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "DSA-5330-1"
+              ]
+            },
+            {
+              "ids": [
+                "DSA-5365-1"
+              ]
+            }
+          ]
+        },
+        {
+          "package": {
+            "name": "git",
+            "version": "1:2.30.2-1",
+            "ecosystem": "Debian"
+          },
+          "vulnerabilities": [
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5332-1",
+              "modified": "2023-01-29T08:23:55.213052Z",
+              "published": "2023-01-29T00:00:00Z",
+              "aliases": [
+                "CVE-2022-23521",
+                "CVE-2022-24765",
+                "CVE-2022-29187",
+                "CVE-2022-39253",
+                "CVE-2022-39260",
+                "CVE-2022-41903"
+              ],
+              "summary": "git - security update",
+              "details": "",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "git",
+                    "purl": "pkg:deb/debian/git?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "1:2.30.2-1+deb11u1"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "1:2.30.2-1"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5332-1.json"
+                  }
+                }
+              ],
+              "references": null
+            },
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5357-1",
+              "modified": "2023-02-24T01:08:14.930169Z",
+              "published": "2023-02-23T00:00:00Z",
+              "aliases": [
+                "CVE-2023-22490",
+                "CVE-2023-23946"
+              ],
+              "summary": "git - security update",
+              "details": "\nSeveral vulnerabilities have been discovered in git, a fast, scalable,\ndistributed revision control system.\n\n\n* [CVE-2023-22490](https://security-tracker.debian.org/tracker/CVE-2023-22490)\nyvvdwf found a data exfiltration vulnerability while performing local\n clone from malicious repository even using a non-local transport.\n* [CVE-2023-23946](https://security-tracker.debian.org/tracker/CVE-2023-23946)\nJoern Schneeweisz found a path traversal vulnerability in git-apply\n where a path outside the working tree can be overwritten as the acting\n user.\n\n\nFor the stable distribution (bullseye), these problems have been fixed in\nversion 1:2.30.2-1+deb11u2.\n\n\nWe recommend that you upgrade your git packages.\n\n\nFor the detailed security status of git please refer to\nits security tracker page at:\n[\\\nhttps://security-tracker.debian.org/tracker/git](https://security-tracker.debian.org/tracker/git)\n\n\n",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "git",
+                    "purl": "pkg:deb/debian/git?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "1:2.30.2-1+deb11u2"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "1:2.30.2-1",
+                    "1:2.30.2-1+deb11u1"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5357-1.json"
+                  }
+                }
+              ],
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://www.debian.org/security/2023/dsa-5357"
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "DSA-5332-1"
+              ]
+            },
+            {
+              "ids": [
+                "DSA-5357-1"
+              ]
+            }
+          ]
+        },
+        {
+          "package": {
+            "name": "imagemagick",
+            "version": "8:6.9.11.60+dfsg-1.3",
+            "ecosystem": "Debian"
+          },
+          "vulnerabilities": [
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5347-1",
+              "modified": "2023-02-15T12:52:27.046547Z",
+              "published": "2023-02-13T00:00:00Z",
+              "aliases": [
+                "CVE-2022-44267",
+                "CVE-2022-44268"
+              ],
+              "summary": "imagemagick - security update",
+              "details": "\nBryan Gonzalez discovered that the PNG support in Imagemagick could be\ntricked into embedding the content of an arbitrary file when converting\nan image file.\n\n\nFor the stable distribution (bullseye), these problems have been fixed in\nversion 8:6.9.11.60+dfsg-1.3+deb11u1.\n\n\nWe recommend that you upgrade your imagemagick packages.\n\n\nFor the detailed security status of imagemagick please refer to\nits security tracker page at:\n[\\\nhttps://security-tracker.debian.org/tracker/imagemagick](https://security-tracker.debian.org/tracker/imagemagick)\n\n\n",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "imagemagick",
+                    "purl": "pkg:deb/debian/imagemagick?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "8:6.9.11.60+dfsg-1.3+deb11u1"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "8:6.9.11.60+dfsg-1.3"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5347-1.json"
+                  }
+                }
+              ],
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://www.debian.org/security/2023/dsa-5347"
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "DSA-5347-1"
+              ]
+            }
+          ]
+        },
+        {
+          "package": {
+            "name": "openssl",
+            "version": "1.1.1n-0+deb11u3",
+            "ecosystem": "Debian"
+          },
+          "vulnerabilities": [
+            {
+              "schema_version": "1.3.0",
+              "id": "DSA-5343-1",
+              "modified": "2023-02-08T18:44:23.134715Z",
+              "published": "2023-02-07T00:00:00Z",
+              "aliases": [
+                "CVE-2022-2097",
+                "CVE-2022-4304",
+                "CVE-2022-4450",
+                "CVE-2023-0215",
+                "CVE-2023-0286"
+              ],
+              "summary": "openssl - security update",
+              "details": "\nMultiple vulnerabilities have been discovered in OpenSSL, a Secure\nSockets Layer toolkit, which may result in incomplete encryption, side\nchannel attacks, denial of service or information disclosure.\n\n\nAdditional details can be found in the upstream advisories at\n\u003chttps://www.openssl.org/news/secadv/20220705.txt\u003e and\n\u003chttps://www.openssl.org/news/secadv/20230207.txt\u003e\n\n\nFor the stable distribution (bullseye), these problems have been fixed in\nversion 1.1.1n-0+deb11u4.\n\n\nWe recommend that you upgrade your openssl packages.\n\n\nFor the detailed security status of openssl please refer to its security\ntracker page at:\n[\\\nhttps://security-tracker.debian.org/tracker/openssl](https://security-tracker.debian.org/tracker/openssl)\n\n\n",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Debian:11",
+                    "name": "openssl",
+                    "purl": "pkg:deb/debian/openssl?arch=source"
+                  },
+                  "ranges": [
+                    {
+                      "type": "ECOSYSTEM",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "1.1.1n-0+deb11u4"
+                        }
+                      ]
+                    }
+                  ],
+                  "versions": [
+                    "1.1.1k-1",
+                    "1.1.1k-1+deb11u1",
+                    "1.1.1k-1+deb11u2",
+                    "1.1.1l-1",
+                    "1.1.1m-0+deb11u1",
+                    "1.1.1m-1",
+                    "1.1.1n-0+deb11u1",
+                    "1.1.1n-0+deb11u2",
+                    "1.1.1n-0+deb11u3"
+                  ],
+                  "database_specific": {
+                    "source": "https://storage.googleapis.com/debian-osv/dsa-osv/DSA-5343-1.json"
+                  }
+                }
+              ],
+              "references": [
+                {
+                  "type": "ADVISORY",
+                  "url": "https://www.debian.org/security/2023/dsa-5343"
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": [
+                "DSA-5343-1"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
