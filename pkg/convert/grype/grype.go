@@ -32,18 +32,18 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 		if n == nil || n.GetVulnerability().CvssScore == 0 {
 			continue
 		}
-		cve := n.Name
+		noteName := n.Name
 
 		// If cve is not found, add to map
-		if _, ok := list[cve]; !ok {
-			list[cve] = types.NoteOccurrences{Note: n}
+		if _, ok := list[noteName]; !ok {
+			list[noteName] = types.NoteOccurrences{Note: n}
 		}
-		nocc := list[cve]
+		nocc := list[noteName]
 		occ := convertOccurrence(s, v, n.Name)
 		if occ != nil {
 			nocc.Occurrences = append(nocc.Occurrences, occ)
 		}
-		list[cve] = nocc
+		list[noteName] = nocc
 	}
 
 	return list, nil
