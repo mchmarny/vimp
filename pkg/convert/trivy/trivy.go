@@ -26,31 +26,32 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 
 	for _, r := range s.Data.Search("Results").Children() {
 		for _, v := range r.Search("Vulnerabilities").Children() {
-			cve := v.Search("VulnerabilityID").Data().(string)
-
 			// create note
-			n := convertNote(s, v, cve)
+			n := convertNote(s, v)
 
 			// don't add notes with no CVSS score
 			if n == nil || n.GetVulnerability().CvssScore == 0 {
 				continue
 			}
+			noteName := n.Name
 
 			// If cve is not found, add to map
-			if _, ok := list[cve]; !ok {
-				list[cve] = types.NoteOccurrences{Note: n}
+			if _, ok := list[noteName]; !ok {
+				list[noteName] = types.NoteOccurrences{Note: n}
 			}
-			nocc := list[cve]
-			occ := convertOccurrence(s, v, cve, n.Name)
+			nocc := list[noteName]
+			occ := convertOccurrence(s, v, n.Name, getPackageType(r))
 			nocc.Occurrences = append(nocc.Occurrences, occ)
-			list[cve] = nocc
+			list[noteName] = nocc
 		}
 	}
 
 	return list, nil
 }
 
-func convertNote(s *src.Source, v *gabs.Container, cve string) *g.Note {
+func convertNote(s *src.Source, v *gabs.Container) *g.Note {
+	cve := v.Search("VulnerabilityID").Data().(string)
+
 	if v.Search("CVSS", "nvd").Data() == nil {
 		return nil
 	}
@@ -113,7 +114,9 @@ func convertNote(s *src.Source, v *gabs.Container, cve string) *g.Note {
 	return &n
 }
 
-func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName string) *g.Occurrence {
+func convertOccurrence(s *src.Source, v *gabs.Container, noteName string, packageType string) *g.Occurrence {
+	cve := v.Search("VulnerabilityID").Data().(string)
+
 	if v.Search("CVSS", "nvd").Data() == nil {
 		return nil
 	}
@@ -137,24 +140,16 @@ func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName st
 					},
 				},
 				CvssScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V2Score").Data()),
-				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
-					AffectedCpeUri:  makeCPE(v),
-					AffectedPackage: v.Search("PkgName").Data().(string),
-					AffectedVersion: &g.Version{
-						Name: v.Search("InstalledVersion").Data().(string),
-						Kind: g.Version_NORMAL,
-					},
-					FixedCpeUri:  makeCPE(v),
-					FixedPackage: v.Search("PkgName").Data().(string),
-					FixedVersion: &g.Version{
-						Kind: g.Version_MAXIMUM,
-					},
-				}},
-				Severity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
+				Severity:  utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
 				// TODO: What is the difference between severity and effective severity?
 				EffectiveSeverity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
 			}},
 	}
+
+	// PackageIssues
+	o.GetVulnerability().PackageIssue = append(
+		o.GetVulnerability().PackageIssue,
+		getBasePackageIssue(v, packageType))
 
 	// CVSSv2
 	if nvd.Search("V2Vector").Data() != nil {
@@ -198,4 +193,32 @@ func makeCPE(v *gabs.Container) string {
 		src,
 		pkgName,
 		pkgVersion)
+}
+
+func getPackageType(r *gabs.Container) string {
+	if r.Search("Class").Data().(string) == "lang-pkgs" {
+		switch r.Search("Type").Data().(string) {
+		case "gobinary":
+			return "GO"
+			// TODO: Add other languages
+		}
+	}
+	return "OS"
+}
+
+func getBasePackageIssue(v *gabs.Container, packageType string) *g.VulnerabilityOccurrence_PackageIssue {
+	return &g.VulnerabilityOccurrence_PackageIssue{
+		PackageType:     packageType,
+		AffectedCpeUri:  makeCPE(v),
+		AffectedPackage: v.Search("PkgName").Data().(string),
+		AffectedVersion: &g.Version{
+			Name: v.Search("InstalledVersion").Data().(string),
+			Kind: g.Version_NORMAL,
+		},
+		FixedCpeUri:  makeCPE(v),
+		FixedPackage: v.Search("PkgName").Data().(string),
+		FixedVersion: &g.Version{
+			Kind: g.Version_MAXIMUM,
+		},
+	}
 }
