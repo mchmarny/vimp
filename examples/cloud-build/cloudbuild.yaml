@@ -36,7 +36,9 @@ steps:
     - publish
     name: anchore/grype
     dir: examples/cloud-build
-    args: [$(cat image-digest.txt)]
+    env:
+    - "_IMG_DIGEST=$(cat image-digest.txt)"
+    args: [$_IMG_DIGEST]
 
   - id: scan
     waitFor:
