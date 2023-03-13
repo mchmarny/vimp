@@ -38,7 +38,7 @@ steps:
     args:
     - -c
     - |-
-      --add-cpes-if-none -s AllLayers -o json --file report.json $(cat image-digest.txt)
+      grype --add-cpes-if-none -s AllLayers -o json --file report.json $(cat image-digest.txt)
 
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
@@ -49,7 +49,7 @@ steps:
     args:
     - -c
     - |-
-      import --project $PROJECT_ID --source $(cat image-digest.txt) --file report.json --format grype
+      vulctl import --project $PROJECT_ID --source $(cat image-digest.txt) --file report.json --format grype
 
 images:
 - ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:${_IMG_VERSION}
