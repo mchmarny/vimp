@@ -14,12 +14,12 @@ steps:
       docker build --build-arg VERSION=${TAG_NAME} \
         -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}" \
         .
-  
+
   # Publish image
   - id: publish
     name: gcr.io/cloud-builders/docker
     entrypoint: /bin/bash
-    waitFor: 
+    waitFor:
     - build
     dir: app
     args:
@@ -31,7 +31,7 @@ steps:
       cat image-digest.txt
 
   - id: scan
-    waitFor: 
+    waitFor:
     - publish
     name: anchore/grype
     args: ['--add-cpes-if-none', '-s', 'AllLayers', '-o', 'json', '--file', 'report.json', '$(cat image-digest.txt)']
