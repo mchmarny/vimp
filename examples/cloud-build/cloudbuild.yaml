@@ -40,8 +40,8 @@ steps:
     args:
     - -c
     - |-
-      TEST="$(cat image-digest.txt)"
-      echo $TEST
+      _TEST=$(cat image-digest.txt)
+      echo $_TEST
 
   - id: scan
     waitFor:
