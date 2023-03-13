@@ -1,6 +1,6 @@
 substitutions:
   _IMG_NAME: node-demo
-  _IMG_VERSION: v0.0.2
+  _IMG_VERSION: v0.0.3
 
 steps:
 
