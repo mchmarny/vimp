@@ -36,9 +36,14 @@ steps:
     - publish
     name: anchore/grype
     args:
-    - -c
-    - |-
-      grype --add-cpes-if-none -s AllLayers -o json --file report.json $(cat image-digest.txt)
+    - --add-cpes-if-none
+    - -s
+    - AllLayers
+    - -o
+    - json
+    - --file
+    - report.json
+    - $(cat image-digest.txt)
 
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
@@ -47,9 +52,15 @@ steps:
     - scan
     name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl
     args:
-    - -c
-    - |-
-      vulctl import --project $PROJECT_ID --source $(cat image-digest.txt) --file report.json --format grype
+    - import
+    - --project
+    - $PROJECT_ID
+    - --source
+    - $(cat image-digest.txt)
+    - --file
+    - report.json
+    - --format
+    - grype
 
 images:
 - ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:${_IMG_VERSION}
