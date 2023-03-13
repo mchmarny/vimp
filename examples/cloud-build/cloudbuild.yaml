@@ -12,8 +12,8 @@ steps:
     - -c
     - |
       docker build --build-arg VERSION=${TAG_NAME} \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${COMMIT_SHA}" \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${TAG_NAME}" \
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${COMMIT_SHA}" \
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}" \
         .
   
   # Publish image
@@ -26,8 +26,8 @@ steps:
     args:
     - -c
     - |-
-      docker push "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${TAG_NAME}"
-      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${TAG_NAME}" \
+      docker push "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}"
+      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}" \
         --format '{{index .RepoDigests 0}}' > image-digest.txt
       cat image-digest.txt
 
@@ -46,4 +46,4 @@ steps:
     args: ['import', '--project', '$PROJECT_ID', '--source', '$(cat image-digest.txt)', '--file', 'report.json', '--format', 'grype']
 
 images:
-- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_APP_NAME:$TAG_NAME
+- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:$TAG_NAME
