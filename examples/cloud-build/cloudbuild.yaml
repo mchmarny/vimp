@@ -3,6 +3,16 @@ substitutions:
 
 steps:
 
+  # Debug
+  - id: debug
+    name: gcr.io/cloud-builders/docker
+    entrypoint: /bin/bash
+    dir: examples/cloud-build
+    args:
+    - -c
+    - |
+      echo "$env"
+
   # Build image
   - id: build
     name: gcr.io/cloud-builders/docker
@@ -47,4 +57,4 @@ steps:
     args: ['import', '--project', '$PROJECT_ID', '--source', '$(cat image-digest.txt)', '--file', 'report.json', '--format', 'grype']
 
 images:
-- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:$(cat ../../.version)
+- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:$TAG_NAME
