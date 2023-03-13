@@ -35,6 +35,8 @@ steps:
     waitFor:
     - publish
     name: anchore/grype
+    env:
+    - "_IMG_DIGEST=$(cat image-digest.txt)"
     args:
     - --add-cpes-if-none
     - -s
@@ -43,7 +45,7 @@ steps:
     - json
     - --file
     - report.json
-    - "$(cat image-digest.txt)"
+    - $_IMG_DIGEST
 
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
@@ -51,12 +53,14 @@ steps:
     waitFor:
     - scan
     name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl
+    env:
+    - "_IMG_DIGEST=$(cat image-digest.txt)"
     args:
     - import
     - --project
     - $PROJECT_ID
     - --source
-    - "$(cat image-digest.txt)"
+    - $_IMG_DIGEST
     - --file
     - report.json
     - --format
