@@ -7,12 +7,13 @@ steps:
   - id: build
     name: gcr.io/cloud-builders/docker
     entrypoint: /bin/bash
-    dir: app
+    dir: examples/cloud-build
     args:
     - -c
     - |
-      docker build --build-arg VERSION=${TAG_NAME} \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}" \
+      _RELEASE_VERSION=$(cat ../../.version)
+      docker build --build-arg VERSION=${_RELEASE_VERSION} \
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${_RELEASE_VERSION}" \
         .
 
   # Publish image
@@ -21,12 +22,13 @@ steps:
     entrypoint: /bin/bash
     waitFor:
     - build
-    dir: app
+    dir: examples/cloud-build
     args:
     - -c
     - |-
-      docker push "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}"
-      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${TAG_NAME}" \
+      _RELEASE_VERSION=$(cat ../../.version)
+      docker push "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${_RELEASE_VERSION}"
+      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_IMG_NAME}:${_RELEASE_VERSION}" \
         --format '{{index .RepoDigests 0}}' > image-digest.txt
       cat image-digest.txt
 
@@ -45,4 +47,4 @@ steps:
     args: ['import', '--project', '$PROJECT_ID', '--source', '$(cat image-digest.txt)', '--file', 'report.json', '--format', 'grype']
 
 images:
-- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:$TAG_NAME
+- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:$(cat ../../.version)
