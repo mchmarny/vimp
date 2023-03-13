@@ -39,7 +39,7 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 	}
 
 	// TODO: Debug code
-	//deleteNoteOccurrences(ctx, opt, list)
+	//_ = deleteNoteOccurrences(ctx, opt, list)
 
 	log.Info().Msgf("Found %d vulnerabilities", len(list))
 

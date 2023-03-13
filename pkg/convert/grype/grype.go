@@ -2,6 +2,7 @@ package grype
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
@@ -24,8 +25,6 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 	list := make(map[string]types.NoteOccurrences, 0)
 
 	for _, v := range s.Data.Search("matches").Children() {
-		cve := v.Search("vulnerability", "id").Data().(string)
-
 		// create note
 		n := convertNote(s, v)
 
@@ -33,6 +32,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 		if n == nil || n.GetVulnerability().CvssScore == 0 {
 			continue
 		}
+		cve := n.Name
 
 		// If cve is not found, add to map
 		if _, ok := list[cve]; !ok {
@@ -50,13 +50,6 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 }
 
 func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occurrence {
-	// match
-	matchList := v.Search("matchDetails").Children()
-	if len(matchList) == 0 {
-		return nil
-	}
-	match := matchList[0] // TODO: Create a detail per match
-
 	// nvd vulnerability
 	rvList := v.Search("relatedVulnerabilities").Children()
 	var rv *gabs.Container
@@ -102,24 +95,26 @@ func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occ
 				},
 				CvssVersion: g.CVSSVersion_CVSS_VERSION_2,
 				CvssScore:   utils.ToFloat32(cvss2.Search("metrics", "baseScore").Data()),
-				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
-					AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
-					AffectedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: Need to handle case where a node in the chain is nil. Use Data().(string) instead
-					AffectedVersion: &g.Version{
-						Name: match.Search("searchedBy", "package", "version").String(),
-						Kind: g.Version_MINIMUM,
-					},
-					FixedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),     // TODO: This is same as affected
-					FixedPackage: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
-					FixedVersion: &g.Version{
-						Name: match.Search("searchedBy", "package", "version").String(), // TODO: This is same as affected
-						Kind: g.Version_MINIMUM,
-					},
-				}},
-				Severity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
+				Severity:    utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
 				// TODO: What is the difference between severity and effective severity?
 				EffectiveSeverity: utils.ToGrafeasSeverity(rv.Search("severity").Data().(string)),
 			}},
+	}
+
+	// PackageIssues
+	if len(v.Search("vulnerability", "fix", "versions").Children()) == 0 {
+		o.GetVulnerability().PackageIssue = append(
+			o.GetVulnerability().PackageIssue,
+			getBasePackageIssue(v))
+	} else {
+		for _, version := range v.Search("vulnerability", "fix", "versions").Children() {
+			pi := getBasePackageIssue(v)
+			pi.FixedVersion = &g.Version{
+				Name: version.Data().(string),
+				Kind: g.Version_NORMAL,
+			}
+			o.GetVulnerability().PackageIssue = append(o.GetVulnerability().PackageIssue, pi)
+		}
 	}
 
 	// CVSSv3
@@ -214,4 +209,21 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	}
 
 	return &n
+}
+
+func getBasePackageIssue(v *gabs.Container) *g.VulnerabilityOccurrence_PackageIssue {
+	return &g.VulnerabilityOccurrence_PackageIssue{
+		PackageType:     strings.ToUpper(v.Search("artifact", "language").Data().(string)),
+		AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
+		AffectedPackage: v.Search("artifact", "name").Data().(string),
+		AffectedVersion: &g.Version{
+			Name: v.Search("artifact", "version").Data().(string),
+			Kind: g.Version_NORMAL,
+		},
+		FixedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
+		FixedPackage: v.Search("artifact", "name").Data().(string),
+		FixedVersion: &g.Version{
+			Kind: g.Version_MAXIMUM,
+		},
+	}
 }
