@@ -144,13 +144,12 @@ func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occ
 					AffectedPackage: v.Search("packageName").Data().(string),
 					AffectedVersion: &g.Version{
 						Name: v.Search("version").Data().(string),
-						Kind: g.Version_MINIMUM,
+						Kind: g.Version_NORMAL,
 					},
-					FixedCpeUri:  makeCPE(v),                              // TODO: This is same as affected
-					FixedPackage: v.Search("packageName").Data().(string), // TODO: This is same as affected
+					FixedCpeUri:  makeCPE(v),
+					FixedPackage: v.Search("packageName").Data().(string),
 					FixedVersion: &g.Version{
-						Name: v.Search("version").Data().(string), // TODO: This is same as affected
-						Kind: g.Version_MINIMUM,
+						Kind: g.Version_MAXIMUM,
 					},
 				}},
 				Severity: utils.ToGrafeasSeverity(v.Search("nvdSeverity").Data().(string)),
