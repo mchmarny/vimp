@@ -142,13 +142,12 @@ func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName st
 					AffectedPackage: v.Search("PkgName").Data().(string),
 					AffectedVersion: &g.Version{
 						Name: v.Search("InstalledVersion").Data().(string),
-						Kind: g.Version_MINIMUM,
+						Kind: g.Version_NORMAL,
 					},
-					FixedCpeUri:  makeCPE(v),                          // TODO: This is same as affected
-					FixedPackage: v.Search("PkgName").Data().(string), // TODO: This is same as affected
+					FixedCpeUri:  makeCPE(v),
+					FixedPackage: v.Search("PkgName").Data().(string),
 					FixedVersion: &g.Version{
-						Name: v.Search("InstalledVersion").Data().(string), // TODO: This is same as affected
-						Kind: g.Version_MINIMUM,
+						Kind: g.Version_MAXIMUM,
 					},
 				}},
 				Severity: utils.ToGrafeasSeverity(v.Search("Severity").Data().(string)),
