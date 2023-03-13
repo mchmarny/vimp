@@ -51,7 +51,6 @@ steps:
     name: us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl
     dir: examples/cloud-build
     args:
-    - --debug
     - import
     - --project
     - $PROJECT_ID
@@ -64,3 +63,8 @@ steps:
 
 images:
 - ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$_IMG_NAME:${_IMG_VERSION}
+
+options:
+  # Verify generation of attestations and provenance metadata for this build.
+  # Otherwise, GCB generates provenance for global builds only.
+  requestedVerifyOption: VERIFIED
