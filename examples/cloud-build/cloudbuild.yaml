@@ -43,7 +43,7 @@ steps:
     - json
     - --file
     - report.json
-    - $(cat image-digest.txt)
+    - "$(cat image-digest.txt)"
 
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
@@ -56,7 +56,7 @@ steps:
     - --project
     - $PROJECT_ID
     - --source
-    - $(cat image-digest.txt)
+    - "$(cat image-digest.txt)"
     - --file
     - report.json
     - --format
