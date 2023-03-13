@@ -42,7 +42,7 @@ The currently supported scanners/formats include:
 
   `trivy image --format json --output report.json $image`
 
-To review the imported vulnerabilities: 
+To review the imported vulnerabilities:
 
 ```shell
 gcloud artifacts docker images list $repo \
