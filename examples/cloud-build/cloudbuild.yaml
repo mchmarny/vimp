@@ -31,30 +31,17 @@ steps:
         --format '{{index .RepoDigests 0}}' > image-digest.txt
       cat image-digest.txt
 
-  - id: debug
-    waitFor:
-    - publish
-    name: anchore/grype
-    dir: examples/cloud-build
-    env:
-    - "_IMG_DIGEST=$(cat image-digest.txt)"
-    args: [$_IMG_DIGEST]
-
   - id: scan
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: /bin/bash
+    dir: examples/cloud-build
     waitFor:
     - publish
-    name: anchore/grype
-    dir: examples/cloud-build
     args:
-    - -vv
-    - --add-cpes-if-none
-    - -s
-    - AllLayers
-    - -o
-    - json
-    - --file
-    - report.json
-    - $(cat image-digest.txt)
+    - -c
+    - |-
+      curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+      grype --add-cpes-if-none -s AllLayers -o json --file report.json $(cat image-digest.txt)
 
   # The Dockerfile used to generate this image is located in the vulctl repo.
   # https://github.com/mchmarny/vulctl/blob/main/Dockerfile
