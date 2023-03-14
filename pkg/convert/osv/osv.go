@@ -55,7 +55,7 @@ func Convert(ctx context.Context, s *src.Source) (map[string]types.NoteOccurrenc
 }
 
 func convertNote(s *src.Source, v *gabs.Container, cve string) *g.Note {
-	// TODO: mchmarny - OSV schema doesn't seem to include CVSS
+	// TODO: OSV schema doesn't seem to include CVSS
 	if v.Search("CVSS", "nvd").Data() == nil {
 		return nil
 	}
@@ -143,9 +143,10 @@ func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName st
 				},
 				CvssScore: utils.ToFloat32(v.Search("CVSS", "nvd", "V2Score").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
-					// TODO: mchmarny - OSV schema doesn't seem to include CPE
-					AffectedCpeUri:  makeCPE(v),
-					AffectedPackage: v.Search("PkgName").Data().(string),
+					// TODO: OSV schema doesn't seem to include CPE, remap to:
+					//
+					AffectedCpeUri:  makeCPE(v.Search("affected", "package")),
+					AffectedPackage: v.Search("affected", "package", "name").Data().(string),
 					AffectedVersion: &g.Version{
 						Name: v.Search("InstalledVersion").Data().(string),
 						Kind: g.Version_MINIMUM,
@@ -197,6 +198,11 @@ func convertOccurrence(s *src.Source, v *gabs.Container, cve string, noteName st
 // Ref: https://en.wikipedia.org/wiki/Common_Platform_Enumeration
 // Schema: cpe:2.3:a:<vendor>:<product>:<version>:<update>:<edition>:<language>:<sw_edition>:<target_sw>:<target_hw>:<other>
 func makeCPE(v *gabs.Container) string {
+	// "package": {
+	// 	"ecosystem": "Debian:11",
+	// 	"name": "git",
+	// 	"purl": "pkg:deb/debian/git?arch=source"
+	// }
 	src := v.Search("SeveritySource").Data().(string)
 	pkgName := v.Search("PkgName").Data().(string)
 	pkgVersion := v.Search("InstalledVersion").Data().(string)
