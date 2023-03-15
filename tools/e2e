@@ -13,5 +13,5 @@ bin/vulctl -h
 msg "import"
 bin/vulctl --debug import --project test \
                   --source us-west1-docker.pkg.dev/cloudy-labz/builders/sbominator@sha256:cdcd67d7e7b444eb38d67ee6078f6f01d98d3ad9252d94a99cfce7eee2107a87 \
-                  --file data/test.json \
+                  --file examples/data/test.json \
                   --format snyk

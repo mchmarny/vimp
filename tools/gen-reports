@@ -4,8 +4,8 @@ set -euo pipefail
 
 digest="us-west1-docker.pkg.dev/cloudy-labz/builders/sbominator@sha256:cdcd67d7e7b444eb38d67ee6078f6f01d98d3ad9252d94a99cfce7eee2107a87"
 
-grype -q --add-cpes-if-none -s AllLayers -o json --file data/grype.json $digest
+grype -q --add-cpes-if-none -s AllLayers -o json --file examples/data/grype.json $digest
 
-snyk container test --app-vulns --json-file-output=data/snyk.json $digest
+snyk container test --app-vulns --json-file-output=examples/data/snyk.json $digest
 
-trivy image --format json --output data/trivy.json $digest
+trivy image --format json --output examples/data/trivy.json $digest
