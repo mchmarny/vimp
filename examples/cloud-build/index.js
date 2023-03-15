@@ -1,14 +1,14 @@
-const express = require('express');
-const app = express();
+// Copyright 2020 Google LLC. All rights reserved.
+// Use of this source code is governed by the Apache 2.0
+// license that can be found in the LICENSE file.
 
-app.get('/', (req, res) => {
-  const name = process.env.NAME || 'World';
-  res.send(`Hello ${name}!`);
-});
+// [START cloudrun_imageproc_server]
+// [START run_imageproc_server]
+const app = require('./app.js');
+const PORT = parseInt(parseInt(process.env.PORT)) || 8080;
 
-const port = parseInt(process.env.PORT) || 8080;
-app.listen(port, () => {
-  console.log(`listening on port: ${port}`);
-});
-
-module.exports = app;
+app.listen(PORT, () =>
+  console.log(`nodejs-image-processing listening on port ${PORT}`)
+);
+// [END run_imageproc_server]
+// [END cloudrun_imageproc_server]

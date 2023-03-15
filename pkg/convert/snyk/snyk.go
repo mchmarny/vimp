@@ -140,6 +140,7 @@ func convertOccurrence(s *src.Source, v *gabs.Container, noteName string) *g.Occ
 				CvssVersion: g.CVSSVersion_CVSS_VERSION_3,
 				CvssScore:   utils.ToFloat32(cvss3.Search("cvssV3BaseScore").Data()),
 				PackageIssue: []*g.VulnerabilityOccurrence_PackageIssue{{
+					PackageType:     "",
 					AffectedCpeUri:  makeCPE(v),
 					AffectedPackage: v.Search("packageName").Data().(string),
 					AffectedVersion: &g.Version{
