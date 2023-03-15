@@ -13,7 +13,7 @@ func TestGrypeConverter(t *testing.T) {
 	opt := &types.ImportOptions{
 		Project: types.TestProjectID,
 		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:    "../../../data/grype.json",
+		File:    "../../../examples/data/grype.json",
 		Format:  types.SourceFormatGrypeJSON,
 	}
 	s, err := src.NewSource(opt)

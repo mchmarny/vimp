@@ -13,7 +13,7 @@ func TestSnykConverter(t *testing.T) {
 	opt := &types.ImportOptions{
 		Project: types.TestProjectID,
 		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:    "../../../data/snyk.json",
+		File:    "../../../examples/data/snyk.json",
 		Format:  types.SourceFormatSnykJSON,
 	}
 	s, err := src.NewSource(opt)

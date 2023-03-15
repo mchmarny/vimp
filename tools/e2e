@@ -10,8 +10,20 @@ msg "root"
 bin/vulctl -v
 bin/vulctl -h
 
-msg "import"
-bin/vulctl --debug import --project test \
-                  --source us-west1-docker.pkg.dev/cloudy-labz/builders/sbominator@sha256:cdcd67d7e7b444eb38d67ee6078f6f01d98d3ad9252d94a99cfce7eee2107a87 \
-                  --file data/test.json \
+msg "import snyk"
+bin/vulctl import --project test \
+                  --source us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo@sha256:666b0f0498092184d635ac8fc53e30586f7bb8895e7ed8afba60632398c1af74 \
+                  --file examples/data/snyk-ruby.json \
                   --format snyk
+
+msg "import grype"
+bin/vulctl import --project test \
+                  --source us-west1-docker.pkg.dev/cloudy-build/vulctl/node-demo@sha256:5bf6464d1b72e0f1d3c32005b234f875daece4581a74bd62dd49de0276f1fa05 \
+                  --file examples/data/grype-node.json \
+                  --format grype
+
+msg "import snyk"
+bin/vulctl import --project test \
+                  --source redis \
+                  --file examples/data/trivy-redis.json \
+                  --format trivy
