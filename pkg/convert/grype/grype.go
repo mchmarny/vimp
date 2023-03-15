@@ -2,7 +2,6 @@ package grype
 
 import (
 	"context"
-	"strings"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/pkg/src"
@@ -213,7 +212,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 
 func getBasePackageIssue(v *gabs.Container) *g.VulnerabilityOccurrence_PackageIssue {
 	return &g.VulnerabilityOccurrence_PackageIssue{
-		PackageType:     strings.ToUpper(v.Search("artifact", "language").Data().(string)),
+		PackageType:     utils.ParsePackageType(v.Search("artifact", "language").Data().(string)),
 		AffectedCpeUri:  v.Search("artifact", "cpes").Index(0).Data().(string),
 		AffectedPackage: v.Search("artifact", "name").Data().(string),
 		AffectedVersion: &g.Version{
