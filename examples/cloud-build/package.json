@@ -1,25 +1,32 @@
 {
-  "name": "helloworld",
-  "description": "Simple hello world sample in Node",
+  "name": "nodejs-image-processing",
   "version": "1.0.0",
   "private": true,
+  "description": "Cloud Storage-triggered image processing with Cloud Vision API and ImageMagick transformation.",
   "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "test": "mocha test/index.test.js --exit",
-    "system-test": "NAME=Cloud mocha test/system.test.js --timeout=180000"
+  "author": "Google LLC",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleCloudPlatform/nodejs-docs-samples.git"
   },
   "engines": {
     "node": ">= 12.0.0"
   },
-  "author": "Google LLC",
-  "license": "Apache-2.0",
+  "scripts": {
+    "start": "node index.js",
+    "test": "mocha test/app.test.js --check-leaks --timeout=5000",
+    "system-test": "mocha test/system.test.js --timeout=360000 --exit"
+  },
   "dependencies": {
-    "express": "^4.17.1"
+    "@google-cloud/storage": "^6.0.0",
+    "@google-cloud/vision": "^3.0.0",
+    "express": "^4.16.4",
+    "gm": "^1.23.1"
   },
   "devDependencies": {
     "google-auth-library": "^8.0.0",
-    "got": "^11.0.0",
+    "got": "^11.5.0",
     "mocha": "^10.0.0",
     "supertest": "^6.0.0"
   }

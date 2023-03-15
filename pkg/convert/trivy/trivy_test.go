@@ -13,7 +13,7 @@ func TestTrivyConverter(t *testing.T) {
 	opt := &types.ImportOptions{
 		Project: types.TestProjectID,
 		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:    "../../../data/trivy.json",
+		File:    "../../../examples/data/trivy.json",
 		Format:  types.SourceFormatSnykJSON,
 	}
 	s, err := src.NewSource(opt)

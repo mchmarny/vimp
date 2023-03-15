@@ -24,7 +24,7 @@ func TestInvalidImport(t *testing.T) {
 	assert.Error(t, err)
 	err = Import(context.TODO(), &types.ImportOptions{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:   "../../../data/grype.json",
+		File:   "../../../examples/data/grype.json",
 	})
 	assert.Error(t, err)
 }
