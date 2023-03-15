@@ -114,6 +114,7 @@ func convertNote(s *src.Source, v *gabs.Container) *g.Note {
 	return &n
 }
 
+// convertOccurrence converts Trivy JSON to Grafeas Occurrence format.
 func convertOccurrence(s *src.Source, v *gabs.Container, noteName string, packageType string) *g.Occurrence {
 	cve := v.Search("VulnerabilityID").Data().(string)
 
@@ -195,15 +196,15 @@ func makeCPE(v *gabs.Container) string {
 		pkgVersion)
 }
 
+// getPackageType returns the package type based on the Trivy Class/Type combination.
+// If the Class is not lang-pkgs, then it is an OS package.
+// Else, use utils.ParsePackageType to determine the package type.
 func getPackageType(r *gabs.Container) string {
-	if r.Search("Class").Data().(string) == "lang-pkgs" {
-		switch r.Search("Type").Data().(string) {
-		case "gobinary":
-			return "GO"
-			// TODO: Add other languages
-		}
+	if r.Search("Class").Data().(string) != "lang-pkgs" {
+		return "OS"
 	}
-	return "OS"
+
+	return utils.ParsePackageType(r.Search("Type").Data().(string))
 }
 
 func getBasePackageIssue(v *gabs.Container, packageType string) *g.VulnerabilityOccurrence_PackageIssue {
