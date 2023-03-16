@@ -4,9 +4,10 @@ cloud.google.com/go/compute/internal
 # cloud.google.com/go/compute/metadata v0.2.3
 ## explicit; go 1.19
 cloud.google.com/go/compute/metadata
-# cloud.google.com/go/containeranalysis v0.7.0
+# cloud.google.com/go/containeranalysis v0.8.0
 ## explicit; go 1.19
 cloud.google.com/go/containeranalysis/apiv1
+cloud.google.com/go/containeranalysis/internal
 # cloud.google.com/go/grafeas v0.2.0
 ## explicit; go 1.16
 cloud.google.com/go/grafeas/apiv1
