@@ -3,16 +3,11 @@ package grype
 import (
 	"testing"
 
-	"github.com/mchmarny/vulctl/internal/source"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGrypeConverter(t *testing.T) {
-	s, err := source.NewJSONSource("test.json")
-	assert.NoError(t, err)
-	assert.NotNil(t, s)
-
-	list, err := Convert(s)
+	list, err := Convert("test.json")
 	assert.NoErrorf(t, err, "failed to convert: %v", err)
 	assert.NotNil(t, list)
 	assert.Greater(t, len(list), 0)
