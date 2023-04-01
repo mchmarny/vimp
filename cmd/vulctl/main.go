@@ -90,7 +90,7 @@ func execute() error {
 	opt := &processor.Options{
 		Source: *source,
 		File:   *file,
-		Format: *format,
+		Format: format,
 		Output: output,
 	}
 

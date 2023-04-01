@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vulctl/internal/converter/grype"
 	"github.com/mchmarny/vulctl/internal/converter/snyk"
 	"github.com/mchmarny/vulctl/internal/converter/trivy"
@@ -9,7 +10,7 @@ import (
 )
 
 // VulnerabilityMapper is a function that converts a source to a list of common vulnerability types.
-type VulnerabilityMapper func(path string) ([]*data.Vulnerability, error)
+type VulnerabilityMapper func(c *gabs.Container) ([]*data.Vulnerability, error)
 
 // GetMapper returns a vulnerability converter for the given source format.
 func getMapper(format Format) (VulnerabilityMapper, error) {

@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/mchmarny/vulctl/internal/parser"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +28,7 @@ type Options struct {
 	File string
 
 	// Format of the file to import.
-	Format string
+	Format *string
 
 	// FormatType is the type of the format (e.g. json, yaml, etc.)
 	FormatType Format
@@ -72,16 +73,25 @@ func (o *Options) validate() error {
 	if o.File == "" {
 		return ErrMissingPath
 	}
-	if o.Format == "" {
+	if o.Format == nil || *o.Format == "" {
+		c, err := parser.GetContainer(o.File)
+		if err != nil {
+			return errors.Wrap(err, "error parsing file while discovering format")
+		}
+		f := discoverFormat(c)
+		o.FormatType = f
+
+	} else {
+		f, err := ParseFormat(*o.Format)
+		if err != nil {
+			return errors.Wrap(err, "error parsing format")
+		}
+		o.FormatType = f
+	}
+
+	if o.FormatType == FormatUnknown {
 		return ErrMissingFormat
 	}
-
-	f, err := ParseFormat(o.Format)
-	if err != nil {
-		return errors.Wrap(err, "error parsing format")
-	}
-
-	o.FormatType = f
 
 	return nil
 }

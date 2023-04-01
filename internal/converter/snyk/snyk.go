@@ -10,25 +10,20 @@ import (
 )
 
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(path string) ([]*data.Vulnerability, error) {
-	if path == "" {
-		return nil, errors.New("empty path")
+func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
+	if c == nil {
+		return nil, errors.New("source required")
 	}
 
-	s, err := gabs.ParseJSONFile(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse file: %s", path)
-	}
-
-	v := s.Search("vulnerabilities")
+	v := c.Search("vulnerabilities")
 	if !v.Exists() {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
 	list := make([]*data.Vulnerability, 0)
 
-	for _, c := range v.Children() {
-		vul := mapVulnerability(c)
+	for _, r := range v.Children() {
+		vul := mapVulnerability(r)
 		if vul == nil {
 			continue
 		}

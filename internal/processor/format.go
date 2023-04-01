@@ -1,6 +1,12 @@
 package processor
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/Jeffail/gabs/v2"
+	"github.com/mchmarny/vulctl/internal/parser"
+)
 
 const (
 	FormatUnknown   Format = iota
@@ -61,4 +67,32 @@ func GetFormatNames() []string {
 		FormatTrivyJSONName,
 		FormatSnykJSONName,
 	}
+}
+
+func discoverFormat(c *gabs.Container) Format {
+	if c == nil {
+		return FormatUnknown
+	}
+
+	// grype
+	d := c.Search("descriptor", "name")
+	if d.Exists() && parser.ToString(d.Data()) == "grype" {
+		return FormatGrypeJSON
+	}
+
+	// snyk
+	d = c.Search("vulnerabilities")
+	if d.Exists() && d.Index(0).Exists() {
+		id := parser.ToString(d.Index(0).Search("id").Data())
+		if strings.HasPrefix(id, "SNYK-") {
+			return FormatSnykJSON
+		}
+	}
+
+	// trivy
+	if c.ExistsP("SchemaVersion") && c.ExistsP("Results") {
+		return FormatTrivyJSON
+	}
+
+	return FormatUnknown
 }
