@@ -1,8 +1,9 @@
-package types
+package processor
 
 import (
 	"net/url"
 
+	"github.com/mchmarny/vulctl/internal/source"
 	"github.com/pkg/errors"
 )
 
@@ -17,7 +18,8 @@ var (
 	ErrInvalidSource = errors.New("invalid source")
 )
 
-type InputOptions struct {
+// Options represents the input options.
+type Options struct {
 	// Source is the URI of the image from which the report was generated.
 	Source string
 
@@ -25,7 +27,10 @@ type InputOptions struct {
 	File string
 
 	// Format of the file to import.
-	Format SourceFormat
+	Format string
+
+	// FormatType is the type of the format (e.g. json, yaml, etc.)
+	FormatType source.Format
 
 	// Output path (optional).
 	Output *string
@@ -34,25 +39,33 @@ type InputOptions struct {
 	Quiet bool
 }
 
-func (i *InputOptions) Validate() error {
+func (o *Options) validate() error {
 	// Validate URL and ensure that scheme is specified
-	if i.Source == "" {
+	if o.Source == "" {
 		return ErrMissingSource
 	}
-	u, err := url.Parse(i.Source)
+	u, err := url.Parse(o.Source)
 	if err != nil {
 		return errors.Wrap(ErrInvalidSource, err.Error())
 	}
 	if u.Scheme == "" {
 		u.Scheme = "https"
 	}
-	i.Source = u.String()
+	o.Source = u.String()
 
-	if i.File == "" {
+	if o.File == "" {
 		return ErrMissingPath
 	}
-	if i.Format == SourceFormatUnknown {
+	if o.Format == "" {
 		return ErrMissingFormat
 	}
+
+	f, err := source.ParseFormat(o.Format)
+	if err != nil {
+		return errors.Wrap(err, "error parsing format")
+	}
+
+	o.FormatType = f
+
 	return nil
 }

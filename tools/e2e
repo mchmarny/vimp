@@ -7,20 +7,22 @@ msg () {
 }
 
 msg "root"
-bin/vulctl -v
-bin/vulctl -h
+bin/vulctl --version
 
 msg "import snyk"
-bin/vulctl import --source test/image \
-                  --file examples/data/snyk.json \
-                  --format snyk
+bin/vulctl --source test/image \
+           --file internal/converter/snyk/test.json \
+           --format snyk \
+           --verbose
 
 msg "import grype"
-bin/vulctl import --source test/image \
-                  --file examples/data/grype.json \
-                  --format grype
+bin/vulctl --source test/image \
+           --file internal/converter/grype/test.json \
+           --format grype \
+           --verbose
 
 msg "import snyk"
-bin/vulctl import --source test/image \
-                  --file examples/data/trivy.json \
-                  --format trivy
+bin/vulctl --source test/image \
+           --file internal/converter/trivy/test.json \
+           --format trivy \
+           --verbose
