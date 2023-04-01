@@ -2,6 +2,7 @@ package processor
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -36,6 +37,9 @@ type Options struct {
 
 	// Quiet suppresses output
 	Quiet bool
+
+	uri    string
+	digest string
 }
 
 func (o *Options) validate() error {
@@ -51,6 +55,19 @@ func (o *Options) validate() error {
 		u.Scheme = "https"
 	}
 	o.Source = u.String()
+
+	if strings.Contains(o.Source, "@") {
+		parts := strings.Split(o.Source, "@")
+		o.uri = parts[0]
+		o.digest = parts[1]
+	} else {
+		if strings.Contains(o.Source, ":") {
+			parts := strings.Split(o.Source, ":")
+			o.uri = parts[0]
+		} else {
+			o.uri = o.Source
+		}
+	}
 
 	if o.File == "" {
 		return ErrMissingPath

@@ -36,10 +36,10 @@ func Process(opt *Options) error {
 	log.Info().Msgf("found %d vulnerabilities", len(uniques))
 
 	scan := &data.Scan{
-		URI:             opt.Source,
-		Digest:          "",
-		PerformedAt:     time.Now().UTC(),
-		Count:           len(uniques),
+		URI:             opt.uri,
+		Digest:          opt.digest,
+		ProcessedAt:     time.Now().UTC(),
+		RecordCount:     len(uniques),
 		Vulnerabilities: uniques,
 	}
 
@@ -57,8 +57,6 @@ func output(in *Options, result *data.Scan) error {
 	if result == nil {
 		return errors.New("vulnerabilities required")
 	}
-
-	log.Debug().Msgf("found: %d", result.Count)
 
 	// output to stdout
 	if in.Output == nil || *in.Output == "" {

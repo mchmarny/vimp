@@ -6,7 +6,7 @@ import "time"
 type Scan struct {
 	URI             string           `json:"uri"`
 	Digest          string           `json:"digest"`
-	PerformedAt     time.Time        `json:"performed_at"`
+	ProcessedAt     time.Time        `json:"processed_at"`
+	RecordCount     int              `json:"record_count"`
 	Vulnerabilities []*Vulnerability `json:"vulnerabilities"`
-	Count           int              `json:"count"`
 }

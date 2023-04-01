@@ -7,29 +7,61 @@
 
 # vulctl
 
-Vulnerability scanners export tool.
-
+Vulnerability scanners result processing tool. Generalizes vulnerability reports from common OSS scanners into a generic format which then can be used to compare data across scanners or persist in database. 
 
 ```shell
-vulctl import --source $image \
-              --file report.json \
-              --format snyk
-              --output results.json
+export image="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
 ```
 
 The currently supported scanners/formats include:
 
-* [grype](https://github.com/anchore/grype)
+* [grype](https://github.com/anchore/grype) `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
+* [snyk](https://github.com/snyk/cli) `snyk container test --app-vulns --json-file-output=report.json $image`
+* [trivy](https://github.com/aquasecurity/trivy) `trivy image --format json --output report.json $image`
 
-  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
+Then, to process the vulnerability report output from `grype`:
 
-* [snyk](https://github.com/snyk/cli)
+```shell
+vulctl --source $image --file report.json --format grype
+```
 
-  `snyk container test --app-vulns --json-file-output=report.json $image`
+The resulting file or stdout output will look something like this:
 
-* [trivy](https://github.com/aquasecurity/trivy)
-
-  `trivy image --format json --output report.json $image`
+```json
+{
+  "uri": "https://docker.io/redis",
+  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
+  "processed_at": "2023-04-01T21:53:11.616Z",
+  "record_count": 82,
+  "vulnerabilities": [
+    {
+      "id": "GHSA-vpvm-3wq2-2wvm",
+      "package": "github.com/opencontainers/runc",
+      "version": "v1.1.0",
+      "severity": "high",
+      "score": 7,
+      "fixed": true
+    },
+    {
+      "id": "CVE-2023-0466",
+      "package": "libssl1.1",
+      "version": "1.1.1n-0+deb11u4",
+      "severity": "unknown",
+      "score": 0,
+      "fixed": false
+    },
+    {
+      "id": "CVE-2022-1304",
+      "package": "e2fsprogs",
+      "version": "1.46.2-2",
+      "severity": "high",
+      "score": 6.8,
+      "fixed": false
+    },
+    ...
+  ]
+}
+```
 
 
 ## Installation 
