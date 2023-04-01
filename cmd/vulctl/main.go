@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
-	"github.com/mchmarny/vulctl/pkg/types"
-	"github.com/mchmarny/vulctl/pkg/vul"
+	"github.com/mchmarny/vulctl/internal/processor"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,7 +20,7 @@ var (
 	date    = "unknown"
 
 	// flags
-	digest    = flag.String("digest", "", "digest of the source image")
+	source    = flag.String("source", "", "digest of the source image")
 	file      = flag.String("file", "", "path to vulnerability report file")
 	format    = flag.String("format", "", "scanner used to generate that file (e.g. grype, snyk, trivy)")
 	output    = flag.String("output", "", "path to write results to")
@@ -38,6 +38,8 @@ func main() {
 	}
 
 	if err := execute(); err != nil {
+		printVersion()
+		printUsage()
 		log.Error().Msg(err.Error())
 		os.Exit(1)
 	}
@@ -46,7 +48,24 @@ func main() {
 }
 
 func printVersion() {
-	log.Info().Str("version", version).Str("commit", commit).Str("date", date).Msg(name)
+	fmt.Printf("%s - %s (commit: %s - build: %s)\n", name, version, commit, date)
+}
+
+func printUsage() {
+	fmt.Printf(`
+
+usage:
+  %s [flags]
+
+flags:
+  --source   <digest> (required)
+  --file     <path>   (required)
+  --format   <format> (required, e.g. grype, snyk, trivy)
+  --output   <path>   (optional, defaults to stdout)
+  --verbose           (optional, prints debug logs, defaults to false)
+  --version           (optional, prints version and exits)
+
+`, name)
 }
 
 func initLogging(verbose *bool) {
@@ -68,23 +87,14 @@ func initLogging(verbose *bool) {
 }
 
 func execute() error {
-	f, err := types.ParseSourceFormat(*format)
-	if err != nil {
-		return errors.Wrap(err, "error parsing format")
-	}
-
-	opt := &types.InputOptions{
-		Source: *digest,
+	opt := &processor.Options{
+		Source: *source,
 		File:   *file,
+		Format: *format,
 		Output: output,
-		Format: f,
 	}
 
-	if err := opt.Validate(); err != nil {
-		return errors.Wrap(err, "error validating input")
-	}
-
-	if err := vul.Import(opt); err != nil {
+	if err := processor.Process(opt); err != nil {
 		return errors.Wrap(err, "error executing command")
 	}
 

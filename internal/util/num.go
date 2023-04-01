@@ -1,4 +1,4 @@
-package utils
+package util
 
 func ToFloat32(v interface{}) float32 {
 	if v == nil {

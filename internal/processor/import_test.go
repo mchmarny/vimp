@@ -1,27 +1,26 @@
-package vul
+package processor
 
 import (
 	"testing"
 
-	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInvalidImport(t *testing.T) {
-	err := Import(nil)
+	err := Process(nil)
 	assert.Error(t, err)
-	err = Import(&types.InputOptions{})
+	err = Process(&Options{})
 	assert.Error(t, err)
-	err = Import(&types.InputOptions{
+	err = Process(&Options{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
 	})
 	assert.Error(t, err)
-	err = Import(&types.InputOptions{
+	err = Process(&Options{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
 		File:   "bad/path/to/file.json",
 	})
 	assert.Error(t, err)
-	err = Import(&types.InputOptions{
+	err = Process(&Options{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
 		File:   "../../../examples/data/grype.json",
 	})
