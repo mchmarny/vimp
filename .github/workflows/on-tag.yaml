@@ -1,4 +1,4 @@
-name: tag-cli
+name: tag-release
 on:
   push:
     tags:
