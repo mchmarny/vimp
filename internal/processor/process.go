@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/mchmarny/vulctl/internal/parser"
 	"github.com/mchmarny/vulctl/pkg/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -18,12 +19,17 @@ func Process(opt *Options) error {
 		return errors.Wrap(err, "error validating options")
 	}
 
-	c, err := getMapper(opt.FormatType)
+	m, err := getMapper(opt.FormatType)
 	if err != nil {
 		return errors.Wrap(err, "error getting converter")
 	}
 
-	list, err := c(opt.File)
+	c, err := parser.GetContainer(opt.File)
+	if err != nil {
+		return errors.Wrap(err, "error parsing source")
+	}
+
+	list, err := m(c)
 	if err != nil {
 		return errors.Wrap(err, "error converting source")
 	}
