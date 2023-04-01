@@ -73,7 +73,7 @@ func output(in *types.InputOptions, vuls map[string]*types.Vulnerability) error 
 		return errors.Wrap(err, "error marshaling the output to file")
 	}
 
-	if err := os.WriteFile(*in.Output, b, 0644); err != nil {
+	if err := os.WriteFile(*in.Output, b, 0600); err != nil {
 		return errors.Wrapf(err, "error writing the output to file: %s", *in.Output)
 	}
 

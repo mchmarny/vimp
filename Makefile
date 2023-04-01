@@ -1,6 +1,6 @@
 RELEASE_VERSION :=$(shell cat .version)
 COMMIT          :=$(shell git rev-parse HEAD)
-YAML_FILES      :=$(shell find . -type f -regex ".*yaml" -print)
+YAML_FILES      :=$(shell find . -type f -regex ".*y*ml" -print)
 CURRENT_DATE	:=$(shell date '+%Y-%m-%dT%H:%M:%SZ')
 
 ## Variable assertions
@@ -59,15 +59,6 @@ build: tidy ## Builds CLI binary
 	-w -s -X main.date=$(CURRENT_DATE) \
 	-extldflags '-static'" \
     -a -mod vendor -o bin/vulctl cmd/vulctl/main.go
-
-.PHONY: image
-image: ## Builds the docker image
-	docker build \
-		--build-arg VERSION=$(RELEASE_VERSION) \
-		--build-arg COMMIT=$(COMMIT) \
-		--build-arg DATE=$(CURRENT_DATE) \
-		-t vulctl:$(RELEASE_VERSION) \
-		.
 
 .PHONY: setup
 setup: ## Creates the GCP resources 
