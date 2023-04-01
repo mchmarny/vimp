@@ -3,13 +3,12 @@
 set -euo pipefail
 
 digest=$1
-name=${2:-data}
 
 # grype
-grype -q --add-cpes-if-none -s AllLayers -o json --file examples/data/grype-${name}.json $digest
-
-# snyk
-snyk container test --app-vulns --json-file-output=examples/data/snyk-${name}.json $digest
+grype -q --add-cpes-if-none -s AllLayers -o json --file examples/data/grype.json $digest
 
 # trivy
-trivy image --format json --output examples/data/trivy-${name}.json $digest
+trivy image --format json --output examples/data/trivy.json $digest
+
+# snyk
+snyk container test --app-vulns --json-file-output=examples/data/snyk.json $digest

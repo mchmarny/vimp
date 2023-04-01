@@ -11,19 +11,16 @@ bin/vulctl -v
 bin/vulctl -h
 
 msg "import snyk"
-bin/vulctl import --project test \
-                  --source us-west1-docker.pkg.dev/cloudy-build/vulctl/ruby-demo@sha256:666b0f0498092184d635ac8fc53e30586f7bb8895e7ed8afba60632398c1af74 \
-                  --file examples/data/snyk-ruby.json \
+bin/vulctl import --source test/image \
+                  --file examples/data/snyk.json \
                   --format snyk
 
 msg "import grype"
-bin/vulctl import --project test \
-                  --source us-west1-docker.pkg.dev/cloudy-build/vulctl/node-demo@sha256:5bf6464d1b72e0f1d3c32005b234f875daece4581a74bd62dd49de0276f1fa05 \
-                  --file examples/data/grype-node.json \
+bin/vulctl import --source test/image \
+                  --file examples/data/grype.json \
                   --format grype
 
 msg "import snyk"
-bin/vulctl import --project test \
-                  --source redis \
-                  --file examples/data/trivy-redis.json \
+bin/vulctl import --source test/image \
+                  --file examples/data/trivy.json \
                   --format trivy

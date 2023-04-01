@@ -7,7 +7,7 @@ import (
 )
 
 // NewSource returns a new Source from the given path.
-func NewSource(opt *types.ImportOptions) (*Source, error) {
+func NewSource(opt *types.InputOptions) (*Source, error) {
 	if opt == nil {
 		return nil, errors.New("options required")
 	}

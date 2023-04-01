@@ -1,35 +1,57 @@
 package main
 
 import (
+	"flag"
 	"os"
 
-	vulctl "github.com/mchmarny/vulctl/cmd/vulctl/cli"
+	"github.com/mchmarny/vulctl/pkg/types"
+	"github.com/mchmarny/vulctl/pkg/vul"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	logLevelEnvVar = "debug"
-)
-
 var (
+	name = "vulctl"
+
+	// set at build time
 	version = "v0.0.1-default"
 	commit  = "none"
 	date    = "unknown"
+
+	// flags
+	digest    = flag.String("digest", "", "digest of the source image")
+	file      = flag.String("file", "", "path to vulnerability report file")
+	format    = flag.String("format", "", "scanner used to generate that file (e.g. grype, snyk, trivy)")
+	output    = flag.String("output", "", "path to write results to")
+	isVerbose = flag.Bool("verbose", false, "verbose output")
+	doVersion = flag.Bool("version", false, "print version and exit")
 )
 
 func main() {
-	initLogging()
-	err := vulctl.Execute(version, commit, date, os.Args)
-	if err != nil {
-		log.Error().Msg(err.Error())
+	flag.Parse()
+	initLogging(isVerbose)
+
+	if *doVersion {
+		printVersion()
+		os.Exit(0)
 	}
+
+	if err := execute(); err != nil {
+		log.Error().Msg(err.Error())
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }
 
-func initLogging() {
+func printVersion() {
+	log.Info().Str("version", version).Str("commit", commit).Str("date", date).Msg(name)
+}
+
+func initLogging(verbose *bool) {
 	level := zerolog.InfoLevel
-	levStr := os.Getenv(logLevelEnvVar)
-	if levStr == "true" {
+	if *verbose {
 		level = zerolog.DebugLevel
 	}
 
@@ -43,4 +65,28 @@ func initLogging() {
 	}
 
 	log.Logger = zerolog.New(out)
+}
+
+func execute() error {
+	f, err := types.ParseSourceFormat(*format)
+	if err != nil {
+		return errors.Wrap(err, "error parsing format")
+	}
+
+	opt := &types.InputOptions{
+		Source: *digest,
+		File:   *file,
+		Output: output,
+		Format: f,
+	}
+
+	if err := opt.Validate(); err != nil {
+		return errors.Wrap(err, "error validating input")
+	}
+
+	if err := vul.Import(opt); err != nil {
+		return errors.Wrap(err, "error executing command")
+	}
+
+	return nil
 }

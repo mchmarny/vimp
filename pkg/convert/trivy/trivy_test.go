@@ -1,7 +1,6 @@
 package trivy
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mchmarny/vulctl/pkg/src"
@@ -10,38 +9,26 @@ import (
 )
 
 func TestTrivyConverter(t *testing.T) {
-	opt := &types.ImportOptions{
-		Project: types.TestProjectID,
-		Source:  "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
-		File:    "../../../examples/data/trivy.json",
-		Format:  types.SourceFormatSnykJSON,
+	opt := &types.InputOptions{
+		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe...",
+		File:   "../../../examples/data/trivy.json",
+		Format: types.SourceFormatSnykJSON,
 	}
 	s, err := src.NewSource(opt)
 	assert.NoError(t, err)
 	assert.NotNil(t, s)
 
-	list, err := Convert(context.TODO(), s)
+	list, err := Convert(s)
 	assert.NoErrorf(t, err, "failed to convert: %v", err)
 	assert.NotNil(t, list)
 
-	for id, nocc := range list {
-		n := nocc.Note
+	for id, v := range list {
 		assert.NotEmpty(t, id)
-		assert.NotEmpty(t, n.Name)
-		assert.NotEmpty(t, n.ShortDescription)
-		assert.NotEmpty(t, n.RelatedUrl)
-		for _, u := range n.RelatedUrl {
-			assert.NotEmpty(t, u.Label)
-			assert.NotEmpty(t, u.Url)
-		}
-		assert.NotNil(t, n.GetVulnerability())
-		assert.NotEmpty(t, n.GetVulnerability().CvssScore)
-		assert.NotNil(t, n.GetVulnerability().CvssVersion)
-		assert.NotEmpty(t, n.GetVulnerability().Severity)
-		assert.NotEmpty(t, n.GetVulnerability().Details)
-		for _, d := range n.GetVulnerability().Details {
-			assert.NotEmpty(t, d.AffectedPackage)
-			assert.NotEmpty(t, d.AffectedCpeUri)
-		}
+		assert.NotEmpty(t, v)
+		assert.NotEmpty(t, v.ID)
+		assert.NotEmpty(t, v.Package)
+		assert.NotEmpty(t, v.Severity)
+		assert.NotEmpty(t, v.Version)
+		assert.GreaterOrEqual(t, v.Score, float32(0), id) // some matches won't have score
 	}
 }
