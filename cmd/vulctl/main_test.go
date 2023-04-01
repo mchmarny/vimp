@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestMain(t *testing.T) {
-	// TODO: make this test more meaningful
-	initLogging()
-	t.Logf("main() test")
+func TestLogging(t *testing.T) {
+	debug := true
+	initLogging(&debug)
+	t.Logf("test")
 }

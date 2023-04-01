@@ -1,21 +1,17 @@
 package vul
 
 import (
-	"context"
-	"fmt"
+	"encoding/json"
+	"os"
 
-	ca "cloud.google.com/go/containeranalysis/apiv1"
 	"github.com/mchmarny/vulctl/pkg/convert"
 	"github.com/mchmarny/vulctl/pkg/src"
 	"github.com/mchmarny/vulctl/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	g "google.golang.org/genproto/googleapis/grafeas/v1"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-func Import(ctx context.Context, opt *types.ImportOptions) error {
+func Import(opt *types.InputOptions) error {
 	if opt == nil {
 		return errors.New("options required")
 	}
@@ -32,13 +28,10 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.Wrap(err, "error getting converter")
 	}
 
-	list, err := c(ctx, s)
+	list, err := c(s)
 	if err != nil {
 		return errors.Wrap(err, "error converting source")
 	}
-
-	// TODO: Debug code
-	//_ = deleteNoteOccurrences(ctx, opt, list)
 
 	log.Info().Msgf("found %d vulnerabilities", len(list))
 
@@ -46,71 +39,42 @@ func Import(ctx context.Context, opt *types.ImportOptions) error {
 		return errors.New("expected non-nil result")
 	}
 
-	for noteID, nocc := range list {
-		log.Debug().Msgf("note: %s, occurrences: %d", noteID, len(nocc.Occurrences))
-		if err := postNoteOccurrences(ctx, opt.Project, noteID, nocc); err != nil {
-			return errors.Wrap(err, "error posting notes")
-		}
+	if err := output(opt, list); err != nil {
+		return errors.Wrap(err, "error posting notes")
 	}
 
 	return nil
 }
 
-// postNoteOccurrences creates new Notes and its associated Occurrences.
-// Notes will be created only if it does not exist.
-func postNoteOccurrences(ctx context.Context, projectID string, noteID string, nocc types.NoteOccurrences) error {
-	if projectID == "" {
-		return errors.New("projectID required")
+func output(in *types.InputOptions, vuls map[string]*types.Vulnerability) error {
+	if in == nil {
+		return errors.New("options required")
+	}
+	if vuls == nil {
+		return errors.New("vulnerabilities required")
 	}
 
-	// don't submit end-to-end test
-	if projectID == types.TestProjectID {
+	log.Debug().Msgf("found: %d", len(vuls))
+
+	list := make([]*types.Vulnerability, 0, len(vuls))
+	for _, v := range vuls {
+		list = append(list, v)
+	}
+
+	if in.Output == nil {
+		if err := json.NewEncoder(os.Stdout).Encode(list); err != nil {
+			return errors.Wrap(err, "error encoding the output to stdout")
+		}
 		return nil
 	}
 
-	c, err := ca.NewClient(ctx)
+	b, err := json.Marshal(list)
 	if err != nil {
-		return errors.Wrap(err, "error creating client")
-	}
-	defer c.Close()
-
-	p := fmt.Sprintf("projects/%s", projectID)
-
-	// Create Note
-	req := &g.CreateNoteRequest{
-		Parent: p,
-		NoteId: noteID,
-		Note:   nocc.Note,
-	}
-	noteName := fmt.Sprintf("%s/notes/%s", p, noteID)
-	_, err = c.GetGrafeasClient().CreateNote(ctx, req)
-	if err != nil {
-		// If note already exists, skip
-		if status.Code(err) == codes.AlreadyExists {
-			log.Debug().Msgf("already exists: %s", noteName)
-		} else {
-			return errors.Wrap(err, "error posting note")
-		}
+		return errors.Wrap(err, "error marshaling the output to file")
 	}
 
-	// Create Occurrences
-	for _, o := range nocc.Occurrences {
-		o.NoteName = noteName
-		req := &g.CreateOccurrenceRequest{
-			Parent:     p,
-			Occurrence: o,
-		}
-		_, err := c.GetGrafeasClient().CreateOccurrence(ctx, req)
-		if err != nil {
-			// If occurrence already exists, skip
-			if status.Code(err) == codes.AlreadyExists {
-				log.Debug().Msgf("already exists: occurrence %s-%s",
-					o.GetVulnerability().PackageIssue[0].AffectedPackage,
-					o.GetVulnerability().PackageIssue[0].AffectedVersion.Name)
-			} else {
-				return errors.Wrap(err, "error posting occurrence")
-			}
-		}
+	if err := os.WriteFile(*in.Output, b, 0644); err != nil {
+		return errors.Wrapf(err, "error writing the output to file: %s", *in.Output)
 	}
 
 	return nil
