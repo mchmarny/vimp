@@ -4,24 +4,28 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vulctl/internal/source"
-	"github.com/mchmarny/vulctl/internal/util"
-	"github.com/mchmarny/vulctl/pkg/vulnerability"
+	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vulctl/pkg/data"
 	"github.com/pkg/errors"
 )
 
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(s *source.Source) ([]*vulnerability.Item, error) {
-	if s == nil || s.Data == nil {
-		return nil, errors.New("valid source required")
+func Convert(path string) ([]*data.Vulnerability, error) {
+	if path == "" {
+		return nil, errors.New("empty path")
 	}
 
-	m := s.Data.Search("matches")
+	s, err := gabs.ParseJSONFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse file: %s", path)
+	}
+
+	m := s.Search("matches")
 	if !m.Exists() {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make([]*vulnerability.Item, 0)
+	list := make([]*data.Vulnerability, 0)
 
 	for _, c := range m.Children() {
 		vul := mapVulnerability(c)
@@ -35,7 +39,7 @@ func Convert(s *source.Source) ([]*vulnerability.Item, error) {
 	return list, nil
 }
 
-func mapVulnerability(m *gabs.Container) *vulnerability.Item {
+func mapVulnerability(m *gabs.Container) *data.Vulnerability {
 	v := m.Search("vulnerability")
 	if !v.Exists() {
 		return nil
@@ -46,13 +50,13 @@ func mapVulnerability(m *gabs.Container) *vulnerability.Item {
 		return nil
 	}
 
-	item := &vulnerability.Item{
-		ID:       util.ToString(v.Search("id").Data()),
-		Package:  util.ToString(a.Search("name").Data()),
-		Version:  util.ToString(a.Search("version").Data()),
-		Severity: strings.ToLower(util.ToString(v.Search("severity").Data())),
+	item := &data.Vulnerability{
+		ID:       parser.ToString(v.Search("id").Data()),
+		Package:  parser.ToString(a.Search("name").Data()),
+		Version:  parser.ToString(a.Search("version").Data()),
+		Severity: strings.ToLower(parser.ToString(v.Search("severity").Data())),
 		Score:    getScore(m),
-		IsFixed:  util.ToString(v.Search("fix", "state").Data()) == "fixed",
+		IsFixed:  parser.ToString(v.Search("fix", "state").Data()) == "fixed",
 	}
 
 	return item
@@ -74,9 +78,9 @@ func getScore(v *gabs.Container) float32 {
 	for _, cvss := range rv.Search("cvss").Children() {
 		switch cvss.Search("version").Data().(string) {
 		case "2.0":
-			return util.ToFloat32(cvss.Search("metrics", "baseScore").Data())
+			return parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
 		case "3.0", "3.1":
-			return util.ToFloat32(cvss.Search("metrics", "baseScore").Data())
+			return parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
 		}
 	}
 

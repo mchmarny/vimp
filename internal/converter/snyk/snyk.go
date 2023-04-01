@@ -4,26 +4,31 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vulctl/internal/source"
-	"github.com/mchmarny/vulctl/internal/util"
-	"github.com/mchmarny/vulctl/pkg/vulnerability"
+	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vulctl/pkg/data"
 	"github.com/pkg/errors"
 )
 
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(s *source.Source) ([]*vulnerability.Item, error) {
-	if s == nil || s.Data == nil {
-		return nil, errors.New("valid source required")
+func Convert(path string) ([]*data.Vulnerability, error) {
+	if path == "" {
+		return nil, errors.New("empty path")
 	}
 
-	if !s.Data.Search("vulnerabilities").Exists() {
+	s, err := gabs.ParseJSONFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse file: %s", path)
+	}
+
+	v := s.Search("vulnerabilities")
+	if !v.Exists() {
 		return nil, errors.New("unable to find vulnerabilities in source data")
 	}
 
-	list := make([]*vulnerability.Item, 0)
+	list := make([]*data.Vulnerability, 0)
 
-	for _, v := range s.Data.Search("vulnerabilities").Children() {
-		vul := mapVulnerability(v)
+	for _, c := range v.Children() {
+		vul := mapVulnerability(c)
 		if vul == nil {
 			continue
 		}
@@ -34,19 +39,19 @@ func Convert(s *source.Source) ([]*vulnerability.Item, error) {
 	return list, nil
 }
 
-func mapVulnerability(v *gabs.Container) *vulnerability.Item {
+func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 	c := v.Search("cvssDetails")
 	if !c.Exists() {
 		return nil
 	}
 
-	item := &vulnerability.Item{
-		ID:       util.ToString(v.Search("identifiers", "CVE").Index(0).Data()),
-		Package:  util.ToString(v.Search("name").Data()),
-		Version:  util.ToString(v.Search("version").Data()),
-		Severity: strings.ToLower(util.ToString(v.Search("severity").Data())),
-		Score:    util.ToFloat32(c.Search("cvssScore").Data()),
-		IsFixed:  util.ToBool(v.Search("isUpgradable").Data()),
+	item := &data.Vulnerability{
+		ID:       parser.ToString(v.Search("identifiers", "CVE").Index(0).Data()),
+		Package:  parser.ToString(v.Search("name").Data()),
+		Version:  parser.ToString(v.Search("version").Data()),
+		Severity: strings.ToLower(parser.ToString(v.Search("severity").Data())),
+		Score:    parser.ToFloat32(c.Search("cvssScore").Data()),
+		IsFixed:  parser.ToBool(v.Search("isUpgradable").Data()),
 	}
 
 	return item

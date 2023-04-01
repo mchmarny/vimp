@@ -4,25 +4,25 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vulctl/internal/source"
-	"github.com/mchmarny/vulctl/internal/util"
-	"github.com/mchmarny/vulctl/pkg/vulnerability"
+	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vulctl/pkg/data"
 	"github.com/pkg/errors"
 )
 
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(s *source.Source) ([]*vulnerability.Item, error) {
-	if s == nil || s.Data == nil {
-		return nil, errors.New("valid source required")
+func Convert(path string) ([]*data.Vulnerability, error) {
+	if path == "" {
+		return nil, errors.New("empty path")
 	}
 
-	if !s.Data.Search("vulnerabilities").Exists() {
-		return nil, errors.New("unable to find vulnerabilities in source data")
+	s, err := gabs.ParseJSONFile(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "unable to parse file: %s", path)
 	}
 
-	list := make([]*vulnerability.Item, 0)
+	list := make([]*data.Vulnerability, 0)
 
-	for _, r := range s.Data.Search("Results").Children() {
+	for _, r := range s.Search("Results").Children() {
 		for _, v := range r.Search("Vulnerabilities").Children() {
 			vul := mapVulnerability(v)
 			if vul == nil {
@@ -36,17 +36,17 @@ func Convert(s *source.Source) ([]*vulnerability.Item, error) {
 	return list, nil
 }
 
-func mapVulnerability(v *gabs.Container) *vulnerability.Item {
+func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 	c := v.Search("CVSS")
 	if !c.Exists() {
 		return nil
 	}
 
-	item := &vulnerability.Item{
-		ID:       util.ToString(v.Search("VulnerabilityID").Data()),
-		Package:  util.ToString(v.Search("PkgName").Data()),
-		Version:  util.ToString(v.Search("InstalledVersion").Data()),
-		Severity: strings.ToLower(util.ToString(v.Search("Severity").Data())),
+	item := &data.Vulnerability{
+		ID:       parser.ToString(v.Search("VulnerabilityID").Data()),
+		Package:  parser.ToString(v.Search("PkgName").Data()),
+		Version:  parser.ToString(v.Search("InstalledVersion").Data()),
+		Severity: strings.ToLower(parser.ToString(v.Search("Severity").Data())),
 		Score:    getScore(c),
 		IsFixed:  false, // trivy does not provide this info
 	}
@@ -58,20 +58,20 @@ func getScore(v *gabs.Container) float32 {
 	c := v.Search("nvd")
 	if c.Exists() {
 		if c.Search("V2Score").Exists() {
-			return util.ToFloat32(c.Search("V2Score").Data())
+			return parser.ToFloat32(c.Search("V2Score").Data())
 		}
 		if c.Search("V3Score").Exists() {
-			return util.ToFloat32(c.Search("V3Score").Data())
+			return parser.ToFloat32(c.Search("V3Score").Data())
 		}
 	}
 
 	c = v.Search("redhat")
 	if c.Exists() {
 		if c.Search("V2Score").Exists() {
-			return util.ToFloat32(c.Search("V2Score").Data())
+			return parser.ToFloat32(c.Search("V2Score").Data())
 		}
 		if c.Search("V3Score").Exists() {
-			return util.ToFloat32(c.Search("V3Score").Data())
+			return parser.ToFloat32(c.Search("V3Score").Data())
 		}
 	}
 
