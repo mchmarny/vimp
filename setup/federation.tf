@@ -6,8 +6,6 @@ locals {
   ci_roles = toset([
     "roles/artifactregistry.reader",
     "roles/artifactregistry.writer",
-    "roles/containeranalysis.occurrences.editor",
-    "roles/containeranalysis.notes.editor",
   ])
 }
 

@@ -15,7 +15,7 @@ jobs:
       contents: read
       security-events: write
     with:
-      go-version: ^1.20.1
+      go-version: ^1.20.2
       scan-severity: 'CRITICAL,HIGH,MEDIUM'
 
   release:
@@ -46,7 +46,7 @@ jobs:
     - name: Prune Git History
       run: git fetch --prune --unshallow
     - name: Install Syft
-      uses: anchore/sbom-action/download-syft@07978da4bdb4faa726e52dfc6b1bed63d4b56479  # v0.13.3
+      uses: anchore/sbom-action/download-syft@422cb34a0f8b599678c41b21163ea6088edb2624  # v0.14.1
       with:
         version: v0.13.1
     - name: Build CLI
@@ -91,7 +91,7 @@ jobs:
     permissions: read-all
     steps:
       - name: Install SLSA Verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@a43888265e1f6aae98c924538298944f2721dcf0  # v2.0.1
+        uses: slsa-framework/slsa-verifier/actions/installer@1ed38477096aa1044a040c5ba8646523a12013d0  # v2.1.0
       - name: Download Assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

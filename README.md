@@ -11,10 +11,10 @@ Vulnerability scanners export tool.
 
 
 ```shell
-vulctl import --project $project \
-              --source $image \
+vulctl import --source $image \
               --file report.json \
               --format snyk
+              --output results.json
 ```
 
 The currently supported scanners/formats include:
