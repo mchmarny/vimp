@@ -3,10 +3,9 @@ package processor
 import (
 	"encoding/json"
 	"os"
+	"time"
 
-	"github.com/mchmarny/vulctl/internal/converter"
-	"github.com/mchmarny/vulctl/internal/source"
-	"github.com/mchmarny/vulctl/pkg/vulnerability"
+	"github.com/mchmarny/vulctl/pkg/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -18,17 +17,13 @@ func Process(opt *Options) error {
 	if err := opt.validate(); err != nil {
 		return errors.Wrap(err, "error validating options")
 	}
-	s, err := source.NewJSONSource(opt.File)
-	if err != nil {
-		return errors.Wrap(err, "error creating source")
-	}
 
-	c, err := converter.GetMapper(opt.FormatType)
+	c, err := getMapper(opt.FormatType)
 	if err != nil {
 		return errors.Wrap(err, "error getting converter")
 	}
 
-	list, err := c(s)
+	list, err := c(opt.File)
 	if err != nil {
 		return errors.Wrap(err, "error converting source")
 	}
@@ -37,36 +32,46 @@ func Process(opt *Options) error {
 		return errors.New("expected non-nil result")
 	}
 
-	uniques := vulnerability.Unique(list)
+	uniques := Unique(list)
 	log.Info().Msgf("found %d vulnerabilities", len(uniques))
 
-	if err := output(opt, uniques); err != nil {
+	scan := &data.Scan{
+		URI:             opt.Source,
+		Digest:          "",
+		PerformedAt:     time.Now().UTC(),
+		Count:           len(uniques),
+		Vulnerabilities: uniques,
+	}
+
+	if err := output(opt, scan); err != nil {
 		return errors.Wrap(err, "error outputting the processed data")
 	}
 
 	return nil
 }
 
-func output(in *Options, list []*vulnerability.Item) error {
+func output(in *Options, result *data.Scan) error {
 	if in == nil {
 		return errors.New("options required")
 	}
-	if list == nil {
+	if result == nil {
 		return errors.New("vulnerabilities required")
 	}
 
-	log.Debug().Msgf("found: %d", len(list))
+	log.Debug().Msgf("found: %d", result.Count)
 
+	// output to stdout
 	if in.Output == nil || *in.Output == "" {
 		je := json.NewEncoder(os.Stdout)
 		je.SetIndent("", "  ")
-		if err := je.Encode(list); err != nil {
+		if err := je.Encode(result); err != nil {
 			return errors.Wrap(err, "error encoding the output to stdout")
 		}
 		return nil
 	}
 
-	b, err := json.Marshal(list)
+	// output to file
+	b, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return errors.Wrap(err, "error marshaling the output to file")
 	}

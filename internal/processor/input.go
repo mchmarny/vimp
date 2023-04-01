@@ -3,7 +3,6 @@ package processor
 import (
 	"net/url"
 
-	"github.com/mchmarny/vulctl/internal/source"
 	"github.com/pkg/errors"
 )
 
@@ -30,7 +29,7 @@ type Options struct {
 	Format string
 
 	// FormatType is the type of the format (e.g. json, yaml, etc.)
-	FormatType source.Format
+	FormatType Format
 
 	// Output path (optional).
 	Output *string
@@ -60,7 +59,7 @@ func (o *Options) validate() error {
 		return ErrMissingFormat
 	}
 
-	f, err := source.ParseFormat(o.Format)
+	f, err := ParseFormat(o.Format)
 	if err != nil {
 		return errors.Wrap(err, "error parsing format")
 	}
