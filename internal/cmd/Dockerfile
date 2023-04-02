@@ -16,4 +16,4 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
 
 FROM cgr.dev/chainguard/bash:latest
 COPY --from=builder /src/vulctl /usr/local/bin/
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
