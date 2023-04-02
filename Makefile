@@ -58,7 +58,7 @@ build: tidy ## Builds CLI binary
 	-w -s -X main.commit=$(COMMIT) \
 	-w -s -X main.date=$(CURRENT_DATE) \
 	-extldflags '-static'" \
-    -a -mod vendor -o bin/vulctl cmd/vulctl/main.go
+    -a -mod vendor -o bin/vulctl cmd/main.go
 
 .PHONY: setup
 setup: ## Creates the GCP resources 
