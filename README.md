@@ -29,51 +29,37 @@ vulctl --source $image --file report.json
 The resulting file or stdout output will look something like this:
 
 ```json
-{
-  "uri": "https://docker.io/redis",
-  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-  "processed_at": "2023-04-01T21:53:11.616Z",
-  "record_count": 82,
-  "vulnerabilities": [
-    {
-      "id": "GHSA-vpvm-3wq2-2wvm",
-      "package": "github.com/opencontainers/runc",
-      "version": "v1.1.0",
-      "severity": "high",
-      "score": 7,
-      "fixed": true
-    },
-    {
-      "id": "CVE-2023-0466",
-      "package": "libssl1.1",
-      "version": "1.1.1n-0+deb11u4",
-      "severity": "unknown",
-      "score": 0,
-      "fixed": false
-    },
-    {
-      "id": "CVE-2022-1304",
-      "package": "e2fsprogs",
-      "version": "1.46.2-2",
-      "severity": "high",
-      "score": 6.8,
-      "fixed": false
-    },
-    ...
-  ]
-}
+[
+  {
+    "id": "CVE-2021-45261",
+    "package": "patch",
+    "version": "2.7.6-2ubuntu1.1",
+    "severity": "low",
+    "score": 4.3,
+    "fixed": false,
+    "image": "https://us-west1-docker.pkg.dev/cloudy-demos/events/test38",
+    "digest": "sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55",
+    "processed_at": "2023-04-02T16:29:57.528705Z"
+  },
+  {
+    "id": "CVE-2018-6952",
+    "package": "patch",
+    "version": "2.7.6-2ubuntu1.1",
+    "severity": "low",
+    "score": 5,
+    "fixed": false,
+    "image": "https://us-west1-docker.pkg.dev/cloudy-demos/events/test38",
+    "digest": "sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55",
+    "processed_at": "2023-04-02T16:29:57.528705Z"
+  },
+  ...
+]
 ```
 
-Supported flags: 
+`vulctl` also supports output to file and CSV format. To see additional flags and supported options:
 
 ```shell
---source   <digest> (required)
---file     <path>   (required)
---format   <format> (required, e.g. grype, snyk, trivy)
---output   <path>   (optional, defaults to stdout)
---flat              (optional, flatten the output, defaults to false)
---verbose           (optional, prints debug logs, defaults to false)
---version           (optional, prints version and exits)
+vulctl -h
 ```
 
 ## Installation 

@@ -85,3 +85,6 @@ images.txt
 # terminalizer 
 /config.yml
 /vulctl.yml
+
+# CSVs
+*.csv
