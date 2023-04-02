@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // DecorateVulnerabilities decorates a list of vulnerabilities with image and digest.
 func DecorateVulnerabilities(list []*Vulnerability, image, digest string) []*ImageVulnerability {
@@ -28,4 +31,19 @@ type ImageVulnerability struct {
 
 	// ProcessedAt is the time the vulnerability was processed.
 	ProcessedAt time.Time `json:"processed_at"`
+}
+
+// Strings returns the string representation of the vulnerability.
+func (v *ImageVulnerability) Strings() []string {
+	return []string{
+		v.Image,
+		v.Digest,
+		v.ProcessedAt.Format(time.RFC3339),
+		v.ID,
+		v.Package,
+		v.Version,
+		v.Severity,
+		fmt.Sprintf("%f", v.Score),
+		fmt.Sprintf("%t", v.IsFixed),
+	}
 }

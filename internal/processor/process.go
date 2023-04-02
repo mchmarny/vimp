@@ -1,9 +1,9 @@
 package processor
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"os"
-	"time"
 
 	"github.com/mchmarny/vulctl/internal/parser"
 	"github.com/mchmarny/vulctl/pkg/data"
@@ -41,53 +41,89 @@ func Process(opt *Options) error {
 	uniques := Unique(list)
 	log.Info().Msgf("found %d vulnerabilities", len(uniques))
 
-	var result interface{}
+	data := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest)
 
-	if opt.Flat {
-		result = data.DecorateVulnerabilities(uniques, opt.uri, opt.digest)
-	} else {
-		result = &data.Scan{
-			URI:             opt.uri,
-			Digest:          opt.digest,
-			ProcessedAt:     time.Now().UTC(),
-			RecordCount:     len(uniques),
-			Vulnerabilities: uniques,
+	// stdout
+	if opt.Output == nil || *opt.Output == "" {
+		if err := output(opt, data); err != nil {
+			return errors.Wrap(err, "error outputting the processed data")
 		}
+		return nil
 	}
 
-	if err := output(opt, result); err != nil {
-		return errors.Wrap(err, "error outputting the processed data")
+	if opt.CSV {
+		if err := writeCSV(*opt.Output, data); err != nil {
+			return errors.Wrap(err, "error writing the processed data to CSV")
+		}
+		return nil
+	}
+
+	if err := writeJSON(*opt.Output, data); err != nil {
+		return errors.Wrap(err, "error writing the processed data to JSON")
 	}
 
 	return nil
 }
 
-func output(in *Options, result interface{}) error {
+// output writes the results to stdout.
+func output(in *Options, results []*data.ImageVulnerability) error {
 	if in == nil {
 		return errors.New("options required")
 	}
-	if result == nil {
-		return errors.New("vulnerabilities required")
+
+	je := json.NewEncoder(os.Stdout)
+	je.SetIndent("", "  ")
+	if err := je.Encode(results); err != nil {
+		return errors.Wrap(err, "error encoding the output to stdout")
 	}
 
-	// output to stdout
-	if in.Output == nil || *in.Output == "" {
-		je := json.NewEncoder(os.Stdout)
-		je.SetIndent("", "  ")
-		if err := je.Encode(result); err != nil {
-			return errors.Wrap(err, "error encoding the output to stdout")
-		}
-		return nil
+	return nil
+}
+
+// writeJSON writes the results to a file.
+func writeJSON(path string, results []*data.ImageVulnerability) error {
+	if path == "" {
+		return errors.New("path required")
 	}
 
-	// output to file
-	b, err := json.MarshalIndent(result, "", "  ")
+	b, err := json.MarshalIndent(results, "", "  ")
 	if err != nil {
 		return errors.Wrap(err, "error marshaling the output to file")
 	}
 
-	if err := os.WriteFile(*in.Output, b, 0600); err != nil {
-		return errors.Wrapf(err, "error writing the output to file: %s", *in.Output)
+	if err := os.WriteFile(path, b, 0600); err != nil {
+		return errors.Wrapf(err, "error writing the output to file: %s", path)
+	}
+
+	return nil
+}
+
+// writeCSV writes the results to a file.
+func writeCSV(path string, results []*data.ImageVulnerability) error {
+	if path == "" {
+		return errors.New("path required")
+	}
+
+	// file
+	f, err := os.Create(path)
+	if err != nil {
+		return errors.Wrapf(err, "error creating the output file: %s", path)
+	}
+	defer f.Close()
+
+	// csv
+	w := csv.NewWriter(f)
+
+	for _, r := range results {
+		if err := w.Write(r.Strings()); err != nil {
+			return errors.Wrap(err, "error writing record to file")
+		}
+	}
+
+	w.Flush()
+
+	if err := w.Error(); err != nil {
+		return errors.Wrap(err, "error writing the output to file")
 	}
 
 	return nil
