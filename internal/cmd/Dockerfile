@@ -15,5 +15,5 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
     -a -mod vendor -o vulctl internal/cmd/main.go
 
 FROM cgr.dev/chainguard/bash:latest
-COPY --from=builder /src/vulctl /usr/local/bin/
-ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
+COPY --from=builder /src/vulctl /
+ENTRYPOINT ["/vulctl"]
