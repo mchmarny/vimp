@@ -1,5 +1,6 @@
 [![test](https://github.com/mchmarny/vulctl/actions/workflows/on-push.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vulctl/actions/workflows/on-push.yaml)
-[![release](https://github.com/mchmarny/vulctl/actions/workflows/on-tag.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vulctl/actions/workflows/on-tag.yaml)
+[![release-cli](https://github.com/mchmarny/vulctl/actions/workflows/on-tag-cli.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vulctl/actions/workflows/on-tag-cli.yaml)
+[![release-img](https://github.com/mchmarny/vulctl/actions/workflows/on-tag-img.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vulctl/actions/workflows/on-tag-img.yaml)
 [![](https://codecov.io/gh/mchmarny/vulctl/branch/main/graph/badge.svg?token=9HLYDZZADN)](https://codecov.io/gh/mchmarny/vulctl)
 [![version](https://img.shields.io/github/release/mchmarny/vulctl.svg?label=version)](https://github.com/mchmarny/vulctl/releases/latest)
 [![](https://img.shields.io/github/go-mod/go-version/mchmarny/vulctl.svg?label=go)](https://github.com/mchmarny/vulctl)
