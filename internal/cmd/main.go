@@ -24,8 +24,9 @@ var (
 	file      = flag.String("file", "", "path to vulnerability report file")
 	format    = flag.String("format", "", "scanner used to generate that file (e.g. grype, snyk, trivy)")
 	output    = flag.String("output", "", "path to write results to")
-	isVerbose = flag.Bool("verbose", false, "verbose output")
-	doVersion = flag.Bool("version", false, "print version and exit")
+	isFlat    = flag.Bool("flat", false, "flatten the output (default: false)")
+	isVerbose = flag.Bool("verbose", false, "verbose output (default: false))")
+	doVersion = flag.Bool("version", false, "print version and exit (default: false)")
 )
 
 func main() {
@@ -62,6 +63,7 @@ flags:
   --file     <path>   (required)
   --format   <format> (required, e.g. grype, snyk, trivy)
   --output   <path>   (optional, defaults to stdout)
+  --flat              (optional, flatten the output, defaults to false)
   --verbose           (optional, prints debug logs, defaults to false)
   --version           (optional, prints version and exits)
 
@@ -92,6 +94,7 @@ func execute() error {
 		File:   *file,
 		Format: format,
 		Output: output,
+		Flat:   *isFlat,
 	}
 
 	if err := processor.Process(opt); err != nil {
