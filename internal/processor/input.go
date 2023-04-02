@@ -93,7 +93,7 @@ func (o *Options) validate() error {
 		return ErrMissingFormat
 	}
 
-	if o.Output != nil && *o.Output == "" && o.CSV {
+	if (o.Output == nil || *o.Output == "") && o.CSV {
 		return errors.New("output path is required for CSV output")
 	}
 

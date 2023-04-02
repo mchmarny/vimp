@@ -41,7 +41,7 @@ func Process(opt *Options) error {
 	uniques := Unique(list)
 	log.Info().Msgf("found %d vulnerabilities", len(uniques))
 
-	data := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest)
+	data := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest, opt.FormatType.String())
 
 	// stdout
 	if opt.Output == nil || *opt.Output == "" {
