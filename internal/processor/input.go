@@ -73,6 +73,7 @@ func (o *Options) validate() error {
 	if o.File == "" {
 		return ErrMissingPath
 	}
+
 	if o.Format == nil || *o.Format == "" {
 		c, err := parser.GetContainer(o.File)
 		if err != nil {
@@ -80,7 +81,6 @@ func (o *Options) validate() error {
 		}
 		f := discoverFormat(c)
 		o.FormatType = f
-
 	} else {
 		f, err := ParseFormat(*o.Format)
 		if err != nil {
