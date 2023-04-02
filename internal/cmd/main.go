@@ -20,13 +20,13 @@ var (
 	date    = "unknown"
 
 	// flags
-	source    = flag.String("source", "", "digest of the source image")
-	file      = flag.String("file", "", "path to vulnerability report file")
-	format    = flag.String("format", "", "scanner used to generate that file (e.g. grype, snyk, trivy)")
-	output    = flag.String("output", "", "path to write results to")
-	isFlat    = flag.Bool("flat", false, "flatten the output (default: false)")
-	isVerbose = flag.Bool("verbose", false, "verbose output (default: false))")
-	doVersion = flag.Bool("version", false, "print version and exit (default: false)")
+	source    = flag.String("source", "", "Digest of the source image from which the vulnerability report was generated.")
+	file      = flag.String("file", "", "Path to vulnerability report.")
+	format    = flag.String("format", "", "Scanner used to generate vulnerability report (e.g. grype, snyk, trivy). Auto-detected if not specified.")
+	output    = flag.String("output", "", "Path to where results should be written (default: stdout).")
+	isCSV     = flag.Bool("csv", false, "Output as CSV (default: json). Only supported when output specified.")
+	isVerbose = flag.Bool("verbose", false, "Verbose output (default: false)")
+	doVersion = flag.Bool("version", false, "Print version (default: false)")
 )
 
 func main() {
@@ -40,7 +40,6 @@ func main() {
 
 	if err := execute(); err != nil {
 		printVersion()
-		printUsage()
 		log.Error().Msg(err.Error())
 		os.Exit(1)
 	}
@@ -50,24 +49,6 @@ func main() {
 
 func printVersion() {
 	fmt.Printf("%s - %s (commit: %s - build: %s)\n", name, version, commit, date)
-}
-
-func printUsage() {
-	fmt.Printf(`
-
-usage:
-  %s [flags]
-
-flags:
-  --source   <digest> (required)
-  --file     <path>   (required)
-  --format   <format> (required, e.g. grype, snyk, trivy)
-  --output   <path>   (optional, defaults to stdout)
-  --flat              (optional, flatten the output, defaults to false)
-  --verbose           (optional, prints debug logs, defaults to false)
-  --version           (optional, prints version and exits)
-
-`, name)
 }
 
 func initLogging(verbose *bool) {
@@ -94,7 +75,7 @@ func execute() error {
 		File:   *file,
 		Format: format,
 		Output: output,
-		Flat:   *isFlat,
+		CSV:    *isCSV,
 	}
 
 	if err := processor.Process(opt); err != nil {

@@ -36,8 +36,8 @@ type Options struct {
 	// Output path (optional).
 	Output *string
 
-	// Flat indicates that the output should be flattened.
-	Flat bool
+	// CSV indicates that the output should be in CSV format.
+	CSV bool
 
 	uri    string
 	digest string
@@ -91,6 +91,10 @@ func (o *Options) validate() error {
 
 	if o.FormatType == FormatUnknown {
 		return ErrMissingFormat
+	}
+
+	if o.Output != nil && *o.Output == "" && o.CSV {
+		return errors.New("output path is required for CSV output")
 	}
 
 	return nil
