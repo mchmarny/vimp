@@ -30,14 +30,14 @@ type Options struct {
 	// Format of the file to import.
 	Format *string
 
-	// FormatType is the type of the format (e.g. json, yaml, etc.)
+	// FormatType is the type of the format (e.g. json, yaml, etc.).
 	FormatType Format
 
 	// Output path (optional).
 	Output *string
 
-	// Quiet suppresses output
-	Quiet bool
+	// Flat indicates that the output should be flattened.
+	Flat bool
 
 	uri    string
 	digest string

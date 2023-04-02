@@ -41,22 +41,28 @@ func Process(opt *Options) error {
 	uniques := Unique(list)
 	log.Info().Msgf("found %d vulnerabilities", len(uniques))
 
-	scan := &data.Scan{
-		URI:             opt.uri,
-		Digest:          opt.digest,
-		ProcessedAt:     time.Now().UTC(),
-		RecordCount:     len(uniques),
-		Vulnerabilities: uniques,
+	var result interface{}
+
+	if opt.Flat {
+		result = data.DecorateVulnerabilities(uniques, opt.uri, opt.digest)
+	} else {
+		result = &data.Scan{
+			URI:             opt.uri,
+			Digest:          opt.digest,
+			ProcessedAt:     time.Now().UTC(),
+			RecordCount:     len(uniques),
+			Vulnerabilities: uniques,
+		}
 	}
 
-	if err := output(opt, scan); err != nil {
+	if err := output(opt, result); err != nil {
 		return errors.Wrap(err, "error outputting the processed data")
 	}
 
 	return nil
 }
 
-func output(in *Options, result *data.Scan) error {
+func output(in *Options, result interface{}) error {
 	if in == nil {
 		return errors.New("options required")
 	}

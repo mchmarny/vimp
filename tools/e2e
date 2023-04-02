@@ -10,19 +10,17 @@ msg "root"
 bin/vulctl --version
 
 msg "import snyk"
-bin/vulctl --source test/image \
+bin/vulctl --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/snyk/test.json \
-           --format snyk \
            --verbose
 
 msg "import grype"
-bin/vulctl --source test/image \
+bin/vulctl --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/grype/test.json \
-           --format grype \
-           --verbose
+           --format grype
 
 msg "import snyk"
-bin/vulctl --source test/image \
+bin/vulctl --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/trivy/test.json \
            --format trivy \
-           --verbose
+           --flat
