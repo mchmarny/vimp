@@ -6,12 +6,13 @@ import (
 )
 
 // DecorateVulnerabilities decorates a list of vulnerabilities with image and digest.
-func DecorateVulnerabilities(list []*Vulnerability, image, digest string) []*ImageVulnerability {
+func DecorateVulnerabilities(list []*Vulnerability, image, digest, src string) []*ImageVulnerability {
 	result := make([]*ImageVulnerability, 0, len(list))
 	for _, v := range list {
 		result = append(result, &ImageVulnerability{
 			Vulnerability: v,
 			Image:         image,
+			Source:        src,
 			Digest:        digest,
 			ProcessedAt:   time.Now().UTC(),
 		})
@@ -29,6 +30,9 @@ type ImageVulnerability struct {
 	// Digest is the image digest.
 	Digest string `json:"digest"`
 
+	// Source is the source of the vulnerability.
+	Source string `json:"source"`
+
 	// ProcessedAt is the time the vulnerability was processed.
 	ProcessedAt time.Time `json:"processed_at"`
 }
@@ -38,6 +42,7 @@ func (v *ImageVulnerability) Strings() []string {
 	return []string{
 		v.Image,
 		v.Digest,
+		v.Source,
 		v.ProcessedAt.Format(time.RFC3339),
 		v.ID,
 		v.Package,
