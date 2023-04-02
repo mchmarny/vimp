@@ -23,7 +23,7 @@ The currently supported scanners/formats include:
 Then, to process the vulnerability report output from `grype`:
 
 ```shell
-vulctl --source $image --file report.json --format grype
+vulctl --source $image --file report.json
 ```
 
 The resulting file or stdout output will look something like this:
@@ -64,6 +64,17 @@ The resulting file or stdout output will look something like this:
 }
 ```
 
+Supported flags: 
+
+```shell
+--source   <digest> (required)
+--file     <path>   (required)
+--format   <format> (required, e.g. grype, snyk, trivy)
+--output   <path>   (optional, defaults to stdout)
+--flat              (optional, flatten the output, defaults to false)
+--verbose           (optional, prints debug logs, defaults to false)
+--version           (optional, prints version and exits)
+```
 
 ## Installation 
 
