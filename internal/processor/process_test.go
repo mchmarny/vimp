@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInvalidImport(t *testing.T) {
+func TestInvalidProcess(t *testing.T) {
 	err := Process(nil)
 	assert.Error(t, err)
 	err = Process(&Options{})

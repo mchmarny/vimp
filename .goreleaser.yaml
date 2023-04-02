@@ -16,7 +16,7 @@ sboms:
 builds:
 - binary: vulctl
   mod_timestamp: '{{ .CommitTimestamp }}'
-  dir: ./cmd/vulctl
+  dir: ./cmd
   env:
   - CGO_ENABLED=0
   flags:
