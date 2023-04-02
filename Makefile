@@ -63,6 +63,7 @@ build: tidy ## Builds CLI binary
 .PHONY: image
 image: ## Builds container image
 	docker build \
+		--platform linux/amd64 \
 		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:$(RELEASE_VERSION) \
 		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:latest \
 		-f internal/cmd/Dockerfile \
