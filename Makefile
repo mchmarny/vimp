@@ -60,6 +60,18 @@ build: tidy ## Builds CLI binary
 	-extldflags '-static'" \
     -a -mod vendor -o bin/vulctl internal/cmd/main.go
 
+.PHONY: image
+image: ## Builds container image
+	docker build \
+		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:$(RELEASE_VERSION) \
+		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:latest \
+		-f internal/cmd/Dockerfile \
+		--build-arg VERSION=$(RELEASE_VERSION) \
+		--build-arg COMMIT=$(COMMIT) \
+		--build-arg DATE=$(CURRENT_DATE) \
+		.
+	docker push us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl --all-tags
+
 .PHONY: setup
 setup: ## Creates the GCP resources 
 	terraform -chdir=./setup init
