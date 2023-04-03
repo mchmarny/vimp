@@ -79,6 +79,7 @@ cosign.*
 # docker 
 digest.txt
 
+/sample
 /images
 images.txt
 
