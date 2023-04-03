@@ -45,8 +45,12 @@ func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 		Package:  parser.ToString(v.Search("name").Data()),
 		Version:  parser.ToString(v.Search("version").Data()),
 		Severity: strings.ToLower(parser.ToString(v.Search("severity").Data())),
-		Score:    parser.ToFloat32(c.Search("cvssScore").Data()),
+		Score:    parser.ToFloat32(v.Search("cvssScore").Data()),
 		IsFixed:  parser.ToBool(v.Search("isUpgradable").Data()),
+	}
+
+	if item.Score == 0 {
+		item.Score = parser.ToFloat32(c.Search("baseScore").Data())
 	}
 
 	return item
