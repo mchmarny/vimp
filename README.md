@@ -31,26 +31,28 @@ The resulting file or stdout output will look something like this:
 ```json
 [
   {
-    "id": "CVE-2021-45261",
-    "package": "patch",
-    "version": "2.7.6-2ubuntu1.1",
+    "id": "CVE-2013-4392",
+    "package": "libudev1",
+    "version": "247.3-7+deb11u1",
     "severity": "low",
-    "score": 4.3,
+    "score": 3.3,
     "fixed": false,
-    "image": "https://us-west1-docker.pkg.dev/cloudy-demos/events/test38",
-    "digest": "sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55",
-    "processed_at": "2023-04-02T16:29:57.528705Z"
+    "image": "https://docker.io/redis",
+    "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
+    "source": "trivy",
+    "processed_at": "2023-04-03T16:56:55.911011Z"
   },
   {
-    "id": "CVE-2018-6952",
-    "package": "patch",
-    "version": "2.7.6-2ubuntu1.1",
-    "severity": "low",
-    "score": 5,
+    "id": "CVE-2022-24769",
+    "package": "github.com/opencontainers/runc",
+    "version": "v1.1.0",
+    "severity": "medium",
+    "score": 4.6,
     "fixed": false,
-    "image": "https://us-west1-docker.pkg.dev/cloudy-demos/events/test38",
-    "digest": "sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55",
-    "processed_at": "2023-04-02T16:29:57.528705Z"
+    "image": "https://docker.io/redis",
+    "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
+    "source": "trivy",
+    "processed_at": "2023-04-03T16:56:55.911012Z"
   },
   ...
 ]
