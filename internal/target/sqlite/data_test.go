@@ -20,6 +20,8 @@ func deleteDB() {
 }
 
 func TestData(t *testing.T) {
+	t.Parallel()
+
 	deleteDB()
 	defer deleteDB()
 

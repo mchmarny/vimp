@@ -29,8 +29,46 @@ type VulnerabilitySource struct {
 	ProcessedAt time.Time `json:"processed_at"`
 }
 
+// Equal returns true if the vulnerability sources are equal.
+func (v *VulnerabilitySource) Equal(other *VulnerabilitySource) bool {
+	return v.Source == other.Source &&
+		v.Severity == other.Severity &&
+		v.Score == other.Score
+}
+
+func (v *VulnerabilitySource) String() string {
+	return v.Source
+}
+
 // VulnerabilityList represents a list of vulnerabilities.
 type VulnerabilityList struct {
 	Image           *Image                            `json:"image"`
+	Count           int                               `json:"count"`
 	Vulnerabilities map[string][]*VulnerabilitySource `json:"vulnerabilities,omitempty"`
+}
+
+// FilterOutDuplicates removes duplicate vulnerabilities.
+func FilterOutDuplicates(in map[string][]*VulnerabilitySource) map[string][]*VulnerabilitySource {
+	out := make(map[string][]*VulnerabilitySource)
+	for cve, v := range in {
+		if areDiff(v) {
+			out[cve] = v
+		}
+	}
+	return out
+}
+
+func areDiff(vuls []*VulnerabilitySource) bool {
+	var last *VulnerabilitySource
+	for _, v := range vuls {
+		if last == nil {
+			last = v
+			continue
+		}
+
+		if !last.Equal(v) {
+			return true
+		}
+	}
+	return false
 }

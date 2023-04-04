@@ -32,6 +32,9 @@ type Options struct {
 
 	// Target is the target data store uri.
 	Target string
+
+	// DiffsOnly indicates if only diffs should be returned.
+	DiffsOnly bool
 }
 
 func (o *Options) String() string {

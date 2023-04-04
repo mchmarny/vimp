@@ -7,6 +7,8 @@ import (
 )
 
 func TestInvalidProcess(t *testing.T) {
+	t.Parallel()
+
 	err := Import(nil)
 	assert.Error(t, err)
 	err = Import(&ImportOptions{})

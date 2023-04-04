@@ -7,6 +7,8 @@ import (
 )
 
 func TestImportInput(t *testing.T) {
+	t.Parallel()
+
 	o := &ImportOptions{}
 	assert.Error(t, o.validate())
 
