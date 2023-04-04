@@ -16,8 +16,6 @@ var (
 
 	// set at build time
 	version = "v0.0.1-default"
-	commit  = "none"
-	date    = "unknown"
 
 	// flags
 	source    = flag.String("source", "", "Digest of the source image from which the vulnerability report was generated.")
@@ -48,7 +46,7 @@ func main() {
 }
 
 func printVersion() {
-	fmt.Printf("%s - %s (commit: %s - build: %s)\n", name, version, commit, date)
+	fmt.Printf("%s - %s\n", name, version)
 }
 
 func initLogging(verbose *bool) {

@@ -1,4 +1,4 @@
-name: build-image
+name: build_image
 
 on:
   workflow_call:
@@ -19,6 +19,11 @@ on:
         description: 'OIDC user ID'
         required: true
         type: string
+      go_version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.20.2'
     outputs:
       digest:
         value: ${{ jobs.build.outputs.digest }}
@@ -36,15 +41,30 @@ jobs:
       id-token: write
     steps:
 
+    - name: Setup Go
+      uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
+      with:
+        go-version: '${{ inputs.go_version }}'
+
+    - run: go version
+
+    - name: Cache Go Modules
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Checkout Code
       uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3  # v3.5.0
 
-    - name: Get Version
-      run: |-
-        set -euo pipefail
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-        echo "CURRENT_DATE=$(date '+%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
-        echo "RELEASE_COMMIT=${GITHUB_SHA}" >> $GITHUB_ENV
+    - name: Tidy Modules
+      run: |
+        go mod tidy
+        go mod vendor
 
     - id: auth
       name: Auth GCP
@@ -54,39 +74,29 @@ jobs:
         workload_identity_provider: ${{ inputs.auth_provider }}
         service_account: ${{ inputs.auth_user }}
 
-    - name: Define Metadata
-      id: meta
-      uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96  # v4.3.0
-      with:
-        images: |
-          ${{ inputs.image_repo }}/${{ inputs.image_name }}
-        tags: |
-          type=raw,enable=true,value=${{ env.RELEASE_VERSION }}
-          type=raw,enable=true,value=${{ env.RELEASE_COMMIT }}
-          type=raw,enable=true,value=latest
+    - name: Install ko
+      uses: ko-build/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa  # v0.6
 
-    - name: Registry Auth
-      uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a  # v2.1.0
-      with:
-        registry: ${{ inputs.image_repo }}
-        username: oauth2accesstoken
-        password: ${{ steps.auth.outputs.access_token }}
-
-    - name: Image Push
-      id: push
-      uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671  # v4.0.0
-      with:
-        context: .
-        file: internal/cmd/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          VERSION=${{ env.RELEASE_VERSION }}
-          COMMIT=${{ env.RELEASE_COMMIT }}
-          DATE=${{ env.CURRENT_DATE }}
-
-    - name: Export Digest
-      id: image
+    - name: Authenticate ko
+      env:
+        AUTH_TOKEN: ${{ steps.auth.outputs.access_token }}
       run: |
-        echo "digest=${{ inputs.image_repo }}/${{ inputs.image_name }}@${{ steps.push.outputs.digest }}" >> $GITHUB_OUTPUT
+        set -euo pipefail
+        reg=$(echo ${{ inputs.image_repo }} | cut -d/ -f1)
+        echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
+
+    - name: Get Version
+      run: |
+        set -euo pipefail
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - name: Build Image
+      id: image
+      env:
+        KO_DOCKER_REPO: ${{ inputs.image_repo }}/${{ inputs.image_name }}
+        GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
+        COSIGN_EXPERIMENTAL: "true"
+      run: |
+        set -euo pipefail
+        ko build cmd/server/main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
+        echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"
