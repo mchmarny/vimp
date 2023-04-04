@@ -77,6 +77,7 @@ jobs:
       auth_user: ${{ needs.conf.outputs.service_account }}
       image_name: ${{ needs.conf.outputs.image_name }}
       image_repo: ${{ needs.conf.outputs.registry_uri }}
+      go_version: ${{ needs.conf.outputs.go_version }}
 
   sign:
     needs:

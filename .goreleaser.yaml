@@ -16,7 +16,7 @@ sboms:
 builds:
 - binary: vimp
   mod_timestamp: '{{ .CommitTimestamp }}'
-  dir: ./internal/cmd
+  dir: .
   env:
   - CGO_ENABLED=0
   flags:
