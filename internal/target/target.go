@@ -14,23 +14,23 @@ import (
 const (
 	expectedURIParts = 2
 
-	// BQType is the BigQuery importer type
-	BQType = "bq"
-	// StdoutType is the stdout importer type
-	ConsoleType = "console"
-	// FileType is the file importer type
-	FileType = "file"
-	// SQLiteType is the sqlite importer type
-	SQLiteType = "sqlite"
-)
-
-var (
-	// ImporterTypes is the list of supported importer types.
-	ImporterTypes = []string{BQType, ConsoleType, FileType}
+	bqType      = "bq"
+	consoleType = "console"
+	fileType    = "file"
+	sqliteType  = "sqlite"
 )
 
 // Importer is the interface for importers.
 type Importer func(uri string, vuls []*data.ImageVulnerability) error
+
+func GetSampleTargets() []string {
+	list := []string{}
+	list = append(list, sqlite.SampleURIs...)
+	list = append(list, bq.SampleURIs...)
+	list = append(list, file.SampleURIs...)
+	list = append(list, console.SampleURIs...)
+	return list
+}
 
 // GetImporter returns importer for the given target.
 func GetImporter(uri string) (Importer, error) {
@@ -45,13 +45,13 @@ func GetImporter(uri string) (Importer, error) {
 	}
 
 	switch strings.ToLower(p[0]) {
-	case BQType:
+	case bqType:
 		return bq.Import, nil
-	case ConsoleType:
+	case consoleType:
 		return console.Import, nil
-	case FileType:
+	case fileType:
 		return file.Import, nil
-	case SQLiteType:
+	case sqliteType:
 		return sqlite.Import, nil
 	default:
 		return nil, errors.Errorf("unsupported import target type: %s", uri)

@@ -51,7 +51,7 @@ build: tidy ## Builds CLI binary
 	CGO_ENABLED=0 go build -trimpath -ldflags="\
     -w -s -X main.version=$(RELEASE_VERSION) \
 	-extldflags '-static'" \
-    -a -mod vendor -o bin/vimp main.go
+    -mod vendor -o bin/vimp main.go
 
 .PHONY: image
 image: ## Builds container image
