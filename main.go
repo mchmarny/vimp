@@ -20,7 +20,7 @@ var (
 	// flags
 	source    = flag.String("source", "", "Digest of the source image from which the vulnerability report was generated.")
 	file      = flag.String("file", "", "Path to vulnerability report.")
-	target    = flag.String("target", "", "Target data store (e.g. bq://project.dataset.table, file://path/to/file.json, stdout:// etc.)")
+	target    = flag.String("target", "", "Target data store (e.g. bq://project.dataset.table, file://path/to/file.json, console://stdout, etc.)")
 	isVerbose = flag.Bool("verbose", false, "Verbose output (default: false)")
 	doVersion = flag.Bool("version", false, "Print version (default: false)")
 )
