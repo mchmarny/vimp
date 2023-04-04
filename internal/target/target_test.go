@@ -10,7 +10,7 @@ func TestTarget(t *testing.T) {
 	_, err := GetImporter("redis://localhost:6379")
 	assert.Error(t, err)
 
-	_, err = GetImporter("bq://project:dataset.table")
+	_, err = GetImporter("bq://project.dataset.table")
 	assert.NoError(t, err)
 
 	_, err = GetImporter("file://path/to/file")

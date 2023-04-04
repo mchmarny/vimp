@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/mchmarny/vimp/pkg/data"
+	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +30,11 @@ func TestData(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = Import(uri, list)
+	assert.NoError(t, err)
+
+	_, err = Query(&query.Options{
+		Target: uri,
+	})
 	assert.NoError(t, err)
 }
 
