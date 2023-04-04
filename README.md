@@ -1,11 +1,3 @@
-[![test](https://github.com/mchmarny/vimp/actions/workflows/on-push.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vimp/actions/workflows/on-push.yaml)
-[![release-cli](https://github.com/mchmarny/vimp/actions/workflows/on-tag-cli.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vimp/actions/workflows/on-tag-cli.yaml)
-[![release-img](https://github.com/mchmarny/vimp/actions/workflows/on-tag-img.yaml/badge.svg?branch=main)](https://github.com/mchmarny/vimp/actions/workflows/on-tag-img.yaml)
-[![](https://codecov.io/gh/mchmarny/vimp/branch/main/graph/badge.svg?token=9HLYDZZADN)](https://codecov.io/gh/mchmarny/vimp)
-[![version](https://img.shields.io/github/release/mchmarny/vimp.svg?label=version)](https://github.com/mchmarny/vimp/releases/latest)
-[![](https://img.shields.io/github/go-mod/go-version/mchmarny/vimp.svg?label=go)](https://github.com/mchmarny/vimp)
-[![](https://goreportcard.com/badge/github.com/mchmarny/vimp)](https://goreportcard.com/report/github.com/mchmarny/vimp)
-
 # vimp
 
 Import CLI for OSS vulnerability scanner output. Generalizes vulnerability reports from common OSS scanners into a generic format and imports them into a target database. Useful for comparing data across multiple scanners.
