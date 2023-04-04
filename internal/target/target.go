@@ -4,12 +4,26 @@ import (
 	"strings"
 
 	"github.com/mchmarny/vimp/internal/target/bq"
+	"github.com/mchmarny/vimp/internal/target/console"
+	"github.com/mchmarny/vimp/internal/target/file"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
 )
 
 const (
 	expectedURIParts = 2
+
+	// BQType is the BigQuery importer type
+	BQType = "bq"
+	// StdoutType is the stdout importer type
+	ConsoleType = "console"
+	// FileType is the file importer type
+	FileType = "file"
+)
+
+var (
+	// ImporterTypes is the list of supported importer types.
+	ImporterTypes = []string{BQType, ConsoleType, FileType}
 )
 
 // Importer is the interface for importers.
@@ -28,8 +42,12 @@ func GetImporter(uri string) (Importer, error) {
 	}
 
 	switch strings.ToLower(p[0]) {
-	case "bq":
+	case BQType:
 		return bq.Import, nil
+	case ConsoleType:
+		return console.Import, nil
+	case FileType:
+		return file.Import, nil
 	default:
 		return nil, errors.Errorf("unsupported import target type: %s", uri)
 	}

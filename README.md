@@ -24,6 +24,21 @@ vimp --source $image --file report.json --target bq://project:dataset.table
 
 > Note, target table will be created if it does not exist.
 
+The resulting schema in the target DB will look something like this (adjusted for DB-specific data types):
+
+```sql
+image       TEXT      NOT NULL
+digest      TEXT      NOT NULL
+source      TEXT      NOT NULL
+processed   TIMESTAMP NOT NULL
+cve         TEXT      NOT NULL
+package     TEXT      NOT NULL
+version     TEXT      NOT NULL
+severity    TEXT      NOT NULL
+score       FLOAT     NOT NULL
+fixed       BOOL      NOT NULL
+```
+
 ## Installation 
 
 You can install `vimp` CLI using one of the following ways:
