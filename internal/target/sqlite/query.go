@@ -77,7 +77,13 @@ func Query(opt *query.Options) (any, error) {
 		return nil, errors.Wrapf(err, "failed to prepare select statement")
 	}
 
-	rows, err := stmt.Query(a)
+	var rows *sql.Rows
+	if a == nil {
+		rows, err = stmt.Query()
+	} else {
+		rows, err = stmt.Query(a...)
+	}
+
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Wrapf(err, "failed to execute select statement")
 	}
@@ -85,10 +91,11 @@ func Query(opt *query.Options) (any, error) {
 
 	switch qt {
 	case query.ByNothing:
-	case query.ByImage:
-		return scanCVEs(opt, rows)
-	case query.ByDigest:
 		return scanArray(rows)
+	case query.ByImage:
+		return scanArray(rows)
+	case query.ByDigest:
+		return scanCVEs(opt, rows)
 	case query.ByCVE:
 		return nil, errors.New("not implemented")
 	}
@@ -134,7 +141,7 @@ func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
 	return v, nil
 }
 
-func scanArray(rows *sql.Rows) ([]any, error) {
+func scanArray(rows *sql.Rows) (any, error) {
 	list := make([]any, 0)
 	for rows.Next() {
 		var v string
