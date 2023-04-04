@@ -7,6 +7,8 @@ import (
 )
 
 func TestTarget(t *testing.T) {
+	t.Parallel()
+
 	_, err := GetImporter("redis://localhost:6379")
 	assert.Error(t, err)
 

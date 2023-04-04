@@ -47,4 +47,9 @@ var (
 		Name:  "cve",
 		Usage: "ID of the CVE to query (e.g. CVE-2021-1234)",
 	}
+
+	diffsOnlyFlag = &c.BoolFlag{
+		Name:  "diffs-only",
+		Usage: "only return differences between sources",
+	}
 )

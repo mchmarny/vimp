@@ -130,11 +130,16 @@ func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
 		})
 	}
 
+	if opt.DiffsOnly {
+		m = query.FilterOutDuplicates(m)
+	}
+
 	v := &query.VulnerabilityList{
 		Image: &query.Image{
 			URI:    opt.Image,
 			Digest: opt.Digest,
 		},
+		Count:           len(m),
 		Vulnerabilities: m,
 	}
 

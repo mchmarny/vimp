@@ -17,16 +17,18 @@ var (
 			imageFlag,
 			digestFlag,
 			cveFlag,
+			diffsOnlyFlag,
 		},
 	}
 )
 
 func runQuery(c *c.Context) error {
 	opt := &query.Options{
-		Target: c.String(targetFlag.Name),
-		Image:  c.String(imageFlag.Name),
-		Digest: c.String(digestFlag.Name),
-		CVE:    c.String(cveFlag.Name),
+		Target:    c.String(targetFlag.Name),
+		Image:     c.String(imageFlag.Name),
+		Digest:    c.String(digestFlag.Name),
+		CVE:       c.String(cveFlag.Name),
+		DiffsOnly: c.Bool(diffsOnlyFlag.Name),
 	}
 
 	printVersion(c)
