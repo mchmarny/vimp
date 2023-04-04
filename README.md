@@ -61,6 +61,8 @@ The imported data will look something like this:
 ]
 ```
 
+> See https://github.com/mchmarny/artifact-events for how to set up `vimp` as an import for all new images in GCR or AR on GCP.
+
 ## Installation 
 
 You can install `vimp` CLI using one of the following ways:
