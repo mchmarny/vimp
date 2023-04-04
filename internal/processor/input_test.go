@@ -19,21 +19,26 @@ func TestInput(t *testing.T) {
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 		File:   "../converter/grype/test.json",
 	}
-	assert.NoError(t, o.validate())
+	assert.Error(t, o.validate())
 
 	o = &Options{
-		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
+		Source: "",
 		File:   "../converter/grype/test.json",
-		CSV:    true,
+		Target: "console://stdout",
 	}
 	assert.Error(t, o.validate())
 
-	f := "test.csv"
 	o = &Options{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 		File:   "../converter/grype/test.json",
-		Output: &f,
-		CSV:    true,
+		Target: "",
+	}
+	assert.Error(t, o.validate())
+
+	o = &Options{
+		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
+		File:   "../converter/grype/test.json",
+		Target: "console://stdout",
 	}
 	assert.NoError(t, o.validate())
 }
