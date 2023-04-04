@@ -20,9 +20,7 @@ var (
 	// flags
 	source    = flag.String("source", "", "Digest of the source image from which the vulnerability report was generated.")
 	file      = flag.String("file", "", "Path to vulnerability report.")
-	format    = flag.String("format", "", "Scanner used to generate vulnerability report (e.g. grype, snyk, trivy). Auto-detected if not specified.")
-	output    = flag.String("output", "", "Path to where results should be written (default: stdout).")
-	isCSV     = flag.Bool("csv", false, "Output as CSV (default: json). Only supported when output specified.")
+	target    = flag.String("target", "", "Target data store (e.g. bq://project.dataset.table, file://path/to/file.json, stdout:// etc.)")
 	isVerbose = flag.Bool("verbose", false, "Verbose output (default: false)")
 	doVersion = flag.Bool("version", false, "Print version (default: false)")
 )
@@ -71,9 +69,7 @@ func execute() error {
 	opt := &processor.Options{
 		Source: *source,
 		File:   *file,
-		Format: format,
-		Output: output,
-		CSV:    *isCSV,
+		Target: *target,
 	}
 
 	if err := processor.Process(opt); err != nil {

@@ -12,16 +12,15 @@ bin/vimp --version
 msg "import snyk"
 bin/vimp --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/snyk/test.json \
+           --target console://stdout \
            --verbose
 
 msg "import grype"
 bin/vimp --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/grype/test.json \
-           --format grype
+           --target console://stdout \
 
 msg "import snyk"
 bin/vimp --source us-west1-docker.pkg.dev/cloudy-demos/events/test38@sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55 \
            --file internal/converter/trivy/test.json \
-           --format trivy \
-           --output test.csv \
-           --csv
+           --target console://stdout \
