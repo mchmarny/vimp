@@ -26,6 +26,12 @@ const (
   `
 )
 
+var (
+	SampleURIs = []string{
+		"sqlite://data.db",
+	}
+)
+
 func Import(uri string, vuls []*data.ImageVulnerability) error {
 	db, err := getStore(uri)
 	if err != nil {
