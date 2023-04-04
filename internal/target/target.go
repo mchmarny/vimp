@@ -6,6 +6,7 @@ import (
 	"github.com/mchmarny/vimp/internal/target/bq"
 	"github.com/mchmarny/vimp/internal/target/console"
 	"github.com/mchmarny/vimp/internal/target/file"
+	"github.com/mchmarny/vimp/internal/target/sqlite"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,8 @@ const (
 	ConsoleType = "console"
 	// FileType is the file importer type
 	FileType = "file"
+	// SQLiteType is the sqlite importer type
+	SQLiteType = "sqlite"
 )
 
 var (
@@ -48,6 +51,8 @@ func GetImporter(uri string) (Importer, error) {
 		return console.Import, nil
 	case FileType:
 		return file.Import, nil
+	case SQLiteType:
+		return sqlite.Import, nil
 	default:
 		return nil, errors.Errorf("unsupported import target type: %s", uri)
 	}

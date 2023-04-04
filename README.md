@@ -19,7 +19,7 @@ Generate vulnerability report using one of the supported OSS scanners:
 Then, import that vulnerability data into one of the supported data stores:
 
 ```shell
-vimp --source $image --file report.json --target bq://project.dataset.table
+vimp --source $image --file report.json --target sqlite//:data.db
 ```
 
 > Note, target table will be created if it does not exist.
