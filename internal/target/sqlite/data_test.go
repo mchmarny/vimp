@@ -32,10 +32,14 @@ func TestData(t *testing.T) {
 	err = Import(uri, list)
 	assert.NoError(t, err)
 
-	_, err = Query(&query.Options{
+	r, err := Query(&query.Options{
 		Target: uri,
 	})
 	assert.NoError(t, err)
+	assert.NotNil(t, r)
+
+	d := r.([]interface{})
+	assert.Equal(t, 3, len(d))
 }
 
 func makeVulns(num int) []*data.ImageVulnerability {
