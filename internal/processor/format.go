@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vimp/internal/parser"
 )
 
 const (

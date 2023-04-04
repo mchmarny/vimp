@@ -2,10 +2,10 @@ package processor
 
 import (
 	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vulctl/internal/converter/grype"
-	"github.com/mchmarny/vulctl/internal/converter/snyk"
-	"github.com/mchmarny/vulctl/internal/converter/trivy"
-	"github.com/mchmarny/vulctl/pkg/data"
+	"github.com/mchmarny/vimp/internal/converter/grype"
+	"github.com/mchmarny/vimp/internal/converter/snyk"
+	"github.com/mchmarny/vimp/internal/converter/trivy"
+	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
 )
 

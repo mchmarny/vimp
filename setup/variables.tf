@@ -13,13 +13,6 @@ variable "name" {
   nullable    = false
 }
 
-variable "location" {
-  description = "Deployment location"
-  default     = "us-west1"
-  type        = string
-  nullable    = false
-}
-
 variable "git_repo" {
   description = "GitHub Repo"
   default     = "mchmarny/s3cme"
