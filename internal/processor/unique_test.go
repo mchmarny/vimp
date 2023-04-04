@@ -8,6 +8,8 @@ import (
 )
 
 func TestUnique(t *testing.T) {
+	t.Parallel()
+
 	items := []*data.Vulnerability{
 		{
 			CVE:     "CVE-2019-0001",
