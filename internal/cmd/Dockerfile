@@ -12,8 +12,8 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="\
 	  -w -s -X main.commit=$COMMIT \
 	  -w -s -X main.date=$DATE \
 	  -extldflags '-static'" \
-    -a -mod vendor -o vulctl internal/cmd/main.go
+    -a -mod vendor -o vimp internal/cmd/main.go
 
 FROM cgr.dev/chainguard/bash:latest
-COPY --from=builder /src/vulctl /bin/vulctl
-ENTRYPOINT ["/bin/vulctl"]
+COPY --from=builder /src/vimp /bin/vimp
+ENTRYPOINT ["/bin/vimp"]

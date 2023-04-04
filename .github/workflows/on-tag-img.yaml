@@ -11,11 +11,11 @@ jobs:
 
   conf:
     env:
-      IMG_NAME: vulctl
-      PROVIDER_ID: projects/689738033528/locations/global/workloadIdentityPools/vulctl-github-pool/providers/github-provider
-      REG_URI: us-west1-docker.pkg.dev/cloudy-build/vulctl
-      SA_EMAIL: vulctl-github-actions-user@cloudy-build.iam.gserviceaccount.com
-      PROJECT_ID: cloudy-build
+      IMG_NAME: vimp
+      PROVIDER_ID: projects/382826505963/locations/global/workloadIdentityPools/vimp-github-pool/providers/github-provider
+      REG_URI: us-docker.pkg.dev/cloudy-tools/builders
+      SA_EMAIL: vimp-github-actions-user@cloudy-tools.iam.gserviceaccount.com
+      PROJECT_ID: cloudy-tools
 
       # Defaults
       BUILDER_VERSION: v1.4.0

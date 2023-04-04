@@ -97,7 +97,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vulctl*"
+          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vimp*"
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$ATT_FILE_NAME"
       - name: Verify Assets
         env:

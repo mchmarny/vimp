@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mchmarny/vulctl/internal/processor"
+	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 var (
-	name = "vulctl"
+	name = "vimp"
 
 	// set at build time
 	version = "v0.0.1-default"

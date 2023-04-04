@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vimp/internal/parser"
 	"github.com/pkg/errors"
 )
 

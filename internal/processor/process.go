@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/mchmarny/vulctl/internal/parser"
-	"github.com/mchmarny/vulctl/pkg/data"
+	"github.com/mchmarny/vimp/internal/parser"
+	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )

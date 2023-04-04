@@ -2,6 +2,7 @@ RELEASE_VERSION :=$(shell cat .version)
 COMMIT          :=$(shell git rev-parse HEAD)
 YAML_FILES      :=$(shell find . -type f -regex ".*y*ml" -print)
 CURRENT_DATE	:=$(shell date '+%Y-%m-%dT%H:%M:%SZ')
+REG_URI         :=us-docker.pkg.dev/cloudy-tools/builders
 
 ## Variable assertions
 ifndef RELEASE_VERSION
@@ -58,20 +59,20 @@ build: tidy ## Builds CLI binary
 	-w -s -X main.commit=$(COMMIT) \
 	-w -s -X main.date=$(CURRENT_DATE) \
 	-extldflags '-static'" \
-    -a -mod vendor -o bin/vulctl internal/cmd/main.go
+    -a -mod vendor -o bin/vimp internal/cmd/main.go
 
 .PHONY: image
 image: ## Builds container image
 	docker build \
 		--platform linux/amd64 \
-		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:$(RELEASE_VERSION) \
-		-t us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl:latest \
+		-t $(REG_URI)/vimp:$(RELEASE_VERSION) \
+		-t $(REG_URI)/vimp:latest \
 		-f internal/cmd/Dockerfile \
 		--build-arg VERSION=$(RELEASE_VERSION) \
 		--build-arg COMMIT=$(COMMIT) \
 		--build-arg DATE=$(CURRENT_DATE) \
 		.
-	docker push us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl --all-tags
+	docker push $(REG_URI)/vimp --all-tags
 
 .PHONY: setup
 setup: ## Creates the GCP resources 
