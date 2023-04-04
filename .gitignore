@@ -89,3 +89,6 @@ images.txt
 
 # CSVs
 *.csv
+
+# Data
+*.db

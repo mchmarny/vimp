@@ -8,17 +8,26 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	SampleURIs = []string{
+		"console://stdout",
+	}
+)
+
 // Import prints the vulnerabilities to stdout.
 func Import(uri string, vuls []*data.ImageVulnerability) error {
-	if uri != "console://stdout" {
-		return errors.New("target uri must be console://stdout")
-	}
-
 	if vuls == nil {
 		return errors.New("vulnerabilities required")
 	}
 
-	je := json.NewEncoder(os.Stdout)
+	var f *os.File
+	if uri == "console://stderr" {
+		f = os.Stderr
+	} else {
+		f = os.Stdout
+	}
+
+	je := json.NewEncoder(f)
 	je.SetIndent("", "  ")
 	if err := je.Encode(vuls); err != nil {
 		return errors.Wrap(err, "error encoding the output to stdout")

@@ -10,6 +10,10 @@ import (
 )
 
 var (
+	SampleURIs = []string{
+		"bq://project.dataset.table",
+	}
+
 	vulnerabilitySchema = bigquery.Schema{
 		{Name: "image", Type: bigquery.StringFieldType, Required: true},
 		{Name: "digest", Type: bigquery.StringFieldType, Required: true},

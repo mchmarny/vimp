@@ -11,9 +11,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	SampleURIs = []string{
+		"file://data.json",
+		"file://data.csv",
+	}
+)
+
 // Import prints the vulnerabilities to stdout.
-// file://data.json
-// file://data.csv
 func Import(uri string, vuls []*data.ImageVulnerability) error {
 	if uri == "" {
 		return errors.New("empty import target")
