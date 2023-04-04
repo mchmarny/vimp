@@ -67,7 +67,7 @@ func (v *VulnerabilityRow) Save() (map[string]bigquery.Value, string, error) {
 		"digest":    v.vul.Digest,
 		"source":    v.vul.Source,
 		"processed": v.vul.ProcessedAt,
-		"cve":       v.vul.ID,
+		"cve":       v.vul.CVE,
 		"package":   v.vul.Package,
 		"version":   v.vul.Version,
 		"severity":  v.vul.Severity,
