@@ -6,36 +6,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInput(t *testing.T) {
-	o := &Options{}
+func TestImportInput(t *testing.T) {
+	o := &ImportOptions{}
 	assert.Error(t, o.validate())
 
-	o = &Options{
+	o = &ImportOptions{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 	}
 	assert.Error(t, o.validate())
 
-	o = &Options{
+	o = &ImportOptions{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 		File:   "../converter/grype/test.json",
 	}
 	assert.Error(t, o.validate())
 
-	o = &Options{
+	o = &ImportOptions{
 		Source: "",
 		File:   "../converter/grype/test.json",
 		Target: "console://stdout",
 	}
 	assert.Error(t, o.validate())
 
-	o = &Options{
+	o = &ImportOptions{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 		File:   "../converter/grype/test.json",
 		Target: "",
 	}
 	assert.Error(t, o.validate())
 
-	o = &Options{
+	o = &ImportOptions{
 		Source: "us-docker.pkg.dev/project/repo/img@sha256:f6efe",
 		File:   "../converter/grype/test.json",
 		Target: "console://stdout",

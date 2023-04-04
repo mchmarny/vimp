@@ -6,11 +6,14 @@ import (
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vimp/internal/parser"
+	"github.com/mchmarny/vimp/internal/target"
+	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
-// Options represents the input options.
-type Options struct {
+// ImportOptions represents the input options.
+type ImportOptions struct {
 	// Source is the URI of the image from which the report was generated.
 	Source string
 
@@ -28,7 +31,7 @@ type Options struct {
 	digest    string
 }
 
-func (o *Options) validate() error {
+func (o *ImportOptions) validate() error {
 	if o.Target == "" {
 		return errors.New("target is required")
 	}
@@ -68,6 +71,46 @@ func (o *Options) validate() error {
 
 	if o.FormatType == FormatUnknown {
 		return errors.New("unknown source file format, supported formats are: grype, snyk, trivy")
+	}
+
+	return nil
+}
+
+// Import imports the vulnerability report to the target data store.
+func Import(opt *ImportOptions) error {
+	if opt == nil {
+		return errors.New("options required")
+	}
+	if err := opt.validate(); err != nil {
+		return errors.Wrap(err, "error validating options")
+	}
+
+	m, err := getMapper(opt.FormatType)
+	if err != nil {
+		return errors.Wrap(err, "error getting converter")
+	}
+
+	t, err := target.GetImporter(opt.Target)
+	if err != nil {
+		return errors.Wrap(err, "error getting importer")
+	}
+
+	list, err := m(opt.container)
+	if err != nil {
+		return errors.Wrap(err, "error converting source")
+	}
+
+	if list == nil {
+		return errors.New("expected non-nil result")
+	}
+
+	uniques := Unique(list)
+	log.Info().Msgf("found %d unique vulnerabilities", len(uniques))
+
+	data := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest, opt.FormatType.String())
+
+	if err := t(opt.Target, data); err != nil {
+		return errors.Wrapf(err, "error importing data to: %s", opt.Target)
 	}
 
 	return nil

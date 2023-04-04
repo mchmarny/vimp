@@ -8,10 +8,9 @@ import (
 
 var (
 	impCmd = &c.Command{
-		Name:    "import",
-		Aliases: []string{"imp"},
-		Usage:   "import vulnerabilities from file",
-		Action:  importCmd,
+		Name:   "import",
+		Usage:  "import vulnerabilities from file",
+		Action: runImport,
 		Flags: []c.Flag{
 			sourceFlag,
 			fileFlag,
@@ -20,8 +19,8 @@ var (
 	}
 )
 
-func importCmd(c *c.Context) error {
-	opt := &processor.Options{
+func runImport(c *c.Context) error {
+	opt := &processor.ImportOptions{
 		Source: c.String(sourceFlag.Name),
 		File:   c.String(fileFlag.Name),
 		Target: c.String(targetFlag.Name),
@@ -29,7 +28,7 @@ func importCmd(c *c.Context) error {
 
 	printVersion(c)
 
-	if err := processor.Process(opt); err != nil {
+	if err := processor.Import(opt); err != nil {
 		return errors.Wrap(err, "error executing command")
 	}
 
