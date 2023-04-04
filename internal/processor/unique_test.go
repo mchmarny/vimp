@@ -3,7 +3,7 @@ package processor
 import (
 	"testing"
 
-	"github.com/mchmarny/vulctl/pkg/data"
+	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,4 +1,4 @@
-module github.com/mchmarny/vulctl
+module github.com/mchmarny/vimp
 
 go 1.20
 

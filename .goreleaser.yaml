@@ -1,4 +1,4 @@
-project_name: vulctl
+project_name: vimp
 
 env:
 - GO111MODULE=on
@@ -14,7 +14,7 @@ sboms:
 - artifacts: binary
 
 builds:
-- binary: vulctl
+- binary: vimp
   mod_timestamp: '{{ .CommitTimestamp }}'
   dir: ./internal/cmd
   env:
@@ -42,7 +42,7 @@ snapshot:
 release:
   github:
     owner: mchmarny
-    name: vulctl
+    name: vimp
   prerelease: auto
 
 archives:
@@ -65,22 +65,22 @@ changelog:
 brews:
 - tap:
     owner: mchmarny
-    name: homebrew-vulctl
+    name: homebrew-vimp
     token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-  homepage: "https://github.com/mchmarny/vulctl"
-  description: "Vulnerability management tool."
+  homepage: "https://github.com/mchmarny/vimp"
+  description: "Vulnerability Import CLI"
   folder: Formula
   license: "Apache-2.0"
   test: |
-    system "#{bin}/vulctl --version"
+    system "#{bin}/vimp --version"
 
 nfpms:
-- file_name_template: "vulctl-{{.Version}}_{{.Os}}-{{.Arch}}"
-  homepage: https://github.com/mchmarny/vulctl/
-  description: "Vulnerability management tool."
-  maintainer: vulctl developers <vulctl@thingz.io>
+- file_name_template: "vimp-{{.Version}}_{{.Os}}-{{.Arch}}"
+  homepage: https://github.com/mchmarny/vimp/
+  description: "Vulnerability Import CLI"
+  maintainer: vimp developers <vimp@thingz.io>
   license: Apache 2.0
-  vendor: vulctl developers
+  vendor: vimp developers
   formats:
   - deb
   - rpm
@@ -88,4 +88,4 @@ nfpms:
 
 universal_binaries:
 - replace: true
-  name_template: 'vulctl'
+  name_template: 'vimp'

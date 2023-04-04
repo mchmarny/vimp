@@ -3,7 +3,7 @@ package grype
 import (
 	"testing"
 
-	"github.com/mchmarny/vulctl/internal/parser"
+	"github.com/mchmarny/vimp/internal/parser"
 	"github.com/stretchr/testify/assert"
 )
 

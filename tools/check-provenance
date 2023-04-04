@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-image="us-west1-docker.pkg.dev/cloudy-build/vulctl/vulctl@sha256:5b1bf63d4dee3c829cc116b00394117b83406d75a4f3e549f96c7df33b4dcce5"
+image="us-west1-docker.pkg.dev/cloudy-build/vimp/vimp@sha256:5b1bf63d4dee3c829cc116b00394117b83406d75a4f3e549f96c7df33b4dcce5"
 
 version=$(cat .version)
 provenance="provenance.json"
@@ -11,5 +11,5 @@ gcloud artifacts docker images describe $image --show-provenance --format json >
 
 slsa-verifier verify-image $image \
     --provenance-path $provenance \
-    --source-uri "github.com/mchmarny/vulctl" \
+    --source-uri "github.com/mchmarny/vimp" \
     --source-tag "$version"
