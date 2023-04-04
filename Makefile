@@ -1,16 +1,10 @@
 RELEASE_VERSION :=$(shell cat .version)
-COMMIT          :=$(shell git rev-parse HEAD)
 YAML_FILES      :=$(shell find . -type f -regex ".*y*ml" -print)
-CURRENT_DATE	:=$(shell date '+%Y-%m-%dT%H:%M:%SZ')
 REG_URI         :=us-docker.pkg.dev/cloudy-tools/builders
 
 ## Variable assertions
 ifndef RELEASE_VERSION
 	$(error RELEASE_VERSION is not set)
-endif
-
-ifndef COMMIT
-	$(error COMMIT is not set)
 endif
 
 all: help
@@ -56,23 +50,15 @@ build: tidy ## Builds CLI binary
 	mkdir -p ./bin
 	CGO_ENABLED=0 go build -trimpath -ldflags="\
     -w -s -X main.version=$(RELEASE_VERSION) \
-	-w -s -X main.commit=$(COMMIT) \
-	-w -s -X main.date=$(CURRENT_DATE) \
 	-extldflags '-static'" \
-    -a -mod vendor -o bin/vimp internal/cmd/main.go
+    -a -mod vendor -o bin/vimp main.go
 
 .PHONY: image
 image: ## Builds container image
-	docker build \
-		--platform linux/amd64 \
-		-t $(REG_URI)/vimp:$(RELEASE_VERSION) \
-		-t $(REG_URI)/vimp:latest \
-		-f internal/cmd/Dockerfile \
-		--build-arg VERSION=$(RELEASE_VERSION) \
-		--build-arg COMMIT=$(COMMIT) \
-		--build-arg DATE=$(CURRENT_DATE) \
-		.
-	docker push $(REG_URI)/vimp --all-tags
+	KO_DOCKER_REPO=$(REG_URI)/vimp \
+    GOFLAGS="-ldflags=-X=main.version=$(RELEASE_VERSION)" \
+    COSIGN_EXPERIMENTAL="true" \
+    ko build main.go --image-refs .digest --bare --tags $(RELEASE_VERSION),latest
 
 .PHONY: setup
 setup: ## Creates the GCP resources 
