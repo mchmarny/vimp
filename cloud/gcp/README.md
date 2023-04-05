@@ -53,6 +53,8 @@ gcloud alpha builds triggers create pubsub \
     --branch=main
 ```
 
+> Make sure that the service account which is used to execute the trigger (default `799736955886@cloudbuild.gserviceaccount.com`) has `roles/bigquery.dataEditor` role. 
+
 ## Test
 
 The above trigger will fire automatically whenever a new image is pushed to either AR or GCR. You can also test it manually by coping existing image to any registry in the same project using `crane`: 
