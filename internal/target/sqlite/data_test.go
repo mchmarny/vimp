@@ -20,8 +20,6 @@ func deleteDB() {
 }
 
 func TestData(t *testing.T) {
-	t.Parallel()
-
 	deleteDB()
 	defer deleteDB()
 
@@ -40,7 +38,7 @@ func TestData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
 
-	d := r.([]interface{})
+	d := r.(map[string]*query.ImageResult)
 	assert.Equal(t, 3, len(d))
 }
 
@@ -54,7 +52,7 @@ func makeVulns(num int) []*data.ImageVulnerability {
 			Source:      v,
 			ProcessedAt: time.Now().UTC(),
 			Vulnerability: &data.Vulnerability{
-				CVE:      v,
+				Exposure: v,
 				Package:  v,
 				Version:  v,
 				Severity: v,

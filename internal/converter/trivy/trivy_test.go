@@ -17,10 +17,10 @@ func TestTrivyConverter(t *testing.T) {
 
 	for _, v := range list {
 		assert.NotEmpty(t, v)
-		assert.NotEmpty(t, v.CVE)
-		assert.NotEmpty(t, v.Package, v.CVE)
-		assert.NotEmpty(t, v.Severity, v.CVE)
-		assert.NotEmpty(t, v.Version, v.CVE)
-		assert.GreaterOrEqual(t, v.Score, float32(0), v.CVE) // some matches won't have score
+		assert.NotEmpty(t, v.Exposure)
+		assert.NotEmpty(t, v.Package, v.Exposure)
+		assert.NotEmpty(t, v.Severity, v.Exposure)
+		assert.NotEmpty(t, v.Version, v.Exposure)
+		assert.GreaterOrEqual(t, v.Score, float32(0), v.Exposure) // some matches won't have score
 	}
 }

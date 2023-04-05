@@ -4,27 +4,159 @@ Import CLI for data output from OSS vulnerability scanners. Extracts vulnerabili
 
 ## Usage
 
-Given a container image digest:
+One of the use-cases where `vimp` can come handy is getting quick overview of the commonality and differences across the vulnerabilities identified by different scanners. To demo this start by exporting a digest of an image you want to use, for example the official Redis image in Docker Hub:
 
 ```shell
 export image="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
 ```
 
-Generate vulnerability report using one of the supported OSS scanners:
+Next, generate vulnerability report using one or more of the supported OSS scanners:
 
 * [grype](https://github.com/anchore/grype) `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
 * [snyk](https://github.com/snyk/cli) `snyk container test --app-vulns --json-file-output=report.json $image`
 * [trivy](https://github.com/aquasecurity/trivy) `trivy image --format json --output report.json $image`
 
-Then, import that vulnerability data into one of the supported data stores:
+Then, import each one of the scanner outputs:
+
+> Note, `vimp` supports number of targets; data stores like local Sqlite DB or Google BigQuery (the target table will be created if it does not exist). You can also use `vimp` to export data into a file (`json` or `csv`), or `stdout`.
 
 ```shell
-vimp --source $image --file report.json --target sqlite//:data.db
+vimp import --source $image --file report.json --target sqlite://demo.db
 ```
 
-> Note, target table will be created if it does not exist.
+In case of import with `snyk` output for the above image the response should be something like this: 
 
-The resulting schema in the target DB will look something like this (adjusted for DB-specific data types):
+```shell
+INF found 78 unique vulnerabilities
+```
+
+Once you imported data, you can also run queries against this data. The default query against the same data will provide summary of all the data in your store: 
+
+```shell
+vimp query --target sqlite://demo.db
+```
+
+After importing data for one image from three sources the response will look something like this: 
+
+```json
+INF found 1 records
+{
+  "https://docker.io/redis": {
+    "versions": {
+      "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448": {
+        "exposures": 240,
+        "sources": 3,
+        "packages": 73,
+        "high_score": 10,
+        "first_discovered": "2023-04-05T19:29:16Z",
+        "last_discovered": "2023-04-05T19:41:11Z"
+      }
+    }
+  }
+}
+```
+
+To dig deeper into the data for that image, you can list all the vulnerabilities found that image across all of the sources: 
+
+```shell
+vimp query --target sqlite://demo.db \
+           --image https://docker.io/redis \
+           --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
+```
+
+The results for that query should look something like this: 
+
+> Notice the differences in `severity` and `score` reported by the different scanners:
+
+```json
+{
+  "image": "https://docker.io/redis",
+  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
+  "exposures": {
+    "CVE-2005-2541": [
+      {
+        "source": "grype",
+        "severity": "negligible",
+        "score": 10,
+        "last_discovered": "2023-04-05T19:40:42Z"
+      },
+      {
+        "source": "snyk",
+        "severity": "low",
+        "score": 9.8,
+        "last_discovered": "2023-04-05T19:29:16Z"
+      },
+      {
+        "source": "trivy",
+        "severity": "low",
+        "score": 10,
+        "last_discovered": "2023-04-05T19:41:11Z"
+      }
+    ],
+    "CVE-2007-5686": [
+      {
+        "source": "grype",
+        "severity": "negligible",
+        "score": 4.9,
+        "last_discovered": "2023-04-05T19:40:42Z"
+      },
+      ...
+    ],
+  }
+}
+```
+
+> There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diffs-only` flag to highlight only the data where the exposures are not the same across all of the sources. 
+
+To drill into the packages impacted by each vulnerabilities you can use the additional `--exposure` flag: 
+
+```shell
+vimp query --target sqlite://demo.db \
+           --image https://docker.io/redis \
+           --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
+           --exposure CVE-2005-2541
+```
+
+The result should look something like this: 
+
+```json
+INF found 3 records
+{
+  "image": "https://docker.io/redis",
+  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
+  "exposure": "CVE-2005-2541",
+  "packages": [
+    {
+      "source": "grype",
+      "package": "tar",
+      "version": "1.34+dfsg-1",
+      "severity": "negligible",
+      "score": 10,
+      "last_discovered": "2023-04-05T19:40:42Z"
+    },
+    {
+      "source": "snyk",
+      "package": "tar",
+      "version": "1.34+dfsg-1",
+      "severity": "low",
+      "score": 9.8,
+      "last_discovered": "2023-04-05T19:29:16Z"
+    },
+    {
+      "source": "trivy",
+      "package": "tar",
+      "version": "1.34+dfsg-1",
+      "severity": "low",
+      "score": 10,
+      "last_discovered": "2023-04-05T19:41:11Z"
+    }
+  ]
+}
+```
+
+## Data Store
+
+The schema created by `vimp` in the target DB will look something like this (adjusted for DB-specific data types):
 
 ```sql
 image       TEXT      NOT NULL
@@ -40,26 +172,6 @@ fixed       BOOL      NOT NULL
 ```
 
 See [sql/query.sql](sql/query.sql) for examples of queries against the imported data. 
-
-The imported data will look something like this: 
-
-```json
-[
-    {
-        "image": "https://docker.io/redis",
-        "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-        "source": "grype",
-        "processed": "2023-04-04 13:15:22.410631 UTC",
-        "cve": "CVE-2018-20860",
-        "package": "libopenmpt0",
-        "version": "0.3.6-1ubuntu0~18.04.1",
-        "severity": "low",
-        "score": "4.3",
-        "fixed": "false"
-    }
-    ...
-]
-```
 
 > See https://github.com/mchmarny/artifact-events for how to set up `vimp` as an import for all new images in GCR or AR on GCP.
 

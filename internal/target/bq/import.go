@@ -9,22 +9,35 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	columnImage     = "image"
+	columnDigest    = "digest"
+	columnSource    = "source"
+	columnProcessed = "processed"
+	columnExposure  = "exposure"
+	columnPackage   = "package"
+	columnVersion   = "version"
+	columnSeverity  = "severity"
+	columnScore     = "score"
+	columnFixed     = "fixed"
+)
+
 var (
 	SampleURIs = []string{
 		"bq://project.dataset.table",
 	}
 
 	vulnerabilitySchema = bigquery.Schema{
-		{Name: "image", Type: bigquery.StringFieldType, Required: true},
-		{Name: "digest", Type: bigquery.StringFieldType, Required: true},
-		{Name: "source", Type: bigquery.StringFieldType, Required: true},
-		{Name: "processed", Type: bigquery.TimestampFieldType, Required: true},
-		{Name: "cve", Type: bigquery.StringFieldType, Required: true},
-		{Name: "package", Type: bigquery.StringFieldType, Required: true},
-		{Name: "version", Type: bigquery.StringFieldType, Required: true},
-		{Name: "severity", Type: bigquery.StringFieldType, Required: true},
-		{Name: "score", Type: bigquery.FloatFieldType, Required: true},
-		{Name: "fixed", Type: bigquery.BooleanFieldType, Required: true},
+		{Name: columnImage, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnDigest, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnSource, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnProcessed, Type: bigquery.TimestampFieldType, Required: true},
+		{Name: columnExposure, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnPackage, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnVersion, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnSeverity, Type: bigquery.StringFieldType, Required: true},
+		{Name: columnScore, Type: bigquery.FloatFieldType, Required: true},
+		{Name: columnFixed, Type: bigquery.BooleanFieldType, Required: true},
 	}
 )
 
@@ -67,15 +80,15 @@ type VulnerabilityRow struct {
 
 func (v *VulnerabilityRow) Save() (map[string]bigquery.Value, string, error) {
 	return map[string]bigquery.Value{
-		"image":     v.vul.Image,
-		"digest":    v.vul.Digest,
-		"source":    v.vul.Source,
-		"processed": v.vul.ProcessedAt,
-		"cve":       v.vul.CVE,
-		"package":   v.vul.Package,
-		"version":   v.vul.Version,
-		"severity":  v.vul.Severity,
-		"score":     v.vul.Score,
-		"fixed":     v.vul.IsFixed,
+		columnImage:     v.vul.Image,
+		columnDigest:    v.vul.Digest,
+		columnSource:    v.vul.Source,
+		columnProcessed: v.vul.ProcessedAt,
+		columnExposure:  v.vul.Exposure,
+		columnPackage:   v.vul.Package,
+		columnVersion:   v.vul.Version,
+		columnSeverity:  v.vul.Severity,
+		columnScore:     v.vul.Score,
+		columnFixed:     v.vul.IsFixed,
 	}, "", nil
 }
