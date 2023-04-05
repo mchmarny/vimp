@@ -42,9 +42,9 @@ var (
 		Usage:   "sha:256 digest of the image (e.g. sha256:f6efe...)",
 	}
 
-	cveFlag = &c.StringFlag{
-		Name:  "cve",
-		Usage: "ID of the CVE to query (e.g. CVE-2021-1234)",
+	exposureFlag = &c.StringFlag{
+		Name:  "exposure",
+		Usage: "ID of the exposure to query (e.g. CVE-2021-1234)",
 	}
 
 	diffsOnlyFlag = &c.BoolFlag{

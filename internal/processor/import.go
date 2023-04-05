@@ -104,7 +104,7 @@ func Import(opt *ImportOptions) error {
 		return errors.New("expected non-nil result")
 	}
 
-	uniques := Unique(list)
+	uniques := unique(list)
 	log.Info().Msgf("found %d unique vulnerabilities", len(uniques))
 
 	data := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest, opt.FormatType.String())

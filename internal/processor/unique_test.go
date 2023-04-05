@@ -12,21 +12,21 @@ func TestUnique(t *testing.T) {
 
 	items := []*data.Vulnerability{
 		{
-			CVE:     "CVE-2019-0001",
-			Package: "test",
-			Version: "1.0.0",
+			Exposure: "CVE-2019-0001",
+			Package:  "test",
+			Version:  "1.0.0",
 		},
 		{
-			CVE:     "CVE-2019-0002",
-			Package: "test2",
-			Version: "2.0.0",
+			Exposure: "CVE-2019-0002",
+			Package:  "test2",
+			Version:  "2.0.0",
 		},
 		{
-			CVE:     "CVE-2019-0001",
-			Package: "test",
-			Version: "1.0.0",
+			Exposure: "CVE-2019-0001",
+			Package:  "test",
+			Version:  "1.0.0",
 		},
 	}
 
-	assert.Equal(t, 2, len(Unique(items)))
+	assert.Equal(t, 2, len(unique(items)))
 }

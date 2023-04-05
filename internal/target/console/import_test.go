@@ -25,7 +25,7 @@ func makeVulns(num int) []*data.ImageVulnerability {
 			Source:      v,
 			ProcessedAt: time.Now(),
 			Vulnerability: &data.Vulnerability{
-				CVE:      v,
+				Exposure: v,
 				Package:  v,
 				Version:  v,
 				Severity: v,

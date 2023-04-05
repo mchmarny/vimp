@@ -9,7 +9,7 @@ WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
 
 -- list vulnerabilities for a given image
 SELECT
-    cve,
+    exposure,
     source,
     severity,
     score,
@@ -17,10 +17,10 @@ SELECT
 FROM `cloudy-demos.artifact.vul`
 WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
 AND digest = 'sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55'
-GROUP BY cve, source, severity, score
+GROUP BY exposure, source, severity, score
 ORDER BY 1, 2
 
--- list packages for a given image cve
+-- list packages for a given image exposure
 SELECT
     source,
     package,
@@ -31,6 +31,6 @@ SELECT
 FROM `cloudy-demos.artifact.vul`
 WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
 AND digest = 'sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55'
-AND cve = 'CVE-2009-5155'
+AND exposure = 'CVE-2009-5155'
 GROUP BY source, package, version, severity, score
 ORDER BY 1, 2, 3

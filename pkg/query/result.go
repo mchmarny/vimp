@@ -1,18 +1,64 @@
 package query
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"time"
 )
 
-type Image struct {
-	// Image is the image name.
+type ImageResult struct {
+	// Versions represents the different versions of the image.
+	Versions map[string]*DigestSummaryResult `json:"versions"`
+}
+
+type DigestSummaryResult struct {
+	// Exposures is the number of exposures for that image digest.
+	Exposures int `json:"exposures"`
+
+	// Sources is the number of sources for that image digest.
+	Sources int `json:"sources"`
+
+	// Packages is the number of packages for that image digest.
+	Packages int `json:"packages"`
+
+	// HighScore is the highest score for that image digest.
+	HighScore float32 `json:"high_score"`
+
+	// First is the first time the image was discovered.
+	First time.Time `json:"first_discovered"`
+
+	// Last is the last time the image was discovered.
+	Last time.Time `json:"last_discovered"`
+}
+
+type ImageExposureResult struct {
+	// Image is the image result.
 	Image string `json:"image"`
 
 	// Digest is the image digest.
-	Digest string `json:"digest,omitempty"`
+	Digest string `json:"digest"`
+
+	// Exposures is the list of exposures.
+	Exposures map[string][]*ExposureResult `json:"exposures"`
 }
 
-type VulnerabilitySource struct {
+// HasUniqueExposures returns true if the image has unique exposures.
+func HasUniqueExposures(list []*ExposureResult) bool {
+	if len(list) == 0 {
+		return false
+	}
+
+	var last *ExposureResult
+	for _, x := range list {
+		if last != nil && last.GetID() != x.GetID() {
+			return true
+		}
+	}
+
+	return false
+}
+
+type ExposureResult struct {
 	// Source is the source of the vulnerability.
 	Source string `json:"source"`
 
@@ -22,53 +68,45 @@ type VulnerabilitySource struct {
 	// Score is the vulnerability score.
 	Score float32 `json:"score,omitempty"`
 
-	// Is Fixed indicates of the vulnerability has been fixed.
-	IsFixed bool `json:"fixed,omitempty"`
-
-	// ProcessedAt is the time the vulnerability was processed.
-	ProcessedAt time.Time `json:"processed_at"`
+	// Last is the last time the image was discovered.
+	Last time.Time `json:"last_discovered"`
 }
 
-// Equal returns true if the vulnerability sources are equal.
-func (v *VulnerabilitySource) Equal(other *VulnerabilitySource) bool {
-	return v.Source == other.Source &&
-		v.Severity == other.Severity &&
-		v.Score == other.Score
+func (e *ExposureResult) GetID() string {
+	s := fmt.Sprintf("%s%s%f", e.Source, e.Severity, e.Score)
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }
 
-func (v *VulnerabilitySource) String() string {
-	return v.Source
+type PackageExposureResult struct {
+	// Image is the image result.
+	Image string `json:"image"`
+
+	// Digest is the image digest.
+	Digest string `json:"digest"`
+
+	// Exposure is the exposure.
+	Exposure string `json:"exposure"`
+
+	// Packages is the list of packages.
+	Packages []*PackageResult `json:"packages"`
 }
 
-// VulnerabilityList represents a list of vulnerabilities.
-type VulnerabilityList struct {
-	Image           *Image                            `json:"image"`
-	Count           int                               `json:"count"`
-	Vulnerabilities map[string][]*VulnerabilitySource `json:"vulnerabilities,omitempty"`
-}
+type PackageResult struct {
+	// Source is the source of the vulnerability.
+	Source string `json:"source"`
 
-// FilterOutDuplicates removes duplicate vulnerabilities.
-func FilterOutDuplicates(in map[string][]*VulnerabilitySource) map[string][]*VulnerabilitySource {
-	out := make(map[string][]*VulnerabilitySource)
-	for cve, v := range in {
-		if areDiff(v) {
-			out[cve] = v
-		}
-	}
-	return out
-}
+	// Package is the package name.
+	Package string `json:"package"`
 
-func areDiff(vuls []*VulnerabilitySource) bool {
-	var last *VulnerabilitySource
-	for _, v := range vuls {
-		if last == nil {
-			last = v
-			continue
-		}
+	// Version is the package version.
+	Version string `json:"version"`
 
-		if !last.Equal(v) {
-			return true
-		}
-	}
-	return false
+	// Severity is the vulnerability severity.
+	Severity string `json:"severity,omitempty"`
+
+	// Score is the vulnerability score.
+	Score float32 `json:"score,omitempty"`
+
+	// Last is the last time the image was discovered.
+	Last time.Time `json:"last_discovered"`
 }

@@ -16,7 +16,7 @@ var (
 			targetFlag,
 			imageFlag,
 			digestFlag,
-			cveFlag,
+			exposureFlag,
 			diffsOnlyFlag,
 		},
 	}
@@ -27,7 +27,7 @@ func runQuery(c *c.Context) error {
 		Target:    c.String(targetFlag.Name),
 		Image:     c.String(imageFlag.Name),
 		Digest:    c.String(digestFlag.Name),
-		CVE:       c.String(cveFlag.Name),
+		Exposure:  c.String(exposureFlag.Name),
 		DiffsOnly: c.Bool(diffsOnlyFlag.Name),
 	}
 

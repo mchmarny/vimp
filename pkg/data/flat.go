@@ -44,7 +44,7 @@ func (v *ImageVulnerability) Strings() []string {
 		v.Digest,
 		v.Source,
 		v.ProcessedAt.Format(time.RFC3339),
-		v.CVE,
+		v.Exposure,
 		v.Package,
 		v.Version,
 		v.Severity,
