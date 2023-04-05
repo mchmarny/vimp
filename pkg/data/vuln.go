@@ -11,8 +11,8 @@ const (
 
 // Vulnerability represents a single vulnerability.
 type Vulnerability struct {
-	// CVE is the vulnerability ID.
-	CVE string `json:"cve,omitempty"`
+	// Exposure is the vulnerability ID.
+	Exposure string `json:"exposure,omitempty"`
 
 	// Package is the package name.
 	Package string `json:"package,omitempty"`
@@ -31,10 +31,10 @@ type Vulnerability struct {
 }
 
 func (v *Vulnerability) String() string {
-	return fmt.Sprintf("%s/%s/%s/%s/%f/%t", v.CVE, v.Package, v.Version, v.Severity, v.Score, v.IsFixed)
+	return fmt.Sprintf("%s/%s/%s/%s/%f/%t", v.Exposure, v.Package, v.Version, v.Severity, v.Score, v.IsFixed)
 }
 
-func (v *Vulnerability) GetSHA256() string {
-	s := fmt.Sprintf("%s%s%s%s%s", v.CVE, ShaConcatChar, v.Package, ShaConcatChar, v.Version)
+func (v *Vulnerability) GetID() string {
+	s := fmt.Sprintf("%s%s%s%s%s", v.Exposure, ShaConcatChar, v.Package, ShaConcatChar, v.Version)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }

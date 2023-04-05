@@ -38,7 +38,7 @@ func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 	}
 
 	item := &data.Vulnerability{
-		CVE:      parser.ToString(v.Search("VulnerabilityID").Data()),
+		Exposure: parser.ToString(v.Search("VulnerabilityID").Data()),
 		Package:  parser.ToString(v.Search("PkgName").Data()),
 		Version:  parser.ToString(v.Search("InstalledVersion").Data()),
 		Severity: strings.ToLower(parser.ToString(v.Search("Severity").Data())),

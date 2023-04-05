@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -58,6 +59,14 @@ func getStore(path string) (*sql.DB, error) {
 		}
 	}
 
-	log.Debug().Msg("data initialized")
 	return db, nil
+}
+
+func parseTime(v string) time.Time {
+	t, err := time.Parse(time.RFC3339Nano, v)
+	if err != nil {
+		log.Error().Err(err).Msgf("failed to parse time: %s", v)
+		return time.Now().UTC()
+	}
+	return t
 }

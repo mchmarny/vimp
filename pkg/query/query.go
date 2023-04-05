@@ -13,7 +13,7 @@ const (
 	Undefined Query = iota
 	Images
 	Digests
-	CVEs
+	Exposure
 	Packages
 )
 
@@ -27,8 +27,8 @@ func (q Query) String() string {
 		return "images"
 	case Digests:
 		return "digests"
-	case CVEs:
-		return "cves"
+	case Exposure:
+		return "exposure"
 	case Packages:
 		return "packages"
 	default:
@@ -44,8 +44,8 @@ type Options struct {
 	// Digest is the sha:256 digest of the image.
 	Digest string
 
-	// CVE is the CVE ID to query.
-	CVE string
+	// Exposure is the CVE ID to query.
+	Exposure string
 
 	// Target is the target data store uri.
 	Target string
@@ -55,23 +55,24 @@ type Options struct {
 }
 
 func (o *Options) String() string {
-	return fmt.Sprintf("Options{Image: %s, Digest: %s, CVE: %s, Target: %s, DiffsOnly: %t}",
-		o.Image, o.Digest, o.CVE, o.Target, o.DiffsOnly)
+	return fmt.Sprintf("image: %s, digest: %s, exposure: %s, target: %s, diffsOnly: %t}",
+		o.Image, o.Digest, o.Exposure, o.Target, o.DiffsOnly)
 }
 
 // GetTope returns the query type.
 // TODO: this is a bit of a hack, need to refactor
 func (o *Options) GetQuery() (Query, error) {
-	if o.CVE == "" && o.Digest == "" && o.Image == "" {
+	// if nothing set, return all images
+	if o.Exposure == "" && o.Digest == "" && o.Image == "" {
 		return Images, nil
 	}
 
-	if o.CVE == "" && o.Digest == "" {
+	if o.Exposure == "" && o.Digest == "" {
 		return Digests, nil
 	}
 
-	if o.CVE == "" {
-		return CVEs, nil
+	if o.Exposure == "" {
+		return Exposure, nil
 	}
 
 	return Packages, nil
