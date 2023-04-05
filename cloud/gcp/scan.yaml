@@ -1,0 +1,72 @@
+steps:
+
+  # If the image is not passed by digest, we need to resolve it to a digest
+  - id: config
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: /bin/bash
+    args:
+    - -c
+    - |-
+      echo "processing ${_DIGEST}"
+      if [[ "${_DIGEST}" != *"@"* ]];then
+        echo "ERROR: image ${_DIGEST} doesn't have a digest"
+        exit 1
+      fi
+      echo $(echo ${_DIGEST} | cut -d: -f2) > sha.txt
+
+  # snyk
+  - id: scan-snyk
+    name: docker.io/snyk/snyk:docker
+    waitFor:
+    - config
+    allowExitCodes: [0, 1]
+    args: ['snyk', 'container', 'test', '--app-vulns', '--json-file-output=snyk.json', '${_DIGEST}']
+    env:
+    - 'SNYK_TOKEN=${_SNYK_TOKEN}'
+
+  - id: load-snyk
+    name: us-docker.pkg.dev/cloudy-tools/builders/vimp
+    wait_for:
+    - config
+    - scan-snyk
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./snyk.json
+    - --target=${_DATASET}
+
+  # grype
+  - id: scan-grype
+    name: docker.io/anchore/grype
+    waitFor:
+    - config
+    args: ['-s', 'AllLayers', '-o', 'json', '--file', 'grype.json', '${_DIGEST}']
+
+  - id: load-grype
+    name: us-docker.pkg.dev/cloudy-tools/builders/vimp
+    wait_for:
+    - config
+    - scan-grype
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./grype.json
+    - --target=${_DATASET}
+
+  # trivy
+  - id: scan-trivy
+    name: docker.io/aquasec/trivy
+    waitFor:
+    - config
+    args: ['image', '--format', 'json', '--scanners', 'vuln', '--output', 'trivy.json', '${_DIGEST}']
+
+  - id: load-trivy
+    name: us-docker.pkg.dev/cloudy-tools/builders/vimp
+    wait_for:
+    - config
+    - scan-trivy
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./trivy.json
+    - --target=${_DATASET}
