@@ -95,7 +95,7 @@ func (o *Options) Validate() error {
 		if err != nil {
 			return errors.Wrap(err, "error parsing source")
 		}
-		if u.Scheme != "" {
+		if u.Scheme == "" {
 			u.Scheme = "https"
 		}
 		o.Image = u.String()
