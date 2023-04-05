@@ -41,7 +41,7 @@ func getStore(path string) (*sql.DB, error) {
 		wasCreated = true
 	}
 
-	db, err := sql.Open(dataDriver, path)
+	db, err := sql.Open(dataDriver, fmt.Sprintf("%s?parseTime=true", path))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open database: %s", path)
 	}
