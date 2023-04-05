@@ -31,10 +31,9 @@ var (
 	}
 
 	imageFlag = &c.StringFlag{
-		Name:     "image",
-		Aliases:  []string{"img"},
-		Usage:    "image uri without the tag or digest (e.g. ghcr.io/repo/img)",
-		Required: true,
+		Name:    "image",
+		Aliases: []string{"img"},
+		Usage:   "image uri without the tag or digest (e.g. ghcr.io/repo/img)",
 	}
 
 	digestFlag = &c.StringFlag{

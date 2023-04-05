@@ -6,6 +6,7 @@ import (
 
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -46,6 +47,8 @@ func Query(opt *query.Options) (any, error) {
 		return nil, errors.New("options are required")
 	}
 
+	log.Debug().Str("options", opt.String()).Msg("Query")
+
 	db, err := getStore(opt.Target)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get store")
@@ -53,24 +56,31 @@ func Query(opt *query.Options) (any, error) {
 
 	var q string
 	var a []interface{}
-	qt := opt.GetTope()
+	qt, err := opt.GetQuery()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get query type")
+	}
+
+	log.Debug().Str("query", qt.String()).Msg("Query")
 
 	switch qt {
-	case query.ByNothing:
+	case query.Images:
 		q = queryAllImages
 		a = nil
-	case query.ByImage:
+	case query.Digests:
 		q = queryDigests
 		a = []interface{}{opt.Image}
-	case query.ByDigest:
+	case query.CVEs:
 		q = queryCVEs
 		a = []interface{}{opt.Image, opt.Digest}
-	case query.ByCVE:
+	case query.Packages:
 		q = queryPackages
 		a = []interface{}{opt.Image, opt.Digest, opt.CVE}
 	default:
 		return nil, errors.Errorf("unsupported query type: %v", qt)
 	}
+
+	log.Debug().Str("sql", q).Msgf("Query: %v", a)
 
 	stmt, err := db.Prepare(q)
 	if err != nil {
@@ -90,17 +100,31 @@ func Query(opt *query.Options) (any, error) {
 	defer rows.Close()
 
 	switch qt {
-	case query.ByNothing:
+	case query.Images:
 		return scanArray(rows)
-	case query.ByImage:
-		return scanArray(rows)
-	case query.ByDigest:
+	case query.Digests:
+		return scanImages(rows)
+	case query.CVEs:
 		return scanCVEs(opt, rows)
-	case query.ByCVE:
+	case query.Packages:
 		return nil, errors.New("not implemented")
 	}
 
 	return nil, errors.Errorf("unsupported query type: %v", qt)
+}
+
+func scanImages(rows *sql.Rows) (any, error) {
+	m := make([]*query.Image, 0)
+
+	for rows.Next() {
+		v := &query.Image{}
+		if err := rows.Scan(&v.Image, &v.Digest); err != nil {
+			return nil, errors.Wrapf(err, "failed to scan image row")
+		}
+		m = append(m, v)
+	}
+
+	return m, nil
 }
 
 func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
@@ -111,7 +135,7 @@ func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
 		var source string
 		var severity string
 		var score float64
-		var lastProcessed time.Time
+		var lastProcessed string
 
 		if err := rows.Scan(&cve, &source, &severity, &score, &lastProcessed); err != nil {
 			return nil, errors.Wrapf(err, "failed to scan image row")
@@ -121,12 +145,17 @@ func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
 			m[cve] = make([]*query.VulnerabilitySource, 0)
 		}
 
+		t, err := time.Parse(time.RFC3339Nano, lastProcessed)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error parsing time from %s", lastProcessed)
+		}
+
 		m[cve] = append(m[cve], &query.VulnerabilitySource{
 			Source:      source,
 			Severity:    severity,
 			Score:       float32(score),
 			IsFixed:     false,
-			ProcessedAt: lastProcessed,
+			ProcessedAt: t,
 		})
 	}
 
@@ -136,7 +165,7 @@ func scanCVEs(opt *query.Options, rows *sql.Rows) (any, error) {
 
 	v := &query.VulnerabilityList{
 		Image: &query.Image{
-			URI:    opt.Image,
+			Image:  opt.Image,
 			Digest: opt.Digest,
 		},
 		Count:           len(m),

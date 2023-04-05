@@ -10,14 +10,31 @@ import (
 
 const (
 	// TypeImage represents the image query type.
-	ByNothing Type = iota
-	ByImage
-	ByDigest
-	ByCVE
+	Undefined Query = iota
+	Images
+	Digests
+	CVEs
+	Packages
 )
 
 // Type represents the query type.
-type Type int64
+type Query int64
+
+// String returns the string representation of the query type.
+func (q Query) String() string {
+	switch q {
+	case Images:
+		return "images"
+	case Digests:
+		return "digests"
+	case CVEs:
+		return "cves"
+	case Packages:
+		return "packages"
+	default:
+		return "undefined"
+	}
+}
 
 // Options represents the input options.
 type Options struct {
@@ -38,25 +55,26 @@ type Options struct {
 }
 
 func (o *Options) String() string {
-	return fmt.Sprintf("Options{Image: %s, Digest: %s, CVE: %s, Target: %s}", o.Image, o.Digest, o.CVE, o.Target)
+	return fmt.Sprintf("Options{Image: %s, Digest: %s, CVE: %s, Target: %s, DiffsOnly: %t}",
+		o.Image, o.Digest, o.CVE, o.Target, o.DiffsOnly)
 }
 
 // GetTope returns the query type.
 // TODO: this is a bit of a hack, need to refactor
-func (o *Options) GetTope() Type {
+func (o *Options) GetQuery() (Query, error) {
 	if o.CVE == "" && o.Digest == "" && o.Image == "" {
-		return ByNothing
+		return Images, nil
 	}
 
 	if o.CVE == "" && o.Digest == "" {
-		return ByImage
+		return Digests, nil
 	}
 
 	if o.CVE == "" {
-		return ByDigest
+		return CVEs, nil
 	}
 
-	return ByCVE
+	return Packages, nil
 }
 
 // Validate validates the options.
@@ -65,24 +83,22 @@ func (o *Options) Validate() error {
 		return errors.New("target is required")
 	}
 
-	if o.Image == "" {
-		return errors.New("image is required")
-	}
+	if o.Image != "" {
+		if strings.Contains(o.Image, "@") {
+			imageParts := strings.Split(o.Image, "@")
+			o.Image = imageParts[0]
+			o.Digest = imageParts[1]
+		}
 
-	if strings.Contains(o.Image, "@") {
-		imageParts := strings.Split(o.Image, "@")
-		o.Image = imageParts[0]
-		o.Digest = imageParts[1]
+		u, err := url.Parse(o.Image)
+		if err != nil {
+			return errors.Wrap(err, "error parsing source")
+		}
+		if u.Scheme != "" {
+			u.Scheme = "https"
+		}
+		o.Image = u.String()
 	}
-
-	u, err := url.Parse(o.Image)
-	if err != nil {
-		return errors.Wrap(err, "error parsing source")
-	}
-	if u.Scheme != "" {
-		u.Scheme = "https"
-	}
-	o.Image = u.String()
 
 	return nil
 }

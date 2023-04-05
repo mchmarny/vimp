@@ -5,8 +5,8 @@ import (
 )
 
 type Image struct {
-	// URI is the image name.
-	URI string `json:"uri"`
+	// Image is the image name.
+	Image string `json:"image"`
 
 	// Digest is the image digest.
 	Digest string `json:"digest,omitempty"`
