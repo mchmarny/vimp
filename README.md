@@ -1,36 +1,34 @@
 # vimp
 
-Import CLI for data output from OSS vulnerability scanners. Extracts vulnerabilities from reports output by common OSS scanners and converts it into a generic format which then is saved into a target store. Useful for comparing data across multiple scanners.
+Compare data from multiple OSS vulnerability scanners. The `vimp` CLI currently supports output from [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). `vimp` CLI also comes with an embedded Sqlite DB and support for other data stores, like [Google BigQuery](https://cloud.google.com/bigquery), or output to local file (`JSON` or `CVS`), and `stdout` output.
 
 ## Usage
 
-One of the use-cases where `vimp` can come handy is getting quick overview of the commonality and differences across the vulnerabilities identified by different scanners. To demo this start by exporting a digest of an image you want to use, for example the official Redis image in Docker Hub:
+Start by using a container image, tor example, the official Redis image in Docker Hub:
 
 ```shell
 export image="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
 ```
 
-Next, generate vulnerability report using one or more of the supported OSS scanners:
+Next, generate vulnerability reports using any number of one supported OSS scanners:
 
-* [grype](https://github.com/anchore/grype) `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
-* [snyk](https://github.com/snyk/cli) `snyk container test --app-vulns --json-file-output=report.json $image`
-* [trivy](https://github.com/aquasecurity/trivy) `trivy image --format json --output report.json $image`
+*  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
+*  `snyk container test --app-vulns --json-file-output=report.json $image`
+*  `trivy image --format json --output report.json $image`
 
-Then, import each one of the scanner outputs:
-
-> Note, `vimp` supports number of targets; data stores like local Sqlite DB or Google BigQuery (the target table will be created if it does not exist). You can also use `vimp` to export data into a file (`json` or `csv`), or `stdout`.
+Then, import each one of the resulting reports into the supported target stores (use `vimp import -h` for more information):
 
 ```shell
 vimp import --source $image --file report.json --target sqlite://demo.db
 ```
 
-In case of import with `snyk` output for the above image the response should be something like this: 
+The output for the above command should look something like this: 
 
 ```shell
 INF found 78 unique vulnerabilities
 ```
 
-Once you imported data, you can also run queries against this data. The default query against the same data will provide summary of all the data in your store: 
+Once you data is imported, you can then run queries against that data. The default query against the same data will provide summary of all the data in your store: 
 
 ```shell
 vimp query --target sqlite://demo.db
