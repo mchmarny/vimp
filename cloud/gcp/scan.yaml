@@ -58,7 +58,11 @@ steps:
     allowExitCodes: [0, 1]
     args: ['snyk', 'container', 'test', '--app-vulns', '--json-file-output=snyk.json', '${_DIGEST}']
     env:
-    - 'SNYK_TOKEN=${_SNYK_TOKEN}'
+    - 'SNYK_TOKEN=$$SNYK_TOKEN'
+    availableSecrets:
+      secretManager:
+      - versionName: ${_SNYK_TOKEN}
+        env: 'SNYK_TOKEN'
 
   - id: load-snyk
     name: us-docker.pkg.dev/cloudy-tools/builders/vimp
