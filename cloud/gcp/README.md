@@ -1,20 +1,18 @@
 # vimp on GCP
 
-You can `vimp` to aggregate all exposure data for images pushed into Artifact Registry and Container Registry in BigQuery.
+Aggregate all exposure data for images pushed into Artifact Registry and Container Registry in BigQuery using `vimp`.
 
 ## Setup
 
-Make sure there are existing GitHub connections in Google Cloud Build:
+Start by [forking the `vimp` repo](https://github.com/mchmarny/vimp/fork) so that you can make changes. 
+
+Next, make sure there are existing GitHub connections in Google Cloud Build:
+
+> If not, this step will need to be created in UI.
 
 ```shell
 gcloud alpha builds connections list --region $REGION
 ```
-
-If not, this step will need to be created in UI.
-
-## Configuration
-
-Start by [forking the `vimp` repo](https://github.com/mchmarny/vimp/fork) so that you can make changes. 
 
 When done, export the following environment variables with your own values: 
 
@@ -45,7 +43,9 @@ echo -n "${SNYK_TOKEN}" | gcloud secrets versions add vimp-snyk-token --data-fil
 export SNYK_SECRET=$(gcloud secrets versions describe 1 --secret vimp-snyk-token --format="value(NAME)")
 ```
 
-Finally, create a pub/sub trigger in GCB using the [provided build configurations file](scan-new-image.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automate-builds-pubsub-events):
+Finally, create a pub/sub trigger in GCB using the [provided build configurations file](scan-new-image.yaml). 
+
+> More detail about the parameters used below [here](https://cloud.google.com/build/docs/automate-builds-pubsub-events):
 
 ```shell
 gcloud alpha builds triggers create pubsub \
