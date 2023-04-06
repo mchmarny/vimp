@@ -59,10 +59,6 @@ steps:
     args: ['snyk', 'container', 'test', '--app-vulns', '--json-file-output=snyk.json', '${_DIGEST}']
     env:
     - 'SNYK_TOKEN=$$SNYK_TOKEN'
-    availableSecrets:
-      secretManager:
-      - versionName: ${_SNYK_TOKEN}
-        env: 'SNYK_TOKEN'
 
   - id: load-snyk
     name: us-docker.pkg.dev/cloudy-tools/builders/vimp
@@ -74,3 +70,8 @@ steps:
     - --source=${_DIGEST}
     - --file=./snyk.json
     - --target=${_DATASET}
+
+availableSecrets:
+  secretManager:
+  - versionName: ${_SNYK_TOKEN}
+    env: 'SNYK_TOKEN'
