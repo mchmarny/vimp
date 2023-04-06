@@ -57,6 +57,8 @@ steps:
     - config
     allowExitCodes: [0, 1]
     args: ['snyk', 'container', 'test', '--app-vulns', '--json-file-output=snyk.json', '${_DIGEST}']
+    secretEnv:
+    - SNYK_TOKEN
     env:
     - 'SNYK_TOKEN=$$SNYK_TOKEN'
 
