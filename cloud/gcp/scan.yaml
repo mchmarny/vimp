@@ -51,6 +51,9 @@ steps:
     - --target=${_DATASET}
 
   # snyk
+  # NOTE: snyk exit with 1 if vulnerabilities are found
+  # ERROR: step exited with non-zero status: 1
+  # This is why the allowExitCodes is set to [0, 1]
   - id: scan-snyk
     name: docker.io/snyk/snyk:docker
     waitFor:
