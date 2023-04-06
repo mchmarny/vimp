@@ -37,6 +37,14 @@ Next, create a pub/sub topic (if one does not already exists):
 gcloud pubsub topics create gcr --project $PROJECT_ID
 ```
 
+Create a secret that will hold the snyk token:
+
+```shell
+gcloud secrets create vimp-snyk-token --replication-policy="automatic"
+echo -n "${SNYK_TOKEN}" | gcloud secrets versions add vimp-snyk-token --data-file=- \
+export SNYK_SECRET=$(gcloud secrets versions describe 1 --secret vimp-snyk-token --format="value(NAME)")
+```
+
 Finally, create a pub/sub trigger in GCB using the [provided build configurations file](scan-new-image.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automate-builds-pubsub-events):
 
 ```shell
@@ -46,14 +54,14 @@ gcloud alpha builds triggers create pubsub \
     --name=scan-and-save-image-exposure-data \
     --topic=projects/$PROJECT_ID/topics/gcr \
     --build-config=cloud/gcp/scan.yaml \
-    --substitutions=_DIGEST='$(body.message.data.digest)',_ACTION='$(body.message.data.action)',_SNYK_TOKEN=$SNYK_TOKEN,_DATASET=$DATASET \
+    --substitutions=_DIGEST='$(body.message.data.digest)',_ACTION='$(body.message.data.action)',_SNYK_TOKEN=$SNYK_SECRET,_DATASET=$DATASET \
     --subscription-filter='_ACTION == "INSERT"' \
     --repo=https://www.github.com/$GH_USER/vimp \
     --repo-type=GITHUB \
     --branch=main
 ```
 
-> Make sure that the service account which is used to execute the trigger (default `799736955886@cloudbuild.gserviceaccount.com`) has `roles/bigquery.dataEditor` role. 
+> Make sure that the service account which is used to execute the trigger (default `799736955886@cloudbuild.gserviceaccount.com`) has `roles/bigquery.dataEditor` and `roles/secretmanager.secretAccessor` roles.
 
 ## Test
 
