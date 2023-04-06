@@ -409,7 +409,7 @@ func X__builtin_object_size(t *TLS, p uintptr, typ int32) types.Size_t {
 
 var atomicLoadStore16 sync.Mutex
 
-func AtomicLoadNUint16(ptr uintptr, memorder int16) uint16 {
+func AtomicLoadNUint16(ptr uintptr, memorder int32) uint16 {
 	atomicLoadStore16.Lock()
 	r := *(*uint16)(unsafe.Pointer(ptr))
 	atomicLoadStore16.Unlock()
@@ -575,7 +575,16 @@ func Xabs(t *TLS, j int32) int32 {
 	return -j
 }
 
+func Xllabs(tls *TLS, a int64) int64 {
+	if a >= int64(0) {
+		return a
+	}
+
+	return -a
+}
+
 func X__builtin_isnan(t *TLS, x float64) int32    { return Bool32(math.IsNaN(x)) }
+func X__builtin_llabs(tls *TLS, a int64) int64    { return Xllabs(tls, a) }
 func Xacos(t *TLS, x float64) float64             { return math.Acos(x) }
 func Xacosh(t *TLS, x float64) float64            { return math.Acosh(x) }
 func Xasin(t *TLS, x float64) float64             { return math.Asin(x) }
@@ -602,6 +611,7 @@ func Xisnanl(t *TLS, x float64) int32             { return Bool32(math.IsNaN(x))
 func Xldexp(t *TLS, x float64, exp int32) float64 { return math.Ldexp(x, int(exp)) }
 func Xlog(t *TLS, x float64) float64              { return math.Log(x) }
 func Xlog10(t *TLS, x float64) float64            { return math.Log10(x) }
+func Xlog2(t *TLS, x float64) float64             { return math.Log2(x) }
 func Xround(t *TLS, x float64) float64            { return math.Round(x) }
 func Xsin(t *TLS, x float64) float64              { return math.Sin(x) }
 func Xsinf(t *TLS, x float32) float32             { return float32(math.Sin(float64(x))) }
@@ -1223,8 +1233,9 @@ func Xreadv(t *TLS, fd int32, iov uintptr, iovcnt int32) types.Ssize_t {
 }
 
 // int openpty(int *amaster, int *aslave, char *name,
-//                    const struct termios *termp,
-//                    const struct winsize *winp);
+//
+//	const struct termios *termp,
+//	const struct winsize *winp);
 func Xopenpty(t *TLS, amaster, aslave, name, termp, winp uintptr) int32 {
 	panic(todo(""))
 }
@@ -1235,8 +1246,9 @@ func Xsetsid(t *TLS) types.Pid_t {
 }
 
 // int pselect(int nfds, fd_set *readfds, fd_set *writefds,
-//                    fd_set *exceptfds, const struct timespec *timeout,
-//                    const sigset_t *sigmask);
+//
+//	fd_set *exceptfds, const struct timespec *timeout,
+//	const sigset_t *sigmask);
 func Xpselect(t *TLS, nfds int32, readfds, writefds, exceptfds, timeout, sigmask uintptr) int32 {
 	panic(todo(""))
 }

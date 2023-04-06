@@ -21,7 +21,7 @@ cloud.google.com/go/compute/internal
 # cloud.google.com/go/compute/metadata v0.2.3
 ## explicit; go 1.19
 cloud.google.com/go/compute/metadata
-# cloud.google.com/go/iam v0.13.0
+# cloud.google.com/go/iam v1.0.0
 ## explicit; go 1.19
 cloud.google.com/go/iam
 cloud.google.com/go/iam/apiv1/iampb
@@ -66,6 +66,9 @@ github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
+# github.com/dustin/go-humanize v1.0.1
+## explicit; go 1.16
+github.com/dustin/go-humanize
 # github.com/goccy/go-json v0.10.2
 ## explicit; go 1.12
 github.com/goccy/go-json
@@ -121,7 +124,7 @@ github.com/kballard/go-shellquote
 ## explicit; go 1.16
 github.com/klauspost/asmfmt
 github.com/klauspost/asmfmt/cmd/asmfmt
-# github.com/klauspost/compress v1.16.3
+# github.com/klauspost/compress v1.16.4
 ## explicit; go 1.18
 github.com/klauspost/compress
 github.com/klauspost/compress/flate
@@ -162,7 +165,7 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0
+# github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
 ## explicit; go 1.12
 github.com/remyoudompheng/bigfft
 # github.com/rs/zerolog v1.29.0
@@ -205,7 +208,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/mod v0.9.0
+# golang.org/x/mod v0.10.0
 ## explicit; go 1.17
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
@@ -231,12 +234,12 @@ golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.1.0
 ## explicit
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.6.0
+# golang.org/x/sys v0.7.0
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
 golang.org/x/sys/unix
-# golang.org/x/text v0.8.0
+# golang.org/x/text v0.9.0
 ## explicit; go 1.17
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
@@ -269,7 +272,7 @@ golang.org/x/tools/internal/typesinternal
 ## explicit; go 1.17
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/api v0.114.0
+# google.golang.org/api v0.116.0
 ## explicit; go 1.19
 google.golang.org/api/bigquery/v2
 google.golang.org/api/googleapi
@@ -300,7 +303,7 @@ google.golang.org/appengine/internal/socket
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/socket
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20230330200707-38013875ee22
+# google.golang.org/genproto v0.0.0-20230403163135-c38d8f061ccd
 ## explicit; go 1.19
 google.golang.org/genproto/googleapis/api
 google.golang.org/genproto/googleapis/api/annotations
@@ -409,17 +412,17 @@ google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
-# lukechampine.com/uint128 v1.2.0
+# lukechampine.com/uint128 v1.3.0
 ## explicit; go 1.12
 lukechampine.com/uint128
-# modernc.org/cc/v3 v3.36.3
-## explicit; go 1.15
+# modernc.org/cc/v3 v3.40.0
+## explicit; go 1.17
 modernc.org/cc/v3
-# modernc.org/ccgo/v3 v3.16.9
-## explicit; go 1.16
+# modernc.org/ccgo/v3 v3.16.13
+## explicit; go 1.17
 modernc.org/ccgo/v3/lib
-# modernc.org/libc v1.17.1
-## explicit; go 1.16
+# modernc.org/libc v1.22.3
+## explicit; go 1.18
 modernc.org/libc
 modernc.org/libc/errno
 modernc.org/libc/fcntl
@@ -449,19 +452,19 @@ modernc.org/libc/wctype
 # modernc.org/mathutil v1.5.0
 ## explicit; go 1.13
 modernc.org/mathutil
-# modernc.org/memory v1.2.1
+# modernc.org/memory v1.5.0
 ## explicit; go 1.18
 modernc.org/memory
 # modernc.org/opt v0.1.3
 ## explicit; go 1.13
 modernc.org/opt
-# modernc.org/sqlite v1.18.1
-## explicit; go 1.17
+# modernc.org/sqlite v1.21.1
+## explicit; go 1.18
 modernc.org/sqlite
 modernc.org/sqlite/lib
 # modernc.org/strutil v1.1.3
 ## explicit; go 1.18
 modernc.org/strutil
-# modernc.org/token v1.0.0
+# modernc.org/token v1.1.0
 ## explicit
 modernc.org/token
