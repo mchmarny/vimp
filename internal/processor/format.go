@@ -2,7 +2,6 @@ package processor
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vimp/internal/parser"
@@ -80,18 +79,14 @@ func discoverFormat(c *gabs.Container) Format {
 		return FormatGrypeJSON
 	}
 
-	// snyk
-	d = c.Search("vulnerabilities")
-	if d.Exists() && d.Index(0).Exists() {
-		id := parser.ToString(d.Index(0).Search("id").Data())
-		if strings.HasPrefix(id, "SNYK-") {
-			return FormatSnykJSON
-		}
-	}
-
 	// trivy
 	if c.ExistsP("SchemaVersion") && c.ExistsP("Results") {
 		return FormatTrivyJSON
+	}
+
+	// snyk
+	if c.Search("vulnerabilities").Exists() && c.Search("applications").Exists() {
+		return FormatSnykJSON
 	}
 
 	return FormatUnknown
