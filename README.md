@@ -1,6 +1,8 @@
 # vimp
 
-Compare data from multiple OSS vulnerability scanners. The `vimp` CLI currently supports output from [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). `vimp` CLI also comes with an embedded Sqlite DB and support for other data stores, like [Google BigQuery](https://cloud.google.com/bigquery), or output to local file (`JSON` or `CVS`), and `stdout` output.
+Compare data from multiple vulnerability scanners to get a more complete picture of potential exposures. 
+
+`vimp` CLI currently supports output from common oepn source vulnerability scanners like [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). The CLI also comes with an embedded data store (Sqlite) and support for other databases, like [Google BigQuery](https://cloud.google.com/bigquery). Alternatively, `vimp` can also output to local file (`JSON` or `CVS`) or `stdout`.
 
 ## Usage
 
@@ -19,8 +21,10 @@ Next, generate vulnerability reports using any number of one supported OSS scann
 Then, import each one of the resulting reports into the supported target stores (use `vimp import -h` for more information):
 
 ```shell
-vimp import --source $image --file report.json --target sqlite://demo.db
+vimp import --source $image --file report.json
 ```
+
+> Note, by default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`).
 
 The output for the above command should look something like this: 
 
@@ -31,8 +35,10 @@ INF found 78 unique vulnerabilities
 Once you data is imported, you can then run queries against that data. The default query against the same data will provide summary of all the data in your store: 
 
 ```shell
-vimp query --target sqlite://demo.db
+vimp query
 ```
+
+> Note, by default, `vimp` will query (`.vimp.db`) in your home directory. You can target different database using the `--target` flag (e.g. `sqlite://data/vimp.db`).
 
 After importing data for one image from three sources the response will look something like this: 
 
@@ -57,8 +63,7 @@ INF found 1 records
 To dig deeper into the data for that image, you can list all the vulnerabilities found that image across all of the sources: 
 
 ```shell
-vimp query --target sqlite://demo.db \
-           --image https://docker.io/redis \
+vimp query --image https://docker.io/redis \
            --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
 ```
 
@@ -109,8 +114,7 @@ The results for that query should look something like this:
 To drill into the packages impacted by each vulnerabilities you can use the additional `--exposure` flag: 
 
 ```shell
-vimp query --target sqlite://demo.db \
-           --image https://docker.io/redis \
+vimp query --image https://docker.io/redis \
            --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
            --exposure CVE-2005-2541
 ```

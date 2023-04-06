@@ -24,10 +24,9 @@ var (
 	}
 
 	targetFlag = &c.StringFlag{
-		Name:     "target",
-		Aliases:  []string{"t"},
-		Usage:    fmt.Sprintf("target (e.g. %s, etc.)", strings.Join(target.GetSampleTargets(), ", ")),
-		Required: true,
+		Name:    "target",
+		Aliases: []string{"t"},
+		Usage:   fmt.Sprintf("target (e.g. %s, etc.)", strings.Join(target.GetSampleTargets(), ", ")),
 	}
 
 	imageFlag = &c.StringFlag{

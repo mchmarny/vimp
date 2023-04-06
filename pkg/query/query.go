@@ -2,19 +2,13 @@ package query
 
 import (
 	"fmt"
-	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/mchmarny/vimp/internal/config"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
-	// FileNameDefault is the default file name for the data store.
-	FileNameDefault = ".vimp.db"
-
 	// TypeImage represents the image query type.
 	Undefined Query = iota
 	Images
@@ -93,33 +87,16 @@ func (o *Options) Validate() error {
 			o.Digest = imageParts[1]
 		}
 
-		u, err := url.Parse(o.Image)
+		var err error
+		o.Image, err = config.EnsureURI(o.Image)
 		if err != nil {
-			return errors.Wrap(err, "error parsing source")
+			return errors.Wrap(err, "invalid image format")
 		}
-		if u.Scheme == "" {
-			u.Scheme = "https"
-		}
-		o.Image = u.String()
 	}
 
 	if o.Target == "" {
-		path, err := getDefaultDBPath()
-		if err != nil {
-			return errors.Wrap(err, "error getting default db path")
-		}
-		o.Target = path
+		o.Target = config.GetDefaultDBPath()
 	}
 
 	return nil
-}
-
-func getDefaultDBPath() (path string, err error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get user home dir")
-	}
-	log.Debug().Msgf("home dir: %s", home)
-
-	return filepath.Join(home, FileNameDefault), nil
 }

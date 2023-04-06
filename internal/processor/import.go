@@ -1,10 +1,10 @@
 package processor
 
 import (
-	"net/url"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
+	"github.com/mchmarny/vimp/internal/config"
 	"github.com/mchmarny/vimp/internal/parser"
 	"github.com/mchmarny/vimp/internal/target"
 	"github.com/mchmarny/vimp/pkg/data"
@@ -32,10 +32,6 @@ type ImportOptions struct {
 }
 
 func (o *ImportOptions) validate() error {
-	if o.Target == "" {
-		return errors.New("target is required")
-	}
-
 	if o.Source == "" {
 		return errors.New("source is required")
 	}
@@ -44,15 +40,17 @@ func (o *ImportOptions) validate() error {
 		return errors.New("source must contain digest")
 	}
 
-	u, err := url.Parse(o.Source)
-	if err != nil {
-		return errors.Wrap(err, "error parsing source")
+	if o.Target == "" {
+		o.Target = config.GetDefaultDBPath()
 	}
-	if u.Scheme == "" {
-		u.Scheme = "https"
-	}
-	o.Source = u.String()
 
+	var err error
+	o.Source, err = config.EnsureURI(o.Source)
+	if err != nil {
+		return errors.Wrap(err, "invalid source format")
+	}
+
+	// if image is set with digest, split it and set the digest
 	parts := strings.Split(o.Source, "@")
 	o.uri = parts[0]
 	o.digest = parts[1]
@@ -60,6 +58,12 @@ func (o *ImportOptions) validate() error {
 	if o.File == "" {
 		return errors.New("file path is required")
 	}
+
+	log.Info().
+		Str("image", o.uri).
+		Str("digest", o.digest).
+		Str("target", o.Target).
+		Msg("importing:")
 
 	c, err := parser.GetContainer(o.File)
 	if err != nil {
