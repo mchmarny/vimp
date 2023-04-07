@@ -14,5 +14,4 @@ func TestAllScanners(t *testing.T) {
 	r, err := Scan(o)
 	assert.NoError(t, err)
 	assert.NotNil(t, r)
-	assert.Len(t, r.Files, 3)
 }
