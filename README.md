@@ -9,8 +9,10 @@ Compare data from multiple vulnerability scanners to get a more complete picture
 Start by using a container image, tor example, the official Redis image in Docker Hub:
 
 ```shell
-export image="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
+export image="docker.io/redis"
 ```
+
+> Note, image can have a tag or or digest or both (yes, it looks weird but it's a valid URI). Either way, the image URI will be resolved to its digest during import.
 
 `vimp` currently recognizes the output from the following OSS scanners/formats:
 
