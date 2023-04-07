@@ -88,7 +88,7 @@ func (o *Options) Validate() error {
 		}
 
 		var err error
-		o.Image, err = config.EnsureURI(o.Image)
+		o.Image, err = config.RemoveSchema(o.Image)
 		if err != nil {
 			return errors.Wrap(err, "invalid image format")
 		}

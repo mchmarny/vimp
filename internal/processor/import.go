@@ -40,16 +40,19 @@ func (o *ImportOptions) validate() error {
 		return errors.New("source is required")
 	}
 
-	if !strings.Contains(o.Source, "@") {
-		return errors.New("source must contain digest")
-	}
-
 	if o.Target == "" {
 		o.Target = config.GetDefaultDBPath()
 	}
 
 	var err error
-	o.Source, err = config.EnsureURI(o.Source)
+	if !strings.Contains(o.Source, "@") {
+		o.Source, err = config.GetDigest(o.Source)
+		if err != nil {
+			return errors.Wrap(err, "error getting digest")
+		}
+	}
+
+	o.Source, err = config.RemoveSchema(o.Source)
 	if err != nil {
 		return errors.Wrap(err, "invalid source format")
 	}
@@ -93,6 +96,12 @@ func Import(opt *ImportOptions) error {
 	// if file is set, import it
 	if opt.File != "" {
 		return runImport(opt)
+	}
+
+	var err error
+	opt.Source, err = config.RemoveSchema(opt.Source)
+	if err != nil {
+		return errors.Wrap(err, "invalid source format")
 	}
 
 	// if file is not set, scan the image and import the results
