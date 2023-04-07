@@ -15,15 +15,17 @@ var (
 			sourceFlag,
 			fileFlag,
 			targetFlag,
+			scannersFlag,
 		},
 	}
 )
 
 func runImport(c *c.Context) error {
 	opt := &processor.ImportOptions{
-		Source: c.String(sourceFlag.Name),
-		File:   c.String(fileFlag.Name),
-		Target: c.String(targetFlag.Name),
+		Source:   c.String(sourceFlag.Name),
+		File:     c.String(fileFlag.Name),
+		Target:   c.String(targetFlag.Name),
+		Scanners: c.String(scannersFlag.Name),
 	}
 
 	printVersion(c)

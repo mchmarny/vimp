@@ -6,6 +6,7 @@ import (
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vimp/internal/config"
 	"github.com/mchmarny/vimp/internal/parser"
+	"github.com/mchmarny/vimp/internal/scanner"
 	"github.com/mchmarny/vimp/internal/target"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
@@ -19,6 +20,9 @@ type ImportOptions struct {
 
 	// File path to the vulnerability report to import.
 	File string
+
+	// Scanners is the list of scanners to use.
+	Scanners string
 
 	// Target is the target data store uri.
 	Target string
@@ -82,6 +86,37 @@ func (o *ImportOptions) validate() error {
 
 // Import imports the vulnerability report to the target data store.
 func Import(opt *ImportOptions) error {
+	if opt == nil {
+		return errors.New("options required")
+	}
+
+	// if file is set, import it
+	if opt.File != "" {
+		return runImport(opt)
+	}
+
+	// if file is not set, scan the image and import the results
+	so := &scanner.Options{
+		Image: opt.Source,
+		Scans: opt.Scanners,
+	}
+
+	r, err := scanner.Scan(so)
+	if err != nil {
+		return errors.Wrap(err, "error scanning image")
+	}
+
+	for _, f := range r.Files {
+		opt.File = f
+		if err := runImport(opt); err != nil {
+			return errors.Wrap(err, "error importing file")
+		}
+	}
+
+	return nil
+}
+
+func runImport(opt *ImportOptions) error {
 	if opt == nil {
 		return errors.New("options required")
 	}

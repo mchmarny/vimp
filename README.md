@@ -12,24 +12,39 @@ Start by using a container image, tor example, the official Redis image in Docke
 export image="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
 ```
 
-Next, generate vulnerability reports using any number of one supported OSS scanners:
+`vimp` currently recognizes the output from the following OSS scanners/formats:
 
 *  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
 *  `snyk container test --app-vulns --json-file-output=report.json $image`
 *  `trivy image --format json --output report.json $image`
 
-Then, import each one of the resulting reports into the supported target stores (use `vimp import -h` for more information):
+You can either import the resulting reports from any of the above commands into the local data store:
 
 ```shell
 vimp import --source $image --file report.json
 ```
 
-> Note, by default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`).
+Or, omit the `--file` flag all together and `vimp` will automatically scan and import the provided image with any of the installed scanners:
+
+```shell
+vimp import --source $image
+```
+
+By default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`). Find all the scanner and target data store options using `vimp import -h`.
 
 The output for the above command should look something like this: 
 
 ```shell
+vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
+INF v0.5.3
+INF scanning image docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
+INF grype scan completed: grype-110213000.json
+INF found 83 unique vulnerabilities
+INF snyk scan completed: snyk-255733000.json
 INF found 78 unique vulnerabilities
+INF trivy scan completed: trivy-658830000.json
+INF found 79 unique vulnerabilities
+INF importing: digest=sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 image=https://docker.io/redis target=sqlite://.vimp.db
 ```
 
 Once you data is imported, you can then run queries against that data. The default query against the same data will provide summary of all the data in your store: 
