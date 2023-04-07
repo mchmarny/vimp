@@ -44,7 +44,7 @@ INF snyk scan completed: snyk-255733000.json
 INF found 78 unique vulnerabilities
 INF trivy scan completed: trivy-658830000.json
 INF found 79 unique vulnerabilities
-INF importing: digest=sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 image=https://docker.io/redis target=sqlite://.vimp.db
+INF importing: digest=sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 image=docker.io/redis target=sqlite://.vimp.db
 ```
 
 Once you data is imported, you can then run queries against that data. The default query against the same data will provide summary of all the data in your store: 
@@ -60,7 +60,7 @@ After importing data for one image from three sources the response will look som
 ```json
 INF found 1 records
 {
-  "https://docker.io/redis": {
+  "docker.io/redis": {
     "versions": {
       "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448": {
         "exposures": 240,
@@ -78,7 +78,7 @@ INF found 1 records
 To dig deeper into the data for that image, you can list all the vulnerabilities found that image across all of the sources: 
 
 ```shell
-vimp query --image https://docker.io/redis \
+vimp query --image docker.io/redis \
            --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
 ```
 
@@ -88,7 +88,7 @@ The results for that query should look something like this:
 
 ```json
 {
-  "image": "https://docker.io/redis",
+  "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
   "exposures": {
     "CVE-2005-2541": [
@@ -129,7 +129,7 @@ The results for that query should look something like this:
 To drill into the packages impacted by each vulnerabilities you can use the additional `--exposure` flag: 
 
 ```shell
-vimp query --image https://docker.io/redis \
+vimp query --image docker.io/redis \
            --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
            --exposure CVE-2005-2541
 ```
@@ -139,7 +139,7 @@ The result should look something like this:
 ```json
 INF found 3 records
 {
-  "image": "https://docker.io/redis",
+  "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
   "exposure": "CVE-2005-2541",
   "packages": [
