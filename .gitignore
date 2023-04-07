@@ -92,3 +92,4 @@ images.txt
 
 # Data
 *.db
+.digest

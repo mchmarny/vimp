@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mchmarny/vimp/internal/scanner"
 	"github.com/mchmarny/vimp/internal/target"
 	c "github.com/urfave/cli/v2"
 )
@@ -17,10 +18,14 @@ var (
 	}
 
 	fileFlag = &c.StringFlag{
-		Name:     "file",
-		Aliases:  []string{"f"},
-		Usage:    "path to vulnerability report to import",
-		Required: true,
+		Name:    "file",
+		Aliases: []string{"f"},
+		Usage:   "path to vulnerability report to import, image scans will automatically be performed if not provided",
+	}
+
+	scannersFlag = &c.StringFlag{
+		Name:  "scanners",
+		Usage: fmt.Sprintf("comma separated list of scanners to use (e.g. %s, etc.), ignored if file is provided", strings.Join(scanner.GetSampleScanners(), ", ")),
 	}
 
 	targetFlag = &c.StringFlag{
