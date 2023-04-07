@@ -2,7 +2,7 @@
 
 Compare data from multiple vulnerability scanners to get a more complete picture of potential exposures. 
 
-`vimp` CLI currently supports output from common oepn source vulnerability scanners like [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). The CLI also comes with an embedded data store (`sqlite`) and support for other databases, like [BigQuery](https://cloud.google.com/bigquery). Alternatively, `vimp` can also output to local file (`JSON` or `CVS`) or `stdout`.
+`vimp` CLI currently supports output from common open source vulnerability scanners like [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). The CLI also comes with an embedded data store (`sqlite`) and support for other databases, like [BigQuery](https://cloud.google.com/bigquery). Alternatively, `vimp` can also output to local file (`JSON` or `CVS`) or `stdout`.
 
 ## Usage
 
