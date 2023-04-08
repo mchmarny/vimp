@@ -52,7 +52,7 @@ var (
 	}
 
 	diffsOnlyFlag = &c.BoolFlag{
-		Name:  "diffs-only",
+		Name:  "diff",
 		Usage: "only return differences between sources",
 	}
 )

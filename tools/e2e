@@ -39,7 +39,7 @@ msg "query image versions without dups"
 bin/vimp query --target sqlite://demo.db \
                --image docker.io/redis \
                --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-               --diffs-only
+               --diff
 
 msg "query image exposure"
 bin/vimp query --target sqlite://demo.db \
