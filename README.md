@@ -93,24 +93,24 @@ The results for that query should look something like this:
   "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
   "exposures": {
-    "CVE-2005-2541": [
+    "CVE-2022-29458": [
       {
         "source": "grype",
-        "severity": "negligible",
-        "score": 10,
-        "last_discovered": "2023-04-05T19:40:42Z"
+        "severity": "high",
+        "score": 5.8,
+        "last_discovered": "2023-04-07T20:33:24Z"
       },
       {
         "source": "snyk",
         "severity": "low",
-        "score": 9.8,
-        "last_discovered": "2023-04-05T19:29:16Z"
+        "score": 7.1,
+        "last_discovered": "2023-04-07T20:33:24Z"
       },
       {
         "source": "trivy",
-        "severity": "low",
-        "score": 10,
-        "last_discovered": "2023-04-05T19:41:11Z"
+        "severity": "high",
+        "score": 5.8,
+        "last_discovered": "2023-04-07T20:33:24Z"
       }
     ],
     "CVE-2007-5686": [
@@ -143,13 +143,13 @@ INF found 3 records
 {
   "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-  "exposure": "CVE-2005-2541",
+  "exposure": "CVE-2022-29458",
   "packages": [
     {
       "source": "grype",
       "package": "tar",
       "version": "1.34+dfsg-1",
-      "severity": "negligible",
+      "severity": "high",
       "score": 10,
       "last_discovered": "2023-04-05T19:40:42Z"
     },
@@ -165,7 +165,7 @@ INF found 3 records
       "source": "trivy",
       "package": "tar",
       "version": "1.34+dfsg-1",
-      "severity": "low",
+      "severity": "high",
       "score": 10,
       "last_discovered": "2023-04-05T19:41:11Z"
     }

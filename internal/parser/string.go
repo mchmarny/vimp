@@ -16,3 +16,15 @@ func ToString(v interface{}) string {
 
 	return fmt.Sprintf("%v", v)
 }
+
+func FirstNonEmpty(v ...interface{}) string {
+	for _, c := range v {
+		if c != nil {
+			s := ToString(c)
+			if s != "" {
+				return s
+			}
+		}
+	}
+	return ""
+}
