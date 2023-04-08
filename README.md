@@ -93,82 +93,73 @@ The results for that query should look something like this:
   "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
   "exposures": {
-    "CVE-2022-29458": [
+    "CVE-2013-4392": [
       {
         "source": "grype",
-        "severity": "high",
-        "score": 5.8,
-        "last_discovered": "2023-04-07T20:33:24Z"
+        "severity": "low",
+        "score": 3.3,
+        "last_discovered": "2023-04-08T12:30:45Z"
       },
       {
         "source": "snyk",
-        "severity": "low",
-        "score": 7.1,
-        "last_discovered": "2023-04-07T20:33:24Z"
+        "severity": "medium",
+        "score": 4.4,
+        "last_discovered": "2023-04-08T12:30:45Z"
       },
       {
         "source": "trivy",
-        "severity": "high",
-        "score": 5.8,
-        "last_discovered": "2023-04-07T20:33:24Z"
+        "severity": "low",
+        "last_discovered": "2023-04-08T12:30:45Z"
       }
     ],
-    "CVE-2007-5686": [
-      {
-        "source": "grype",
-        "severity": "negligible",
-        "score": 4.9,
-        "last_discovered": "2023-04-05T19:40:42Z"
-      },
-      ...
-    ],
+    ...
   }
 }
 ```
 
-> There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diff` flag to highlight only the data where the exposures are not the same across all of the sources. 
+There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diff` flag to return only the data where the severity and scores are not the same across all of the sources.
 
-To drill into the packages impacted by each vulnerabilities you can use the additional `--exposure` flag: 
+Additionally, to drill into the packages impacted by each vulnerability, you can use the additional `--exposure` flag: 
 
 ```shell
 vimp query --image docker.io/redis \
            --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-           --exposure CVE-2005-2541
+           --exposure CVE-2013-4392
 ```
 
-The result should look something like this: 
+The results should look something like this: 
 
 ```json
-INF found 3 records
 {
   "image": "docker.io/redis",
   "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-  "exposure": "CVE-2022-29458",
+  "exposure": "CVE-2013-4392",
   "packages": [
     {
       "source": "grype",
-      "package": "tar",
-      "version": "1.34+dfsg-1",
-      "severity": "high",
-      "score": 10,
-      "last_discovered": "2023-04-05T19:40:42Z"
+      "package": "libsystemd0",
+      "version": "247.3-7+deb11u1",
+      "severity": "low",
+      "score": 3.3,
+      "last_discovered": "2023-04-08T12:30:45Z"
+    },
+    {
+      "source": "grype",
+      "package": "libudev1",
+      "version": "247.3-7+deb11u1",
+      "severity": "low",
+      "score": 3.3,
+      "last_discovered": "2023-04-08T12:30:45Z"
     },
     {
       "source": "snyk",
-      "package": "tar",
-      "version": "1.34+dfsg-1",
-      "severity": "low",
-      "score": 9.8,
-      "last_discovered": "2023-04-05T19:29:16Z"
+      "package": "systemd/libsystemd0",
+      "version": "247.3-7+deb11u1",
+      "severity": "medium",
+      "score": 4.4,
+      "last_discovered": "2023-04-08T12:30:45Z"
     },
-    {
-      "source": "trivy",
-      "package": "tar",
-      "version": "1.34+dfsg-1",
-      "severity": "high",
-      "score": 10,
-      "last_discovered": "2023-04-05T19:41:11Z"
-    }
+    ...
   ]
 }
 ```
