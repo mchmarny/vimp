@@ -126,7 +126,7 @@ The results for that query should look something like this:
 }
 ```
 
-> There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diffs-only` flag to highlight only the data where the exposures are not the same across all of the sources. 
+> There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diff` flag to highlight only the data where the exposures are not the same across all of the sources. 
 
 To drill into the packages impacted by each vulnerabilities you can use the additional `--exposure` flag: 
 

@@ -42,20 +42,18 @@ type ImageExposureResult struct {
 	Exposures map[string][]*ExposureResult `json:"exposures"`
 }
 
-// HasUniqueExposures returns true if the image has unique exposures.
-func HasUniqueExposures(list []*ExposureResult) bool {
+// HasUniqueExposureSeverityScore returns true if the image has unique exposures.
+func HasUniqueExposureSeverityScore(list []*ExposureResult) bool {
 	if len(list) == 0 {
 		return false
 	}
 
-	var last *ExposureResult
+	m := make(map[string]bool, 0)
 	for _, x := range list {
-		if last != nil && last.GetID() != x.GetID() {
-			return true
-		}
+		m[x.GetSeverityScoreHash()] = true
 	}
 
-	return false
+	return len(m) > 1
 }
 
 type ExposureResult struct {
@@ -72,8 +70,8 @@ type ExposureResult struct {
 	Last time.Time `json:"last_discovered"`
 }
 
-func (e *ExposureResult) GetID() string {
-	s := fmt.Sprintf("%s%s%f", e.Source, e.Severity, e.Score)
+func (e *ExposureResult) GetSeverityScoreHash() string {
+	s := fmt.Sprintf("%s-%.1f", e.Severity, e.Score)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }
 
