@@ -190,7 +190,7 @@ func scanExposure(opt *query.Options, rows *sql.Rows) (any, error) {
 	u := make(map[string][]*query.ExposureResult, 0)
 
 	for k, v := range list {
-		if !query.HasUniqueExposures(v) {
+		if query.HasUniqueExposureSeverityScore(v) {
 			u[k] = v
 		}
 	}
