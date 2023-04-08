@@ -45,39 +45,44 @@ func mapVulnerability(m *gabs.Container) *data.Vulnerability {
 		return nil
 	}
 
+	rv := m.Search("relatedVulnerabilities").Index(0)
+
 	item := &data.Vulnerability{
-		Exposure: parser.ToString(v.Search("id").Data()),
-		Package:  parser.ToString(a.Search("name").Data()),
-		Version:  parser.ToString(a.Search("version").Data()),
-		Severity: strings.ToLower(parser.ToString(v.Search("severity").Data())),
-		Score:    getScore(m),
-		IsFixed:  parser.ToString(v.Search("fix", "state").Data()) == "fixed",
+		Exposure: parser.ToString(parser.FirstNonEmpty(
+			rv.Search("id").Data(),
+			v.Search("id").Data())),
+		Package: parser.String(a, "name"),
+		Version: parser.String(a, "version"),
+		Severity: strings.ToLower(parser.FirstNonEmpty(
+			rv.Search("severity").Data(),
+			v.Search("severity").Data())),
+		Score:   getScore(rv.Search("cvss")),
+		IsFixed: parser.ToString(v.Search("fix", "state").Data()) == "fixed",
 	}
 
 	return item
 }
 
 func getScore(v *gabs.Container) float32 {
-	rvList := v.Search("relatedVulnerabilities").Children()
-	var rv *gabs.Container
-	for _, rvNode := range rvList {
-		if rvNode.Search("namespace").Data().(string) == "nvd:cpe" {
-			rv = rvNode
-			break
-		}
-	}
-	if rv == nil {
+	if !v.Exists() {
 		return 0
 	}
 
-	for _, cvss := range rv.Search("cvss").Children() {
+	v2 := float32(0.0)
+	v3 := float32(0.0)
+
+	for _, cvss := range v.Children() {
 		switch cvss.Search("version").Data().(string) {
 		case "2.0":
-			return parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
+			v2 = parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
 		case "3.0", "3.1":
-			return parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
+			v3 = parser.ToFloat32(cvss.Search("metrics", "baseScore").Data())
 		}
 	}
 
-	return 0
+	if v3 > 0 {
+		return v3
+	}
+
+	return v2
 }

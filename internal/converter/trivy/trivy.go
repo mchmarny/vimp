@@ -38,35 +38,27 @@ func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 	}
 
 	item := &data.Vulnerability{
-		Exposure: parser.ToString(v.Search("VulnerabilityID").Data()),
-		Package:  parser.ToString(v.Search("PkgName").Data()),
-		Version:  parser.ToString(v.Search("InstalledVersion").Data()),
-		Severity: strings.ToLower(parser.ToString(v.Search("Severity").Data())),
-		Score:    getScore(c),
+		Exposure: parser.String(v, "VulnerabilityID"),
+		Package:  parser.String(v, "PkgName"),
+		Version:  parser.String(v, "InstalledVersion"),
+		Severity: strings.ToLower(parser.String(v, "Severity")),
+		Score:    getScore(c, parser.String(v, "SeveritySource"), "nvd", "redhat"),
 		IsFixed:  false, // trivy does not provide this info
 	}
 
 	return item
 }
 
-func getScore(v *gabs.Container) float32 {
-	c := v.Search("nvd")
-	if c.Exists() {
-		if c.Search("V2Score").Exists() {
-			return parser.ToFloat32(c.Search("V2Score").Data())
-		}
-		if c.Search("V3Score").Exists() {
-			return parser.ToFloat32(c.Search("V3Score").Data())
-		}
-	}
-
-	c = v.Search("redhat")
-	if c.Exists() {
-		if c.Search("V2Score").Exists() {
-			return parser.ToFloat32(c.Search("V2Score").Data())
-		}
-		if c.Search("V3Score").Exists() {
-			return parser.ToFloat32(c.Search("V3Score").Data())
+func getScore(v *gabs.Container, sources ...string) float32 {
+	for _, s := range sources {
+		c := v.Search(s)
+		if c.Exists() {
+			if c.Search("V3Score").Exists() {
+				return parser.ToFloat32(c.Search("V3Score").Data())
+			}
+			if c.Search("V2Score").Exists() {
+				return parser.ToFloat32(c.Search("V2Score").Data())
+			}
 		}
 	}
 
