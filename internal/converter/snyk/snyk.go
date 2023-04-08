@@ -1,8 +1,6 @@
 package snyk
 
 import (
-	"strings"
-
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vimp/internal/parser"
 	"github.com/mchmarny/vimp/pkg/data"
@@ -42,9 +40,9 @@ func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 
 	item := &data.Vulnerability{
 		Exposure: parser.ToString(v.Search("identifiers", "CVE").Index(0).Data()),
-		Package:  parser.ToString(v.Search("name").Data()),
-		Version:  parser.ToString(v.Search("version").Data()),
-		Severity: strings.ToLower(parser.ToString(v.Search("severity").Data())),
+		Package:  parser.String(v, "name"),
+		Version:  parser.String(v, "version"),
+		Severity: parser.GetFirstString(v, "nvdSeverity", "severity"),
 		Score:    parser.ToFloat32(v.Search("cvssScore").Data()),
 		IsFixed:  parser.ToBool(v.Search("isUpgradable").Data()),
 	}
