@@ -75,7 +75,7 @@ jobs:
         workload_identity_provider: ${{ inputs.auth_provider }}
         service_account: ${{ inputs.auth_user }}
 
-    - uses: slsa-framework/slsa-verifier/actions/installer@a43888265e1f6aae98c924538298944f2721dcf0  # v2.0.1
+    - uses: slsa-framework/slsa-verifier/actions/installer@623cf20a23f3360549eafac6efe1a158960f15f9  # v2.0.1
 
     # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance
