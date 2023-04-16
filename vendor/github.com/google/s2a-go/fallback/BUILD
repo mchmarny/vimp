@@ -19,7 +19,7 @@ package(
 )
 
 go_library(
-    name = "s2a_fallback",
+    name = "fallback",
     srcs = ["s2a_fallback.go"],
     importpath = "github.com/google/s2a-go/fallback",
     deps = [
@@ -29,7 +29,7 @@ go_library(
 )
 
 go_test(
-    name = "s2a_fallback_test",
+    name = "fallback_test",
     srcs = ["s2a_fallback_test.go"],
-    embed = [":s2a_fallback"],
+    embed = [":fallback"],
 )
