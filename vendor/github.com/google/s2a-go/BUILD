@@ -18,7 +18,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 package(
-    default_visibility = ["//:__subpackages__"],
+    default_visibility = ["//visibility:public"],
 )
 
 licenses(["notice"])
@@ -34,7 +34,7 @@ go_library(
     ],
     importpath = "github.com/google/s2a-go",
     deps = [
-        "//fallback:s2a_fallback",
+        "//fallback",
         "//internal/handshaker",
         "//internal/handshaker/service",
         "//internal/proto/common_go_proto",
@@ -46,6 +46,11 @@ go_library(
         "@org_golang_google_grpc//grpclog:go_default_library",
         "@org_golang_google_grpc//peer:go_default_library",
     ],
+)
+
+alias(
+    name = "s2a-go",
+    actual = ":s2a",
 )
 
 go_test(
