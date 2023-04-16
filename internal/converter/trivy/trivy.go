@@ -43,7 +43,7 @@ func mapVulnerability(v *gabs.Container) *data.Vulnerability {
 		Version:  parser.String(v, "InstalledVersion"),
 		Severity: strings.ToLower(parser.String(v, "Severity")),
 		Score:    getScore(c, parser.String(v, "SeveritySource"), "nvd", "redhat"),
-		IsFixed:  false, // trivy does not provide this info
+		IsFixed:  parser.String(v, "FixedVersion") != "",
 	}
 
 	return item
