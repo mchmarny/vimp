@@ -18,11 +18,11 @@ func Execute(version string, args []string) {
 	initLogging()
 	app, err := newApp(version)
 	if err != nil {
-		log.Fatal().Err(err).Msg("error creating app")
+		log.Fatal().Msgf("error creating app: %v", err)
 	}
 
 	if err := app.Run(args); err != nil {
-		log.Fatal().Err(err).Msg("error running app")
+		log.Fatal().Msgf("error running app: %v", err)
 	}
 }
 
