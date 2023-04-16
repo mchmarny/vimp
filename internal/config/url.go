@@ -5,12 +5,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/pkg/errors"
-)
-
-const (
-	expectedParts = 2
 )
 
 // RemoveSchema cleans up a URI by removing the scheme.
@@ -36,23 +34,34 @@ func RemoveSchema(uri string) (string, error) {
 // GetDigest returns the digest of the image.
 // Could result in uri that has both a tag and a digest.
 func GetDigest(v string) (string, error) {
-	// if the image uri already contains a digest, return it
-	parts := strings.Split(v, "@")
-	if len(parts) == expectedParts {
+	v = strings.TrimPrefix(v, "https://")
+
+	if strings.Contains(v, "@") {
 		return v, nil
 	}
 
-	uri := v
-	if strings.HasPrefix(v, "https://") {
-		uri = strings.TrimPrefix(v, "https://")
+	if !strings.Contains(v, ".") {
+		v = fmt.Sprintf("docker.io/%s", v)
 	}
 
-	// this should work for tags as well as basic uris which
-	// will resolve to the latest tag
-	digest, err := crane.Digest(uri)
+	ref, err := name.ParseReference(v)
 	if err != nil {
-		return "", errors.Wrapf(err, "getting digest from %s", v)
+		return "", errors.Wrapf(err, "failed to parse image URL from: %s", v)
 	}
 
-	return fmt.Sprintf("%s@%s", v, digest), nil
+	fmt.Printf("ref: %v\n", ref)
+
+	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to fetch image from: %s", ref.String())
+	}
+
+	dig, err := img.Digest()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get digest for image: %s", ref.String())
+	}
+
+	fmt.Printf("dig: %v\n", dig)
+
+	return fmt.Sprintf("%s@%s", v, dig.String()), nil
 }
