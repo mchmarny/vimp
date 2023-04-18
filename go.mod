@@ -3,7 +3,7 @@ module github.com/mchmarny/vimp
 go 1.20
 
 require (
-	cloud.google.com/go/bigquery v1.50.0
+	cloud.google.com/go/bigquery v1.51.0
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/google/go-containerregistry v0.14.0
 	github.com/pkg/errors v0.9.1
