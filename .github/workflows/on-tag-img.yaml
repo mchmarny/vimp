@@ -12,10 +12,10 @@ jobs:
   conf:
     env:
       IMG_NAME: vimp
-      PROVIDER_ID: projects/382826505963/locations/global/workloadIdentityPools/vimp-github-pool/providers/github-provider
-      REG_URI: us-docker.pkg.dev/cloudy-tools/builders
-      SA_EMAIL: vimp-github-actions-user@cloudy-tools.iam.gserviceaccount.com
-      PROJECT_ID: cloudy-tools
+      PROVIDER_ID: projects/595203407878/locations/global/workloadIdentityPools/vimp-github-pool/providers/github-provider
+      REG_URI: us-docker.pkg.dev/s3cme1/builders
+      SA_EMAIL: vimp-github-actions-user@s3cme1.iam.gserviceaccount.com
+      PROJECT_ID: s3cme1
 
       # Defaults
       BUILDER_VERSION: v1.4.0
