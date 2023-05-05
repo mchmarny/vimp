@@ -8,7 +8,7 @@ cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/uid
 cloud.google.com/go/internal/version
-# cloud.google.com/go/bigquery v1.51.0
+# cloud.google.com/go/bigquery v1.51.1
 ## explicit; go 1.19
 cloud.google.com/go/bigquery
 cloud.google.com/go/bigquery/internal
@@ -33,30 +33,32 @@ github.com/Jeffail/gabs/v2
 # github.com/andybalholm/brotli v1.0.5
 ## explicit; go 1.12
 github.com/andybalholm/brotli
-# github.com/apache/arrow/go/v11 v11.0.0
+# github.com/apache/arrow/go/v12 v12.0.0
 ## explicit; go 1.18
-github.com/apache/arrow/go/v11/arrow
-github.com/apache/arrow/go/v11/arrow/array
-github.com/apache/arrow/go/v11/arrow/arrio
-github.com/apache/arrow/go/v11/arrow/bitutil
-github.com/apache/arrow/go/v11/arrow/decimal128
-github.com/apache/arrow/go/v11/arrow/decimal256
-github.com/apache/arrow/go/v11/arrow/endian
-github.com/apache/arrow/go/v11/arrow/float16
-github.com/apache/arrow/go/v11/arrow/internal
-github.com/apache/arrow/go/v11/arrow/internal/debug
-github.com/apache/arrow/go/v11/arrow/internal/dictutils
-github.com/apache/arrow/go/v11/arrow/internal/flatbuf
-github.com/apache/arrow/go/v11/arrow/ipc
-github.com/apache/arrow/go/v11/arrow/memory
-github.com/apache/arrow/go/v11/arrow/memory/internal/cgoalloc
-github.com/apache/arrow/go/v11/internal/bitutils
-github.com/apache/arrow/go/v11/internal/hashing
-github.com/apache/arrow/go/v11/internal/utils
-github.com/apache/arrow/go/v11/parquet
-github.com/apache/arrow/go/v11/parquet/compress
-github.com/apache/arrow/go/v11/parquet/internal/debug
-github.com/apache/arrow/go/v11/parquet/internal/gen-go/parquet
+github.com/apache/arrow/go/v12/arrow
+github.com/apache/arrow/go/v12/arrow/array
+github.com/apache/arrow/go/v12/arrow/arrio
+github.com/apache/arrow/go/v12/arrow/bitutil
+github.com/apache/arrow/go/v12/arrow/decimal128
+github.com/apache/arrow/go/v12/arrow/decimal256
+github.com/apache/arrow/go/v12/arrow/encoded
+github.com/apache/arrow/go/v12/arrow/endian
+github.com/apache/arrow/go/v12/arrow/float16
+github.com/apache/arrow/go/v12/arrow/internal
+github.com/apache/arrow/go/v12/arrow/internal/debug
+github.com/apache/arrow/go/v12/arrow/internal/dictutils
+github.com/apache/arrow/go/v12/arrow/internal/flatbuf
+github.com/apache/arrow/go/v12/arrow/ipc
+github.com/apache/arrow/go/v12/arrow/memory
+github.com/apache/arrow/go/v12/arrow/memory/internal/cgoalloc
+github.com/apache/arrow/go/v12/arrow/memory/mallocator
+github.com/apache/arrow/go/v12/internal/bitutils
+github.com/apache/arrow/go/v12/internal/hashing
+github.com/apache/arrow/go/v12/internal/utils
+github.com/apache/arrow/go/v12/parquet
+github.com/apache/arrow/go/v12/parquet/compress
+github.com/apache/arrow/go/v12/parquet/internal/debug
+github.com/apache/arrow/go/v12/parquet/internal/gen-go/parquet
 # github.com/apache/thrift v0.18.1
 ## explicit; go 1.19
 github.com/apache/thrift/lib/go/thrift
