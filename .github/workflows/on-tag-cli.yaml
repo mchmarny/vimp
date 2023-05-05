@@ -15,7 +15,7 @@ jobs:
       SYFT_VERSION: v0.14.1
       LINTER_VERSION: v1.52.2
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
-      
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
