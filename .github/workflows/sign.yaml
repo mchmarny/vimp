@@ -19,10 +19,6 @@ on:
         description: 'The version of cosign to use'
         required: true
         type: string
-      scan_severity:
-        description: 'Error on vulnerability scan severity'
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -51,35 +47,25 @@ jobs:
 
     - name: Auth Cosign
       run: |
-        set -euo pipefail
-        cosign version
         reg=$(echo ${{ inputs.image_digest }} | cut -d/ -f1)
         cosign login ${reg} --username=oauth2accesstoken --password=${{ steps.auth.outputs.access_token }}
 
     - name: Generate Keys
       run: |
-        set -euo pipefail
         COSIGN_PASSWORD=$(openssl rand -base64 12)
         cosign generate-key-pair
 
-    - name: Attest Image
+    - name: Sign Image
       env:
-        COSIGN_EXPERIMENTAL: "true"
+        COSIGN_YES: true
       run: |
-        set -euo pipefail
         cosign sign ${{ inputs.image_digest }} \
-            --force \
             --key cosign.key \
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
             -a tag=${{ env.GITHUB_REF_NAME }}
 
-    - name: Attest Image
-      env:
-        COSIGN_EXPERIMENTAL: "true"
+    - name: Verify Signature
       run: |
-        set -euo pipefail
-          cosign verify \
-          --key cosign.pub \
-          ${{ inputs.image_digest }}
+        cosign verify --key cosign.pub ${{ inputs.image_digest }}
