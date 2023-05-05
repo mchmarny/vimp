@@ -113,4 +113,5 @@ jobs:
     with:
       auth_provider: ${{ needs.conf.outputs.provider_id }}
       auth_user: ${{ needs.conf.outputs.service_account }}
+      cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.image.outputs.digest }}
