@@ -79,7 +79,6 @@ jobs:
     # SLSA provenance verification using slsa-verifier.
     - name: Verify SLSA Provenance
       run: |-
-        set -euo pipefail
         slsa-verifier version
         slsa-verifier verify-image ${{ inputs.image_digest }} \
           --source-uri "github.com/$GITHUB_REPOSITORY" \
