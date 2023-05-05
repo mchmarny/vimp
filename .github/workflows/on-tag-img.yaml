@@ -97,7 +97,6 @@ jobs:
       auth_user: ${{ needs.conf.outputs.service_account }}
       cosign_version: ${{ needs.conf.outputs.cosign_version }}
       image_digest: ${{ needs.image.outputs.digest }}
-      scan_severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
 
   provenance:
     needs:
