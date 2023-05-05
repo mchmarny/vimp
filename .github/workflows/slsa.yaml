@@ -17,9 +17,8 @@ on:
         type: string
       cosign_version:
         description: 'The version of cosign to use'
-        required: false
+        required: true
         type: string
-        default: 'v1.13.1'
 
 permissions:
   contents: read

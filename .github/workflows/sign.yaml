@@ -17,14 +17,12 @@ on:
         type: string
       cosign_version:
         description: 'The version of cosign to use'
-        required: false
+        required: true
         type: string
-        default: 'v1.13.1'
       scan_severity:
         description: 'Error on vulnerability scan severity'
-        required: false
+        required: true
         type: string
-        default: 'CRITICAL,HIGH,MEDIUM'
 
 permissions:
   contents: read

@@ -21,9 +21,8 @@ on:
         type: string
       go_version:
         description: 'Go version to use'
-        required: false
+        required: true
         type: string
-        default: '1.20.4'
     outputs:
       digest:
         value: ${{ jobs.build.outputs.digest }}
