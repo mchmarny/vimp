@@ -4,19 +4,16 @@ on:
     inputs:
       go-version:
         description: 'Go version to use'
-        required: false
+        required: true
         type: string
-        default: ^1.20.4
       scan-severity:
         description: 'Trivy scan severity'
-        required: false
+        required: true
         type: string
-        default: 'CRITICAL,HIGH'
       golangci_version:
         description: 'golangci version to use'
-        required: false
+        required: true
         type: string
-        default: 'v1.52'
 permissions:
   contents: read
 jobs:
