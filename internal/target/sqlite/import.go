@@ -16,9 +16,6 @@ const (
 		ON CONFLICT(image, digest, source, exposure, package, version) 
 		DO UPDATE SET
 			processed=excluded.processed,
-			exposure=excluded.exposure,
-			package=excluded.package,
-			version=excluded.version,
 			severity=excluded.severity,
 			score=excluded.score,
 			fixed=excluded.fixed
