@@ -32,13 +32,13 @@ Or, omit the `--file` flag all together and `vimp` will automatically scan and i
 vimp import --source $image
 ```
 
-By default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`). Find all the scanner and target data store options using `vimp import -h`.
+By default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`) or another data store (e.g. `postgres://localhost:5432/vulns`). Find all the scanner and target data store options using `vimp import -h`.
 
 The output for the above command should look something like this: 
 
 ```shell
 vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
-INF v0.5.3
+INF v0.6.0
 INF scanning image docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
 INF grype scan completed: grype-110213000.json
 INF found 83 unique vulnerabilities
@@ -181,7 +181,7 @@ score       FLOAT     NOT NULL
 fixed       BOOL      NOT NULL
 ```
 
-See [sql/query.sql](sql/query.sql) for examples of queries against the imported data. 
+See [examples/query.sql](examples/query.sql) for examples of queries against the imported data. 
 
 > See https://github.com/mchmarny/artifact-events for how to set up `vimp` as an import for all new images in GCR or AR on GCP.
 
