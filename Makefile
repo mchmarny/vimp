@@ -69,9 +69,9 @@ setup: ## Creates the GCP resources
 apply: ## Applies Terraform
 	terraform -chdir=./setup apply -auto-approve
 
-.PHONY: db
-db: ## Starts Postgres DB in Docker
-	tools/postgres
+.PHONY: services
+services: ## Provisions all dependencies
+	tools/services
 
 .PHONY: tag
 tag: ## Creates release tag 
