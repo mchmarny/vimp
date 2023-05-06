@@ -1,20 +1,24 @@
+# Wolfi images
 cgr.dev/chainguard/bash
 cgr.dev/chainguard/go
 cgr.dev/chainguard/jre
+# AWS
 docker.io/amazon/amazon-ecs-agent
 docker.io/amazon/cloudwatch-agent
+# Bitnami
 docker.io/bitnami/mariadb
 docker.io/bitnami/memcached
 docker.io/bitnami/mongodb
 docker.io/bitnami/postgresql
 docker.io/bitnami/redis
 docker.io/bitnami/wordpress
+# Common Docker Hub
 docker.io/cockroachdb/cockroach
 docker.io/dynatrace/oneagent
 docker.io/google/cloud-sdk
 docker.io/hashicorp/terraform
 docker.io/openjdk
+# GCP
 gcr.io/cadvisor/cadvisor
 gcr.io/google-containers/addon-builder
-gcr.io/google-containers/cos-gpu-installer
 us-central1-docker.pkg.dev/cloud-workstations-images/predefined/base
