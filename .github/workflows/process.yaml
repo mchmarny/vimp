@@ -1,0 +1,40 @@
+name: process
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'Image to process'
+        required: true
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+
+    - name: Scan grype
+      id: grype
+      uses: anchore/scan-action@v3
+      with:
+        image: ${{ inputs.image }}
+        output-format: json
+        add-cpes-if-none: true
+
+    - name: Scan trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ inputs.image }}
+        scan-type: image
+        format: json
+        output: trivy-results.json
+        hide-progress: true
+        scanners: vuln
+
+    - name: Print Results
+      run: |
+        echo "grype: ${{ steps.grype.outputs.json }}"
+        cat ${{ steps.grype.outputs.json }}
+        echo "trivy: trivy-results.json"
+        cat trivy-results.json
