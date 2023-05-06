@@ -5,12 +5,9 @@ on:
    - cron: '30 */8 * * *'
   workflow_dispatch:
 
-env:
-  image_count: 20
-
 jobs:
 
-  process-list:
+  queue-images:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,24 +23,3 @@ jobs:
           echo "image: $img"
           gh workflow run .github/workflows/process.yaml -f image="$img"
         done < ./.images
-
-  process-hub:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: write
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab  # v3.5.2
-    - name: Parse URL
-      run: |-
-        url="https://hub.docker.com/api/content/v1/products/search?page=1&page_size=${{ env.image_count }}&q=%2B&source=community&type=image%2Cbundle"
-        echo "IMG_URL=$url" >> $GITHUB_ENV
-    - name: Spool Images
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |-
-        curl -sS "${{ env.IMG_URL }}" | jq -r '.summaries[].name' | while read img; do
-          echo "image: $img"
-          gh workflow run .github/workflows/process.yaml -f image="docker.io/$img"
-        done
