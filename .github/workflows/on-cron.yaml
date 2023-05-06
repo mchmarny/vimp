@@ -23,6 +23,10 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |-
         while read img; do
+          # skip comments
+          if [[ $string =~ ^[[:space:]]*\#.*$ ]]; then
+            continue
+          fi
           echo "image: $img"
           gh workflow run .github/workflows/process.yaml -f image="$img"
-        done < ./.images
+        done < ./image.txt
