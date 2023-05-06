@@ -24,7 +24,7 @@ jobs:
       run: |-
         while read img; do
           # skip comments
-          if [[ $string =~ ^[[:space:]]*\#.*$ ]]; then
+          if [[ $img =~ ^[[:space:]]*\#.*$ ]]; then
             continue
           fi
           echo "image: $img"
