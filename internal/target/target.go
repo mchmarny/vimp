@@ -6,6 +6,7 @@ import (
 	"github.com/mchmarny/vimp/internal/target/bq"
 	"github.com/mchmarny/vimp/internal/target/console"
 	"github.com/mchmarny/vimp/internal/target/file"
+	"github.com/mchmarny/vimp/internal/target/postgres"
 	"github.com/mchmarny/vimp/internal/target/sqlite"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/mchmarny/vimp/pkg/query"
@@ -16,10 +17,11 @@ import (
 const (
 	expectedURIParts = 2
 
-	bqType      = "bq"
-	consoleType = "console"
-	fileType    = "file"
-	sqliteType  = "sqlite"
+	bqType       = "bq"
+	consoleType  = "console"
+	fileType     = "file"
+	sqliteType   = "sqlite"
+	postgresType = "postgres"
 )
 
 // Importer is the interface for importers.
@@ -34,6 +36,7 @@ func GetSampleTargets() []string {
 	list = append(list, bq.SampleURIs...)
 	list = append(list, file.SampleURIs...)
 	list = append(list, console.SampleURIs...)
+	list = append(list, postgres.SampleURIs...)
 	return list
 }
 
@@ -60,18 +63,23 @@ func GetImporter(uri string) (Importer, error) {
 		return file.Import, nil
 	case sqliteType:
 		return sqlite.Import, nil
+	case postgresType:
+		return postgres.Import, nil
 	default:
 		return nil, errors.Errorf("unsupported import target type: %s", uri)
 	}
 }
 
+// GetQuerier returns querier for the given target.
 func GetQuerier(uri string) (Querier, error) {
 	uri = getTargetPrefix(uri)
 
 	switch uri {
 	case sqliteType:
 		return sqlite.Query, nil
+	case postgresType:
+		return postgres.Query, nil
 	default:
-		return nil, errors.Errorf("unsupported import target type: %s", uri)
+		return nil, errors.Errorf("unsupported query target type: %s", uri)
 	}
 }
