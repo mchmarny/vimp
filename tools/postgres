@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+if [[ "$(docker images -q /postgres 2> /dev/null)" == "" ]]; then
+   docker stop postgres
+   docker remove postgres
+fi
+
+docker run \
+   --name postgres \
+   -e POSTGRES_USER=test \
+   -e POSTGRES_PASSWORD=test \
+   -p 5432:5432 \
+   -v ${PWD}/data:/var/lib/postgresql/data \
+   -d postgres
