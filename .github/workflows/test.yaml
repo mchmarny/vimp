@@ -22,6 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_DB: test
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - name: Setup Go
       uses: actions/setup-go@4d34df0c2316fe8122ab82dc22947d607c0c91f9  # v4.0.0
