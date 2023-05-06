@@ -91,5 +91,6 @@ images.txt
 *.csv
 
 # Data
+/data
 *.db
 .digest
