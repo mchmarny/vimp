@@ -1,0 +1,6 @@
+gcr.io/google-containers/addon-builder
+us-central1-docker.pkg.dev/cloud-workstations-images/predefined/base
+us-central1-docker.pkg.dev/cloud-workstations-images/predefined/code-oss
+us-central1-docker.pkg.dev/cloud-workstations-images/predefined/goland
+us-central1-docker.pkg.dev/cloud-workstations-images/predefined/intellij-ultimate
+us-central1-docker.pkg.dev/cloud-workstations-images/predefined/pycharm
