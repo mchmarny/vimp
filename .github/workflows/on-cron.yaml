@@ -5,8 +5,11 @@ on:
    - cron: '30 */8 * * *'
   workflow_dispatch:
 
-jobs:
 
+permissions:
+  contents: read
+
+jobs:
   queue-images:
     runs-on: ubuntu-latest
     permissions:
