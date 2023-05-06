@@ -15,18 +15,22 @@ jobs:
       contents: read
     steps:
 
+    - name: Install grype
+      uses: anchore/scan-action/download-grype@4be3c24559b430723e51858969965e163b196957  # v3.3.5
+
     - name: Scan grype
-      id: grype
-      uses: anchore/scan-action@4be3c24559b430723e51858969965e163b196957  # v3.3.5
-      with:
-        image: ${{ inputs.image }}
-        output-format: json
-        add-cpes-if-none: true
+      run: |-
+        grype -q \
+          --add-cpes-if-none \
+          -s AllLayers \
+          -o json \
+          --file ./report.json \
+          ${{ inputs.image }} || true
 
     - name: Print grype
       run: |
-        echo "grype: ${{ steps.grype.outputs.json }}"
-        cat ${{ steps.grype.outputs.json }}
+        echo "grype: ./report.json"
+        cat ./report.json
 
   process-trivy:
     runs-on: ubuntu-latest
