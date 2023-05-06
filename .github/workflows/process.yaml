@@ -62,9 +62,7 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
       with:
         image: ${{ inputs.image }}
-        args: |
-          --app-vulns
-          --json-file-output=./results.json
+        args: --json-file-output=./results.json
 
     - name: Print snyk
       run: |
