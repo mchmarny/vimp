@@ -8,7 +8,8 @@ on:
         required: true
 
 jobs:
-  process:
+
+  process-gryp:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -16,25 +17,56 @@ jobs:
 
     - name: Scan grype
       id: grype
-      uses: anchore/scan-action@v3
+      uses: anchore/scan-action@4be3c24559b430723e51858969965e163b196957  # v3.3.5
       with:
         image: ${{ inputs.image }}
         output-format: json
         add-cpes-if-none: true
 
+    - name: Print grype
+      run: |
+        echo "grype: ${{ steps.grype.outputs.json }}"
+        cat ${{ steps.grype.outputs.json }}
+
+  process-trivy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+
     - name: Scan trivy
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@e5f43133f6e8736992c9f3c1b3296e24b37e17f2  # v0.10.0
       with:
         image-ref: ${{ inputs.image }}
         scan-type: image
         format: json
-        output: trivy-results.json
+        output: ./results.json
         hide-progress: true
         scanners: vuln
 
-    - name: Print Results
+    - name: Print trivy
       run: |
-        echo "grype: ${{ steps.grype.outputs.json }}"
-        cat ${{ steps.grype.outputs.json }}
-        echo "trivy: trivy-results.json"
-        cat trivy-results.json
+        echo "trivy: ./results.json"
+        cat ./results.json
+
+  process-snyk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+
+    - name: Scan snyk
+      uses: snyk/actions/docker@7fad562681122205233d1242c3bb39598c5393da  # v0.3.0
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+      with:
+        image: ${{ inputs.image }}
+        args: |
+          --app-vulns
+          --json-file-output=./results.json
+
+    - name: Print snyk
+      run: |
+        echo "snyk: ./results.json"
+        cat ./results.json
