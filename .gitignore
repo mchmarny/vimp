@@ -75,6 +75,7 @@ tmp
 # Keys 
 cosign.*
 *.pem
+/keys
 
 # docker 
 digest.txt
