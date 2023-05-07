@@ -13,6 +13,7 @@ steps:
     - _DB_CONN_STR
     args:
     - import
+    - --debug
     - --source=${_DIGEST}
     - --file=./grype.json
     - --target=${_DB_CONN_STR}
@@ -30,6 +31,7 @@ steps:
     - _DB_CONN_STR
     args:
     - import
+    - --debug
     - --source=${_DIGEST}
     - --file=./trivy.json
     - --target=${_DB_CONN_STR}
@@ -53,6 +55,7 @@ steps:
     - _DB_CONN_STR
     args:
     - import
+    - --debug
     - --source=${_DIGEST}
     - --file=./snyk.json
     - --target=${_DB_CONN_STR}
