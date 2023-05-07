@@ -1,3 +1,8 @@
+substitutions:
+  _LOAD_IMAGE_VERSION: v0.6.2
+  _SNYK_SECRET: '1'
+  _DB_CONN_STR_SECRET_VERSION: '1'
+
 steps:
 
   # grype
@@ -6,7 +11,7 @@ steps:
     args: ['-s', 'AllLayers', '-o', 'json', '--file', './grype.json', '${_DIGEST}']
 
   - id: load-grype
-    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:${_LOAD_IMAGE_VERSION}
     wait_for:
     - scan-grype
     secretEnv:
@@ -23,7 +28,7 @@ steps:
     args: ['image', '--format', 'json', '--scanners', 'vuln', '--output', './trivy.json', '${_DIGEST}']
 
   - id: load-trivy
-    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:${_LOAD_IMAGE_VERSION}
     wait_for:
     - scan-trivy
     secretEnv:
@@ -46,7 +51,7 @@ steps:
     - SNYK_TOKEN
 
   - id: load-snyk
-    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:${_LOAD_IMAGE_VERSION}
     wait_for:
     - scan-snyk
     secretEnv:
@@ -59,9 +64,9 @@ steps:
 
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/1
+  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/${_SNYK_SECRET_VERSION}
     env: 'SNYK_TOKEN'
-  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/1
+  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/${_DB_CONN_STR_SECRET_VERSION}
     env: 'VIMP_TARGET'
 
 options:
