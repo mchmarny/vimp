@@ -1,7 +1,5 @@
 substitutions:
   _LOAD_IMAGE_VERSION: v0.6.2
-  _SNYK_SECRET: '1'
-  _DB_CONN_STR_SECRET_VERSION: '1'
 
 steps:
 
@@ -64,9 +62,9 @@ steps:
 
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/${_SNYK_SECRET_VERSION}
+  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/1
     env: 'SNYK_TOKEN'
-  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/${_DB_CONN_STR_SECRET_VERSION}
+  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/1
     env: 'VIMP_TARGET'
 
 options:
