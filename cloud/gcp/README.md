@@ -135,7 +135,7 @@ gcloud beta builds triggers create manual \
     --name=queue-images \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --repo=https://github.com/$GH_USER/custom-cloud-workstation-image \
+    --repo=https://www.github.com/$GH_USER/vimp \
     --repo-type=GITHUB \
     --branch=main \
     --build-config=cloud/gcp/queue.yaml
@@ -160,7 +160,7 @@ curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
      "https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run"
 ```
 
-That means we can now set it up as a Cloud Schedule, first, make sure the Cloud Build account has sufficient rights to execute the job:: 
+That means we can now set it up as a Cloud Schedule, first, make sure the Cloud Build account has sufficient rights to execute the job:
 
 
 ```shell
@@ -174,7 +174,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 Finally, create the Cloud Scheduler job:
 
 ```shell
-gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
+gcloud scheduler jobs create http queue-images-schedule \
     --http-method POST \
     --schedule='0 1 * * *' \
     --location=$REGION \
@@ -185,47 +185,7 @@ gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
 
 Now everyday, at 1am UTC, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image.
 
-## Query 
-
-Samples select statements you can use to query the resulting data in BiqQuery:
-
-```sql
--- list images
-SELECT DISTINCT image FROM `cloudy-demos.artifact.vul` ORDER BY 1
-
--- list versions a given image
-SELECT DISTINCT digest
-FROM `cloudy-demos.artifact.vul`
-WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
-
--- list vulnerabilities for a given image
-SELECT
-    exposure,
-    source,
-    severity,
-    score,
-    MAX(processed) last_processed
-FROM `cloudy-demos.artifact.vul`
-WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
-AND digest = 'sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55'
-GROUP BY exposure, source, severity, score
-ORDER BY 1, 2
-
--- list packages for a given image cve
-SELECT
-    source,
-    package,
-    version,
-    severity,
-    score,
-    MAX(processed) last_processed
-FROM `cloudy-demos.artifact.vul`
-WHERE image = 'https://us-west1-docker.pkg.dev/cloudy-demos/events/artifact1'
-AND digest = 'sha256:14dd03939d2d840d7375f394b45d340d95fba8e25070612ac2883eacd7f93a55'
-AND exposure = 'CVE-2009-5155'
-GROUP BY source, package, version, severity, score
-ORDER BY 1, 2, 3
-```
+> See [examples/query.sql](../../examples/query.sql) for examples of SQL queries against the imported data.
 
 ## disclaimer
 
