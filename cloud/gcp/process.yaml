@@ -15,7 +15,6 @@ steps:
     secretEnv:
     - VIMP_TARGET
     args:
-    - --debug
     - import
     - --source=${_DIGEST}
     - --file=./grype.json
@@ -32,7 +31,6 @@ steps:
     secretEnv:
     - VIMP_TARGET
     args:
-    - --debug
     - import
     - --source=${_DIGEST}
     - --file=./trivy.json
@@ -55,7 +53,6 @@ steps:
     secretEnv:
     - VIMP_TARGET
     args:
-    - --debug
     - import
     - --source=${_DIGEST}
     - --file=./snyk.json
