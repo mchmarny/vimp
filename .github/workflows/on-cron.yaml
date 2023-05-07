@@ -4,6 +4,11 @@ on:
   # schedule:
   #  - cron: '30 */8 * * *'
   workflow_dispatch:
+    inputs:
+      image:
+        description: 'Debug'
+        required: false
+        default: 'false'
 
 permissions:
   contents: read
