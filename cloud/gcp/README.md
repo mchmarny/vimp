@@ -111,7 +111,7 @@ gcloud alpha builds triggers create pubsub \
     --region=$REGION \
     --name=scan-and-save-external-image-exposure-data \
     --topic=projects/$PROJECT_ID/topics/image-queue \
-    --build-config=scan.yaml \
+    --build-config=cloud/gcp/process.yaml \
     --substitutions=_DIGEST='$(body.message.data)',_SNYK_TOKEN=$SNYK_SECRET,_DATASET=$DATASET \
     --repo=https://www.github.com/$GH_USER/vimp \
     --repo-type=GITHUB \

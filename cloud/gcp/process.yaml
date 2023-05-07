@@ -1,0 +1,67 @@
+steps:
+
+  # grype
+  - id: scan-grype
+    name: docker.io/anchore/grype
+    args: ['-s', 'AllLayers', '-o', 'json', '--file', './grype.json', '${_DIGEST}']
+
+  - id: load-grype
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    wait_for:
+    - scan-grype
+    secretEnv:
+    - DB_CONN_STR
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./grype.json
+    - --target=${DB_CONN_STR}
+
+  # trivy
+  - id: scan-trivy
+    name: docker.io/aquasec/trivy
+    args: ['image', '--format', 'json', '--scanners', 'vuln', '--output', './trivy.json', '${_DIGEST}']
+
+  - id: load-trivy
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    wait_for:
+    - scan-trivy
+    secretEnv:
+    - DB_CONN_STR
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./trivy.json
+    - --target=${DB_CONN_STR}
+
+  # snyk
+  # NOTE: snyk exit with 1 if vulnerabilities are found
+  # ERROR: step exited with non-zero status: 1
+  # This is why the allowExitCodes is set to [0, 1]
+  - id: scan-snyk
+    name: docker.io/snyk/snyk:docker
+    allowExitCodes: [0, 1]
+    args: ['snyk', 'container', 'test', '--app-vulns', '--json-file-output=./snyk.json', '${_DIGEST}']
+    secretEnv:
+    - SNYK_TOKEN
+
+  - id: load-snyk
+    name: us-docker.pkg.dev/s3cme1/builders/vimp:v0.6.0
+    wait_for:
+    - scan-snyk
+    secretEnv:
+    - DB_CONN_STR
+    args:
+    - import
+    - --source=${_DIGEST}
+    - --file=./snyk.json
+    - --target=${DB_CONN_STR}
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token
+    env: 'SNYK_TOKEN'
+  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str
+    env: 'DB_CONN_STR'
+  pool:
+    name: 'projects/$PROJECT_ID/locations/$LOCATION/workerPools/vimp-pool'
