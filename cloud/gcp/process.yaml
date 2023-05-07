@@ -63,5 +63,5 @@ availableSecrets:
     env: 'SNYK_TOKEN'
   - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str
     env: 'DB_CONN_STR'
-  pool:
-    name: 'projects/$PROJECT_ID/locations/$LOCATION/workerPools/vimp-pool'
+pool:
+  name: 'projects/$PROJECT_ID/locations/$LOCATION/workerPools/vimp-pool'
