@@ -126,6 +126,65 @@ gcloud pubsub topics publish image-queue \
     --project=$PROJECT_ID
 ```
 
+## Schedule 
+
+To schedule [image.txt](../../image.txt) to be queued for processing: 
+
+```shell
+gcloud beta builds triggers create manual \
+    --name=queue-images \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --repo=https://github.com/$GH_USER/custom-cloud-workstation-image \
+    --repo-type=GITHUB \
+    --branch=main \
+    --build-config=cloud/gcp/queue.yaml
+```
+
+Next, capture the trigger ID:
+
+```shell
+export TRIGGER_ID=$(gcloud beta builds triggers describe \
+    queue-images \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --format='value(id)')
+```
+
+You can run this trigger now manually, by invoking from `curl`. 
+
+> This assumes that you have the necessary role to execute the build.
+
+```shell
+curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     "https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run"
+```
+
+That means we can now set it up as a Cloud Schedule, first, make sure the Cloud Build account has sufficient rights to execute the job:: 
+
+
+```shell
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
+    --role="roles/cloudbuild.builds.editor" \
+    --condition=None
+```
+
+Finally, create the Cloud Scheduler job:
+
+```shell
+gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
+    --http-method POST \
+    --schedule='0 1 * * *' \
+    --location=$REGION \
+    --uri=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run \
+    --oauth-service-account-email=$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
+    --oauth-token-scope=https://www.googleapis.com/auth/cloud-platform
+```
+
+Now everyday, at 1am UTC, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image.
+
 ## Query 
 
 Samples select statements you can use to query the resulting data in BiqQuery:
