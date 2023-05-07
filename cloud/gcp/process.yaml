@@ -10,13 +10,12 @@ steps:
     wait_for:
     - scan-grype
     secretEnv:
-    - _DB_CONN_STR
+    - VIMP_TARGET
     args:
     - --debug
     - import
     - --source=${_DIGEST}
     - --file=./grype.json
-    - --target=${_DB_CONN_STR}
 
   # trivy
   - id: scan-trivy
@@ -28,13 +27,12 @@ steps:
     wait_for:
     - scan-trivy
     secretEnv:
-    - _DB_CONN_STR
+    - VIMP_TARGET
     args:
     - --debug
     - import
     - --source=${_DIGEST}
     - --file=./trivy.json
-    - --target=${_DB_CONN_STR}
 
   # snyk
   # NOTE: snyk exit with 1 if vulnerabilities are found
@@ -52,20 +50,19 @@ steps:
     wait_for:
     - scan-snyk
     secretEnv:
-    - _DB_CONN_STR
+    - VIMP_TARGET
     args:
     - --debug
     - import
     - --source=${_DIGEST}
     - --file=./snyk.json
-    - --target=${_DB_CONN_STR}
 
 availableSecrets:
   secretManager:
   - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/1
     env: 'SNYK_TOKEN'
   - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/1
-    env: '_DB_CONN_STR'
+    env: 'VIMP_TARGET'
 
 options:
   pool:

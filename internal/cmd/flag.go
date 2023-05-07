@@ -31,6 +31,7 @@ var (
 	targetFlag = &c.StringFlag{
 		Name:    "target",
 		Aliases: []string{"t"},
+		EnvVars: []string{"VIMP_TARGET"},
 		Usage:   fmt.Sprintf("target (e.g. %s, etc.)", strings.Join(target.GetSampleTargets(), ", ")),
 	}
 
