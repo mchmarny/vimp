@@ -1,10 +1,9 @@
 name: schedule
 
 on:
-  schedule:
-   - cron: '30 */8 * * *'
+  # schedule:
+  #  - cron: '30 */8 * * *'
   workflow_dispatch:
-
 
 permissions:
   contents: read
