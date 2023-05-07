@@ -59,9 +59,9 @@ steps:
 
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token
+  - versionName: projects/$PROJECT_NUMBER/secrets/snyk-token/versions/1
     env: 'SNYK_TOKEN'
-  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str
+  - versionName: projects/$PROJECT_NUMBER/secrets/db-conn-str/versions/1
     env: '_DB_CONN_STR'
 
 options:
