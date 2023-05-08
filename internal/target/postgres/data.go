@@ -3,11 +3,9 @@ package postgres
 import (
 	"context"
 	"embed"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -43,13 +41,4 @@ func getDB(ctx context.Context, uri string) (*pgx.Conn, error) {
 	}
 
 	return conn, nil
-}
-
-func parseTime(v string) time.Time {
-	t, err := time.Parse(time.RFC3339Nano, v)
-	if err != nil {
-		log.Error().Err(err).Msgf("failed to parse time: %s", v)
-		return time.Now().UTC()
-	}
-	return t
 }
