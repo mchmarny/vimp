@@ -1,5 +1,5 @@
 substitutions:
-  _LOAD_IMAGE_VERSION: v0.6.2
+  _LOAD_IMAGE_VERSION: v0.6.3
 
 steps:
 
