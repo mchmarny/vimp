@@ -20,7 +20,7 @@ var (
 						MAX(score) max_score, 
 						MIN(processed) first_processed, 
 						MAX(processed) last_processed 
-					  FROM vul 
+					  FROM vulns 
 					  WHERE image = COALESCE($1, image) 
 					  GROUP BY image, digest 
 				`
@@ -31,7 +31,7 @@ var (
 						severity,
 						score,
 						MAX(processed) last_processed
-					FROM vul
+					FROM vulns
 					WHERE image = $1
 					AND digest = $2
 					GROUP BY exposure, source, severity, score
@@ -44,7 +44,7 @@ var (
 						severity,
 						score,
 						MAX(processed) last_processed
-					FROM vul
+					FROM vulns
 					WHERE image = $1
 					AND digest = $2
 					AND exposure = $3
@@ -122,15 +122,10 @@ func scanSummary(rows pgx.Rows) (any, error) {
 	for rows.Next() {
 		var image string
 		var digest string
-		var exposures int
-		var sources int
-		var packages int
-		var maxScore float32
-		var firstProcessed string
-		var lastProcessed string
+		q := &query.DigestSummaryResult{}
 
-		if err := rows.Scan(&image, &digest, &exposures, &sources, &packages,
-			&maxScore, &firstProcessed, &lastProcessed); err != nil {
+		if err := rows.Scan(&image, &digest,
+			&q.Exposures, &q.Sources, &q.Packages, &q.HighScore, &q.First, &q.Last); err != nil {
 			return nil, errors.Wrapf(err, "failed to scan image row")
 		}
 
@@ -140,14 +135,7 @@ func scanSummary(rows pgx.Rows) (any, error) {
 			}
 		}
 
-		r[image].Versions[digest] = &query.DigestSummaryResult{
-			Exposures: exposures,
-			Sources:   sources,
-			Packages:  packages,
-			HighScore: maxScore,
-			First:     parseTime(firstProcessed),
-			Last:      parseTime(lastProcessed),
-		}
+		r[image].Versions[digest] = q
 	}
 
 	log.Info().Msgf("found %d records", len(r))
@@ -160,20 +148,10 @@ func scanExposure(opt *query.Options, rows pgx.Rows) (any, error) {
 
 	for rows.Next() {
 		var exposure string
-		var source string
-		var severity string
-		var score float32
-		var lastProcessed string
+		e := &query.ExposureResult{}
 
-		if err := rows.Scan(&exposure, &source, &severity, &score, &lastProcessed); err != nil {
+		if err := rows.Scan(&exposure, &e.Source, &e.Severity, &e.Score, &e.Last); err != nil {
 			return nil, errors.Wrapf(err, "failed to scan exposure row")
-		}
-
-		e := &query.ExposureResult{
-			Source:   source,
-			Severity: severity,
-			Score:    score,
-			Last:     parseTime(lastProcessed),
 		}
 
 		list[exposure] = append(list[exposure], e)
@@ -213,25 +191,13 @@ func scanPackages(opt *query.Options, rows pgx.Rows) (any, error) {
 	}
 
 	for rows.Next() {
-		var source string
-		var pkg string
-		var version string
-		var severity string
-		var score float32
-		var lastProcessed string
+		q := &query.PackageResult{}
 
-		if err := rows.Scan(&source, &pkg, &version, &severity, &score, &lastProcessed); err != nil {
+		if err := rows.Scan(&q.Source, &q.Package, &q.Version, &q.Severity, &q.Score, &q.Last); err != nil {
 			return nil, errors.Wrapf(err, "failed to scan package row")
 		}
 
-		r.Packages = append(r.Packages, &query.PackageResult{
-			Source:   source,
-			Package:  pkg,
-			Version:  version,
-			Severity: severity,
-			Score:    score,
-			Last:     parseTime(lastProcessed),
-		})
+		r.Packages = append(r.Packages, q)
 	}
 
 	log.Info().Msgf("found %d records", len(r.Packages))
