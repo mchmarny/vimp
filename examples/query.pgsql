@@ -5,9 +5,9 @@ SELECT distinct image from vul order by 1;
 SELECT 
     image, 
     count(*) records, 
-    DATE(MIN(processed)) min_updated,
-    DATE(MAX(processed)) max_updated
-FROM vul 
+    MIN(imported) min_updated,
+    MAX(imported) max_updated
+FROM vulns 
 GROUP BY image 
 ORDER BY 1;
 
@@ -15,17 +15,17 @@ ORDER BY 1;
 SELECT 
     digest,
     count(*) records, 
-    DATE(max(processed)) updated
-FROM vul
+    max(imported) updated
+FROM vulns
 WHERE image = 'docker.io/bitnami/mariadb'
 GROUP BY digest
 ORDER BY 3;
 
 -- list image vulns per day 
 SELECT 
-    DATE(processed) updated,
+    imported,
     count(*) records
-FROM vul
+FROM vulns
 WHERE image = 'docker.io/bitnami/mariadb'
-GROUP BY DATE(processed)
-ORDER BY 1;
+GROUP BY imported
+ORDER BY 1 DESC;
