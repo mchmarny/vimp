@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	insertSQL = `INSERT INTO vul VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-		ON CONFLICT (image, digest, source, exposure, package, version) 
+	insertSQL = `INSERT INTO vulns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+		ON CONFLICT (image, digest, source, imported, exposure, package, version) 
 		DO UPDATE SET
-			processed = EXCLUDED.processed,
 			severity = EXCLUDED.severity,
 			score = EXCLUDED.score,
-			fixed = EXCLUDED.fixed
+			fixed = EXCLUDED.fixed,
+			processed = EXCLUDED.processed
   `
 )
 
@@ -39,13 +39,14 @@ func Import(uri string, vuls []*data.ImageVulnerability) error {
 			v.Image,
 			v.Digest,
 			v.Source,
-			v.ProcessedAt.Format(time.RFC3339),
+			v.ProcessedAt.Format(time.DateOnly),
 			strings.ToUpper(v.Exposure),
 			v.Package,
 			v.Version,
 			v.Severity,
 			v.Score,
 			v.IsFixed,
+			v.ProcessedAt,
 		)
 		if err != nil {
 			log.Err(err).Msgf("insert: %s", insertSQL)
