@@ -1,4 +1,4 @@
-# cloud.google.com/go v0.110.1
+# cloud.google.com/go v0.110.2
 ## explicit; go 1.19
 cloud.google.com/go/civil
 cloud.google.com/go/internal
@@ -8,20 +8,20 @@ cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/uid
 cloud.google.com/go/internal/version
-# cloud.google.com/go/bigquery v1.51.1
+# cloud.google.com/go/bigquery v1.51.2
 ## explicit; go 1.19
 cloud.google.com/go/bigquery
 cloud.google.com/go/bigquery/internal
 cloud.google.com/go/bigquery/internal/query
 cloud.google.com/go/bigquery/storage/apiv1
 cloud.google.com/go/bigquery/storage/apiv1/storagepb
-# cloud.google.com/go/compute v1.19.1
+# cloud.google.com/go/compute v1.19.2
 ## explicit; go 1.19
 cloud.google.com/go/compute/internal
 # cloud.google.com/go/compute/metadata v0.2.3
 ## explicit; go 1.19
 cloud.google.com/go/compute/metadata
-# cloud.google.com/go/iam v1.0.0
+# cloud.google.com/go/iam v1.0.1
 ## explicit; go 1.19
 cloud.google.com/go/iam
 cloud.google.com/go/iam/apiv1/iampb
@@ -72,7 +72,7 @@ github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/docker/cli v23.0.5+incompatible
+# github.com/docker/cli v23.0.6+incompatible
 ## explicit
 github.com/docker/cli/cli/config
 github.com/docker/cli/cli/config/configfile
@@ -81,7 +81,7 @@ github.com/docker/cli/cli/config/types
 # github.com/docker/distribution v2.8.1+incompatible
 ## explicit
 github.com/docker/distribution/registry/client/auth/challenge
-# github.com/docker/docker v23.0.5+incompatible
+# github.com/docker/docker v23.0.6+incompatible
 ## explicit
 github.com/docker/docker/pkg/homedir
 # github.com/docker/docker-credential-helpers v0.7.0
@@ -116,7 +116,7 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/golang/snappy v0.0.4
 ## explicit
 github.com/golang/snappy
-# github.com/google/flatbuffers v23.3.3+incompatible
+# github.com/google/flatbuffers v23.5.9+incompatible
 ## explicit
 github.com/google/flatbuffers/go
 # github.com/google/go-cmp v0.5.9
@@ -311,7 +311,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.8.0
+# golang.org/x/crypto v0.9.0
 ## explicit; go 1.17
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/chacha20poly1305
@@ -326,7 +326,7 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.9.0
+# golang.org/x/net v0.10.0
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/http/httpguts
@@ -335,7 +335,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/oauth2 v0.7.0
+# golang.org/x/oauth2 v0.8.0
 ## explicit; go 1.17
 golang.org/x/oauth2
 golang.org/x/oauth2/authhandler
@@ -370,7 +370,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.8.0
+# golang.org/x/tools v0.9.1
 ## explicit; go 1.18
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/cmd/stringer
@@ -397,7 +397,7 @@ golang.org/x/tools/internal/typesinternal
 ## explicit; go 1.17
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/api v0.121.0
+# google.golang.org/api v0.122.0
 ## explicit; go 1.19
 google.golang.org/api/bigquery/v2
 google.golang.org/api/googleapi
@@ -546,7 +546,7 @@ modernc.org/cc/v3
 # modernc.org/ccgo/v3 v3.16.13
 ## explicit; go 1.17
 modernc.org/ccgo/v3/lib
-# modernc.org/libc v1.22.5
+# modernc.org/libc v1.22.6
 ## explicit; go 1.18
 modernc.org/libc
 modernc.org/libc/errno
