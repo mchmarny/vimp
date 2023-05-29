@@ -280,7 +280,7 @@ github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.8.2
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
-# github.com/urfave/cli/v2 v2.25.3
+# github.com/urfave/cli/v2 v2.25.4
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/vbatts/tar-split v0.11.3
