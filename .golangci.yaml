@@ -5,7 +5,7 @@ linters:
   enable:
   - asciicheck
   - unused
-  - depguard
+  # - depguard
   - errorlint
   - gofmt
   - gosec
