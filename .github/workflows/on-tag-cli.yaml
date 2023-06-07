@@ -11,9 +11,9 @@ jobs:
 
   conf:
     env:
-      GO_VERSION: ^1.20.4
+      GO_VERSION: ^1.20.5
       SYFT_VERSION: v0.14.1
-      LINTER_VERSION: v1.52.2
+      LINTER_VERSION: v1.53.2
       ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
 
     runs-on: ubuntu-latest

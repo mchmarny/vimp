@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -euo pipefail
+
+docker stop /postgres
+docker remove /postgres
+docker run \
+    --name postgres \
+    -e POSTGRES_USER=test \
+    -e POSTGRES_PASSWORD=test \
+    -p 5432:5432 \
+    -v ${PWD}/data:/var/lib/postgresql/data \
+    -d postgres
