@@ -7,8 +7,11 @@ package libc // import "modernc.org/libc"
 import (
 	"unicode"
 	"unsafe"
+	"os"
+	"strings"
 
 	"golang.org/x/sys/unix"
+	"modernc.org/libc/errno"
 	"modernc.org/libc/fcntl"
 	"modernc.org/libc/signal"
 	"modernc.org/libc/sys/types"
@@ -440,38 +443,37 @@ func Xreadlink(t *TLS, path, buf uintptr, bufsize types.Size_t) types.Ssize_t {
 
 // FILE *fopen64(const char *pathname, const char *mode);
 func Xfopen64(t *TLS, pathname, mode uintptr) uintptr {
-	panic(todo(""))
-	// m := strings.ReplaceAll(GoString(mode), "b", "")
-	// var flags int
-	// switch m {
-	// case "r":
-	// 	flags = os.O_RDONLY
-	// case "r+":
-	// 	flags = os.O_RDWR
-	// case "w":
-	// 	flags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-	// case "w+":
-	// 	flags = os.O_RDWR | os.O_CREATE | os.O_TRUNC
-	// case "a":
-	// 	flags = os.O_WRONLY | os.O_CREATE | os.O_APPEND
-	// case "a+":
-	// 	flags = os.O_RDWR | os.O_CREATE | os.O_APPEND
-	// default:
-	// 	panic(m)
-	// }
-	// fd, _, err := unix.Syscall(unix.SYS_OPEN, pathname, uintptr(flags|unix.O_LARGEFILE), 0666)
-	// if err != 0 {
-	// 	t.setErrno(err)
-	// 	return 0
-	// }
+	m := strings.ReplaceAll(GoString(mode), "b", "")
+	var flags int
+	switch m {
+	case "r":
+		flags = os.O_RDONLY
+	case "r+":
+		flags = os.O_RDWR
+	case "w":
+		flags = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	case "w+":
+		flags = os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	case "a":
+		flags = os.O_WRONLY | os.O_CREATE | os.O_APPEND
+	case "a+":
+		flags = os.O_RDWR | os.O_CREATE | os.O_APPEND
+	default:
+		panic(m)
+	}
+	fd, err := unix.Open(GoString(pathname), flags|unix.O_LARGEFILE, 0666)
+	if err != nil {
+		t.setErrno(err)
+		return 0
+	}
 
-	// if p := newFile(t, int32(fd)); p != 0 {
-	// 	return p
-	// }
+	if p := newFile(t, int32(fd)); p != 0 {
+		return p
+	}
 
-	// Xclose(t, int32(fd))
-	// t.setErrno(errno.ENOMEM)
-	// return 0
+	Xclose(t, int32(fd))
+	t.setErrno(errno.ENOMEM)
+	return 0
 }
 
 // int iswspace(wint_t wc);
