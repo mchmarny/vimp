@@ -3,7 +3,7 @@ module github.com/mchmarny/vimp
 go 1.20
 
 require (
-	cloud.google.com/go/bigquery v1.51.2
+	cloud.google.com/go/bigquery v1.52.0
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/google/go-containerregistry v0.15.2
 	github.com/jackc/pgx/v5 v5.4.0
@@ -20,7 +20,6 @@ require (
 	cloud.google.com/go/compute v1.20.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.0 // indirect
-	cloud.google.com/go/storage v1.30.1 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/thrift v0.18.1 // indirect
