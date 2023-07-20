@@ -1,3 +1,17 @@
+# 5.4.2 (July 11, 2023)
+
+* Fix: RowScanner errors are fatal to Rows
+* Fix: Enable failover efforts when pg_hba.conf disallows non-ssl connections (Brandon Kauffman)
+* Hstore text codec internal improvements (Evan Jones)
+* Fix: Stop timers for background reader when not in use. Fixes memory leak when closing connections (Adrian-Stefan Mares)
+* Fix: Stop background reader as soon as possible.
+* Add PgConn.SyncConn(). This combined with the above fix makes it safe to directly use the underlying net.Conn.
+
+# 5.4.1 (June 18, 2023)
+
+* Fix: concurrency bug with pgtypeDefaultMap and simple protocol (Lev Zakharov)
+* Add TxOptions.BeginQuery to allow overriding the default BEGIN query
+
 # 5.4.0 (June 14, 2023)
 
 * Replace platform specific syscalls for non-blocking IO with more traditional goroutines and deadlines. This returns to the v4 approach with some additional improvements and fixes. This restores the ability to use a pgx.Conn over an ssh.Conn as well as other non-TCP or Unix socket connections. In addition, it is a significantly simpler implementation that is less likely to have cross platform issues.
