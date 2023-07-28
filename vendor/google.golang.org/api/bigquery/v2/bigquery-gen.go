@@ -3262,6 +3262,12 @@ type ExternalDataConfiguration struct {
 	// formats.
 	DecimalTargetTypes []string `json:"decimalTargetTypes,omitempty"`
 
+	// FileSetSpecType: [Optional] Specifies how source URIs are interpreted
+	// for constructing the file set to load. By default source URIs are
+	// expanded against the underlying storage. Other options include
+	// specifying manifest files. Only applicable to object storage systems.
+	FileSetSpecType string `json:"fileSetSpecType,omitempty"`
+
 	// GoogleSheetsOptions: [Optional] Additional options if sourceFormat is
 	// set to GOOGLE_SHEETS.
 	GoogleSheetsOptions *GoogleSheetsOptions `json:"googleSheetsOptions,omitempty"`
@@ -4482,6 +4488,12 @@ type JobConfigurationLoad struct {
 	// raw, binary state. BigQuery also supports the escape sequence "\t" to
 	// specify a tab separator. The default value is a comma (',').
 	FieldDelimiter string `json:"fieldDelimiter,omitempty"`
+
+	// FileSetSpecType: [Optional] Specifies how source URIs are interpreted
+	// for constructing the file set to load. By default source URIs are
+	// expanded against the underlying storage. Other options include
+	// specifying manifest files. Only applicable to object storage systems.
+	FileSetSpecType string `json:"fileSetSpecType,omitempty"`
 
 	// HivePartitioningOptions: [Optional] Options to configure hive
 	// partitioning support.
@@ -5849,8 +5861,9 @@ type Model struct {
 	// models.
 	ExpirationTime int64 `json:"expirationTime,omitempty,string"`
 
-	// FeatureColumns: Output only. Input feature columns that were used to
-	// train this model.
+	// FeatureColumns: Output only. Input feature columns for the model
+	// inference. If the model is trained with TRANSFORM clause, these are
+	// the input of the TRANSFORM clause.
 	FeatureColumns []*StandardSqlField `json:"featureColumns,omitempty"`
 
 	// FriendlyName: Optional. A descriptive name for this model.
@@ -5935,6 +5948,12 @@ type Model struct {
 	// TrainingRuns: Information for all training runs in increasing order
 	// of start_time.
 	TrainingRuns []*TrainingRun `json:"trainingRuns,omitempty"`
+
+	// TransformColumns: Output only. This field will be populated if a
+	// TRANSFORM clause was used to train a model. TRANSFORM clause (if
+	// used) takes feature_columns as input and outputs transform_columns.
+	// transform_columns then are used to train the model.
+	TransformColumns []*TransformColumn `json:"transformColumns,omitempty"`
 
 	// ServerResponse contains the HTTP response code and headers from the
 	// server.
@@ -9146,6 +9165,9 @@ func (s *TimePartitioning) MarshalJSON() ([]byte, error) {
 
 // TrainingOptions: Options used in model training.
 type TrainingOptions struct {
+	// ActivationFn: Activation function of the neural nets.
+	ActivationFn string `json:"activationFn,omitempty"`
+
 	// AdjustStepChanges: If true, detect step changes and make data
 	// adjustment in the input time series.
 	AdjustStepChanges bool `json:"adjustStepChanges,omitempty"`
@@ -9163,6 +9185,10 @@ type TrainingOptions struct {
 	// AutoArimaMinOrder: The min value of the sum of non-seasonal p and q.
 	AutoArimaMinOrder int64 `json:"autoArimaMinOrder,omitempty,string"`
 
+	// AutoClassWeights: Whether to calculate class weights automatically
+	// based on the popularity of each label.
+	AutoClassWeights bool `json:"autoClassWeights,omitempty"`
+
 	// BatchSize: Batch size for dnn models.
 	BatchSize int64 `json:"batchSize,omitempty,string"`
 
@@ -9173,6 +9199,9 @@ type TrainingOptions struct {
 	//   "GBTREE" - Gbtree booster.
 	//   "DART" - Dart booster.
 	BoosterType string `json:"boosterType,omitempty"`
+
+	// BudgetHours: Budget in hours for AutoML training.
+	BudgetHours float64 `json:"budgetHours,omitempty"`
 
 	// CalculatePValues: Whether or not p-value test should be computed for
 	// this model. Only available for linear and logistic regression models.
@@ -9293,6 +9322,10 @@ type TrainingOptions struct {
 	//   "IMPLICIT" - Use weighted-als for implicit feedback problems.
 	//   "EXPLICIT" - Use nonweighted-als for explicit feedback problems.
 	FeedbackType string `json:"feedbackType,omitempty"`
+
+	// FitIntercept: Whether the model should include intercept during model
+	// training.
+	FitIntercept bool `json:"fitIntercept,omitempty"`
 
 	// HiddenUnits: Hidden units for dnn models.
 	HiddenUnits googleapi.Int64s `json:"hiddenUnits,omitempty"`
@@ -9458,6 +9491,9 @@ type TrainingOptions struct {
 	//   "KMEANS_PLUS_PLUS" - Initializes with kmeans++.
 	KmeansInitializationMethod string `json:"kmeansInitializationMethod,omitempty"`
 
+	// L1RegActivation: L1 regularization coefficient to activations.
+	L1RegActivation float64 `json:"l1RegActivation,omitempty"`
+
 	// L1Regularization: L1 regularization coefficient.
 	L1Regularization float64 `json:"l1Regularization,omitempty"`
 
@@ -9522,6 +9558,13 @@ type TrainingOptions struct {
 	// for boosted tree models.
 	MinTreeChildWeight int64 `json:"minTreeChildWeight,omitempty,string"`
 
+	// ModelRegistry: The model registry.
+	//
+	// Possible values:
+	//   "MODEL_REGISTRY_UNSPECIFIED"
+	//   "VERTEX_AI" - Vertex AI.
+	ModelRegistry string `json:"modelRegistry,omitempty"`
+
 	// ModelUri: Google Cloud Storage URI from which the model was imported.
 	// Only applicable for imported models.
 	ModelUri string `json:"modelUri,omitempty"`
@@ -9541,6 +9584,10 @@ type TrainingOptions struct {
 	// iteration for boosted tree models.
 	NumParallelTree int64 `json:"numParallelTree,omitempty,string"`
 
+	// NumPrincipalComponents: Number of principal components to keep in the
+	// PCA model. Must be <= the number of features.
+	NumPrincipalComponents int64 `json:"numPrincipalComponents,omitempty,string"`
+
 	// NumTrials: Number of trials to run this hyperparameter tuning job.
 	NumTrials int64 `json:"numTrials,omitempty,string"`
 
@@ -9555,15 +9602,33 @@ type TrainingOptions struct {
 	// regression problem.
 	OptimizationStrategy string `json:"optimizationStrategy,omitempty"`
 
-	// PreserveInputStructs: Whether to preserve the input structs in output
-	// feature names. Suppose there is a struct A with field b. When false
-	// (default), the output feature name is A_b. When true, the output
-	// feature name is A.b.
-	PreserveInputStructs bool `json:"preserveInputStructs,omitempty"`
+	// Optimizer: Optimizer used for training the neural nets.
+	Optimizer string `json:"optimizer,omitempty"`
+
+	// PcaExplainedVarianceRatio: The minimum ratio of cumulative explained
+	// variance that needs to be given by the PCA model.
+	PcaExplainedVarianceRatio float64 `json:"pcaExplainedVarianceRatio,omitempty"`
+
+	// PcaSolver: The solver for PCA.
+	//
+	// Possible values:
+	//   "UNSPECIFIED"
+	//   "FULL" - Full eigen-decoposition.
+	//   "RANDOMIZED" - Randomized SVD.
+	//   "AUTO" - Auto.
+	PcaSolver string `json:"pcaSolver,omitempty"`
 
 	// SampledShapleyNumPaths: Number of paths for the sampled Shapley
 	// explain method.
 	SampledShapleyNumPaths int64 `json:"sampledShapleyNumPaths,omitempty,string"`
+
+	// ScaleFeatures: If true, scale the feature values by dividing the
+	// feature standard deviation. Currently only apply to PCA.
+	ScaleFeatures bool `json:"scaleFeatures,omitempty"`
+
+	// StandardizeFeatures: Whether to standardize numerical features.
+	// Default to true.
+	StandardizeFeatures bool `json:"standardizeFeatures,omitempty"`
 
 	// Subsample: Subsample fraction of the training data to grow tree to
 	// prevent overfitting for boosted tree models.
@@ -9611,6 +9676,11 @@ type TrainingOptions struct {
 	// UserColumn: User column specified for matrix factorization models.
 	UserColumn string `json:"userColumn,omitempty"`
 
+	// VertexAiModelVersionAliases: The version aliases to apply in Vertex
+	// AI model registry. Always overwrite if the version aliases exists in
+	// a existing model.
+	VertexAiModelVersionAliases []string `json:"vertexAiModelVersionAliases,omitempty"`
+
 	// WalsAlpha: Hyperparameter for matrix factoration when implicit
 	// feedback type is specified.
 	WalsAlpha float64 `json:"walsAlpha,omitempty"`
@@ -9622,21 +9692,20 @@ type TrainingOptions struct {
 	// XGBoost models.
 	XgboostVersion string `json:"xgboostVersion,omitempty"`
 
-	// ForceSendFields is a list of field names (e.g. "AdjustStepChanges")
-	// to unconditionally include in API requests. By default, fields with
+	// ForceSendFields is a list of field names (e.g. "ActivationFn") to
+	// unconditionally include in API requests. By default, fields with
 	// empty or default values are omitted from API requests. However, any
 	// non-pointer, non-interface field appearing in ForceSendFields will be
 	// sent to the server regardless of whether the field is empty or not.
 	// This may be used to include empty fields in Patch requests.
 	ForceSendFields []string `json:"-"`
 
-	// NullFields is a list of field names (e.g. "AdjustStepChanges") to
-	// include in API requests with the JSON null value. By default, fields
-	// with empty values are omitted from API requests. However, any field
-	// with an empty value appearing in NullFields will be sent to the
-	// server as null. It is an error if a field in this list has a
-	// non-empty value. This may be used to include null fields in Patch
-	// requests.
+	// NullFields is a list of field names (e.g. "ActivationFn") to include
+	// in API requests with the JSON null value. By default, fields with
+	// empty values are omitted from API requests. However, any field with
+	// an empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
 	NullFields []string `json:"-"`
 }
 
@@ -9649,37 +9718,43 @@ func (s *TrainingOptions) MarshalJSON() ([]byte, error) {
 func (s *TrainingOptions) UnmarshalJSON(data []byte) error {
 	type NoMethod TrainingOptions
 	var s1 struct {
-		ColsampleBylevel         gensupport.JSONFloat64 `json:"colsampleBylevel"`
-		ColsampleBynode          gensupport.JSONFloat64 `json:"colsampleBynode"`
-		ColsampleBytree          gensupport.JSONFloat64 `json:"colsampleBytree"`
-		DataSplitEvalFraction    gensupport.JSONFloat64 `json:"dataSplitEvalFraction"`
-		Dropout                  gensupport.JSONFloat64 `json:"dropout"`
-		InitialLearnRate         gensupport.JSONFloat64 `json:"initialLearnRate"`
-		L1Regularization         gensupport.JSONFloat64 `json:"l1Regularization"`
-		L2Regularization         gensupport.JSONFloat64 `json:"l2Regularization"`
-		LearnRate                gensupport.JSONFloat64 `json:"learnRate"`
-		MinRelativeProgress      gensupport.JSONFloat64 `json:"minRelativeProgress"`
-		MinSplitLoss             gensupport.JSONFloat64 `json:"minSplitLoss"`
-		Subsample                gensupport.JSONFloat64 `json:"subsample"`
-		TimeSeriesLengthFraction gensupport.JSONFloat64 `json:"timeSeriesLengthFraction"`
-		WalsAlpha                gensupport.JSONFloat64 `json:"walsAlpha"`
+		BudgetHours               gensupport.JSONFloat64 `json:"budgetHours"`
+		ColsampleBylevel          gensupport.JSONFloat64 `json:"colsampleBylevel"`
+		ColsampleBynode           gensupport.JSONFloat64 `json:"colsampleBynode"`
+		ColsampleBytree           gensupport.JSONFloat64 `json:"colsampleBytree"`
+		DataSplitEvalFraction     gensupport.JSONFloat64 `json:"dataSplitEvalFraction"`
+		Dropout                   gensupport.JSONFloat64 `json:"dropout"`
+		InitialLearnRate          gensupport.JSONFloat64 `json:"initialLearnRate"`
+		L1RegActivation           gensupport.JSONFloat64 `json:"l1RegActivation"`
+		L1Regularization          gensupport.JSONFloat64 `json:"l1Regularization"`
+		L2Regularization          gensupport.JSONFloat64 `json:"l2Regularization"`
+		LearnRate                 gensupport.JSONFloat64 `json:"learnRate"`
+		MinRelativeProgress       gensupport.JSONFloat64 `json:"minRelativeProgress"`
+		MinSplitLoss              gensupport.JSONFloat64 `json:"minSplitLoss"`
+		PcaExplainedVarianceRatio gensupport.JSONFloat64 `json:"pcaExplainedVarianceRatio"`
+		Subsample                 gensupport.JSONFloat64 `json:"subsample"`
+		TimeSeriesLengthFraction  gensupport.JSONFloat64 `json:"timeSeriesLengthFraction"`
+		WalsAlpha                 gensupport.JSONFloat64 `json:"walsAlpha"`
 		*NoMethod
 	}
 	s1.NoMethod = (*NoMethod)(s)
 	if err := json.Unmarshal(data, &s1); err != nil {
 		return err
 	}
+	s.BudgetHours = float64(s1.BudgetHours)
 	s.ColsampleBylevel = float64(s1.ColsampleBylevel)
 	s.ColsampleBynode = float64(s1.ColsampleBynode)
 	s.ColsampleBytree = float64(s1.ColsampleBytree)
 	s.DataSplitEvalFraction = float64(s1.DataSplitEvalFraction)
 	s.Dropout = float64(s1.Dropout)
 	s.InitialLearnRate = float64(s1.InitialLearnRate)
+	s.L1RegActivation = float64(s1.L1RegActivation)
 	s.L1Regularization = float64(s1.L1Regularization)
 	s.L2Regularization = float64(s1.L2Regularization)
 	s.LearnRate = float64(s1.LearnRate)
 	s.MinRelativeProgress = float64(s1.MinRelativeProgress)
 	s.MinSplitLoss = float64(s1.MinSplitLoss)
+	s.PcaExplainedVarianceRatio = float64(s1.PcaExplainedVarianceRatio)
 	s.Subsample = float64(s1.Subsample)
 	s.TimeSeriesLengthFraction = float64(s1.TimeSeriesLengthFraction)
 	s.WalsAlpha = float64(s1.WalsAlpha)
@@ -9782,6 +9857,41 @@ type TransactionInfo struct {
 
 func (s *TransactionInfo) MarshalJSON() ([]byte, error) {
 	type NoMethod TransactionInfo
+	raw := NoMethod(*s)
+	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
+}
+
+// TransformColumn: Information about a single transform column.
+type TransformColumn struct {
+	// Name: Output only. Name of the column.
+	Name string `json:"name,omitempty"`
+
+	// TransformSql: Output only. The SQL expression used in the column
+	// transform.
+	TransformSql string `json:"transformSql,omitempty"`
+
+	// Type: Output only. Data type of the column after the transform.
+	Type *StandardSqlDataType `json:"type,omitempty"`
+
+	// ForceSendFields is a list of field names (e.g. "Name") to
+	// unconditionally include in API requests. By default, fields with
+	// empty or default values are omitted from API requests. However, any
+	// non-pointer, non-interface field appearing in ForceSendFields will be
+	// sent to the server regardless of whether the field is empty or not.
+	// This may be used to include empty fields in Patch requests.
+	ForceSendFields []string `json:"-"`
+
+	// NullFields is a list of field names (e.g. "Name") to include in API
+	// requests with the JSON null value. By default, fields with empty
+	// values are omitted from API requests. However, any field with an
+	// empty value appearing in NullFields will be sent to the server as
+	// null. It is an error if a field in this list has a non-empty value.
+	// This may be used to include null fields in Patch requests.
+	NullFields []string `json:"-"`
+}
+
+func (s *TransformColumn) MarshalJSON() ([]byte, error) {
+	type NoMethod TransformColumn
 	raw := NoMethod(*s)
 	return gensupport.MarshalJSON(raw, s.ForceSendFields, s.NullFields)
 }
@@ -14458,154 +14568,6 @@ func (c *RowAccessPoliciesListCall) Pages(ctx context.Context, f func(*ListRowAc
 		}
 		c.PageToken(x.NextPageToken)
 	}
-}
-
-// method id "bigquery.rowAccessPolicies.setIamPolicy":
-
-type RowAccessPoliciesSetIamPolicyCall struct {
-	s                   *Service
-	resource            string
-	setiampolicyrequest *SetIamPolicyRequest
-	urlParams_          gensupport.URLParams
-	ctx_                context.Context
-	header_             http.Header
-}
-
-// SetIamPolicy: Sets the access control policy on the specified
-// resource. Replaces any existing policy. Can return `NOT_FOUND`,
-// `INVALID_ARGUMENT`, and `PERMISSION_DENIED` errors.
-//
-//   - resource: REQUIRED: The resource for which the policy is being
-//     specified. See Resource names
-//     (https://cloud.google.com/apis/design/resource_names) for the
-//     appropriate value for this field.
-func (r *RowAccessPoliciesService) SetIamPolicy(resource string, setiampolicyrequest *SetIamPolicyRequest) *RowAccessPoliciesSetIamPolicyCall {
-	c := &RowAccessPoliciesSetIamPolicyCall{s: r.s, urlParams_: make(gensupport.URLParams)}
-	c.resource = resource
-	c.setiampolicyrequest = setiampolicyrequest
-	return c
-}
-
-// Fields allows partial responses to be retrieved. See
-// https://developers.google.com/gdata/docs/2.0/basics#PartialResponse
-// for more information.
-func (c *RowAccessPoliciesSetIamPolicyCall) Fields(s ...googleapi.Field) *RowAccessPoliciesSetIamPolicyCall {
-	c.urlParams_.Set("fields", googleapi.CombineFields(s))
-	return c
-}
-
-// Context sets the context to be used in this call's Do method. Any
-// pending HTTP request will be aborted if the provided context is
-// canceled.
-func (c *RowAccessPoliciesSetIamPolicyCall) Context(ctx context.Context) *RowAccessPoliciesSetIamPolicyCall {
-	c.ctx_ = ctx
-	return c
-}
-
-// Header returns an http.Header that can be modified by the caller to
-// add HTTP headers to the request.
-func (c *RowAccessPoliciesSetIamPolicyCall) Header() http.Header {
-	if c.header_ == nil {
-		c.header_ = make(http.Header)
-	}
-	return c.header_
-}
-
-func (c *RowAccessPoliciesSetIamPolicyCall) doRequest(alt string) (*http.Response, error) {
-	reqHeaders := make(http.Header)
-	reqHeaders.Set("x-goog-api-client", "gl-go/"+gensupport.GoVersion()+" gdcl/"+internal.Version)
-	for k, v := range c.header_ {
-		reqHeaders[k] = v
-	}
-	reqHeaders.Set("User-Agent", c.s.userAgent())
-	var body io.Reader = nil
-	body, err := googleapi.WithoutDataWrapper.JSONReader(c.setiampolicyrequest)
-	if err != nil {
-		return nil, err
-	}
-	reqHeaders.Set("Content-Type", "application/json")
-	c.urlParams_.Set("alt", alt)
-	c.urlParams_.Set("prettyPrint", "false")
-	urls := googleapi.ResolveRelative(c.s.BasePath, "{+resource}:setIamPolicy")
-	urls += "?" + c.urlParams_.Encode()
-	req, err := http.NewRequest("POST", urls, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = reqHeaders
-	googleapi.Expand(req.URL, map[string]string{
-		"resource": c.resource,
-	})
-	return gensupport.SendRequest(c.ctx_, c.s.client, req)
-}
-
-// Do executes the "bigquery.rowAccessPolicies.setIamPolicy" call.
-// Exactly one of *Policy or error will be non-nil. Any non-2xx status
-// code is an error. Response headers are in either
-// *Policy.ServerResponse.Header or (if a response was returned at all)
-// in error.(*googleapi.Error).Header. Use googleapi.IsNotModified to
-// check whether the returned error was because http.StatusNotModified
-// was returned.
-func (c *RowAccessPoliciesSetIamPolicyCall) Do(opts ...googleapi.CallOption) (*Policy, error) {
-	gensupport.SetOptions(c.urlParams_, opts...)
-	res, err := c.doRequest("json")
-	if res != nil && res.StatusCode == http.StatusNotModified {
-		if res.Body != nil {
-			res.Body.Close()
-		}
-		return nil, gensupport.WrapError(&googleapi.Error{
-			Code:   res.StatusCode,
-			Header: res.Header,
-		})
-	}
-	if err != nil {
-		return nil, err
-	}
-	defer googleapi.CloseBody(res)
-	if err := googleapi.CheckResponse(res); err != nil {
-		return nil, gensupport.WrapError(err)
-	}
-	ret := &Policy{
-		ServerResponse: googleapi.ServerResponse{
-			Header:         res.Header,
-			HTTPStatusCode: res.StatusCode,
-		},
-	}
-	target := &ret
-	if err := gensupport.DecodeResponse(target, res); err != nil {
-		return nil, err
-	}
-	return ret, nil
-	// {
-	//   "description": "Sets the access control policy on the specified resource. Replaces any existing policy. Can return `NOT_FOUND`, `INVALID_ARGUMENT`, and `PERMISSION_DENIED` errors.",
-	//   "flatPath": "projects/{projectsId}/datasets/{datasetsId}/tables/{tablesId}/rowAccessPolicies/{rowAccessPoliciesId}:setIamPolicy",
-	//   "httpMethod": "POST",
-	//   "id": "bigquery.rowAccessPolicies.setIamPolicy",
-	//   "parameterOrder": [
-	//     "resource"
-	//   ],
-	//   "parameters": {
-	//     "resource": {
-	//       "description": "REQUIRED: The resource for which the policy is being specified. See [Resource names](https://cloud.google.com/apis/design/resource_names) for the appropriate value for this field.",
-	//       "location": "path",
-	//       "pattern": "^projects/[^/]+/datasets/[^/]+/tables/[^/]+/rowAccessPolicies/[^/]+$",
-	//       "required": true,
-	//       "type": "string"
-	//     }
-	//   },
-	//   "path": "{+resource}:setIamPolicy",
-	//   "request": {
-	//     "$ref": "SetIamPolicyRequest"
-	//   },
-	//   "response": {
-	//     "$ref": "Policy"
-	//   },
-	//   "scopes": [
-	//     "https://www.googleapis.com/auth/bigquery",
-	//     "https://www.googleapis.com/auth/cloud-platform"
-	//   ]
-	// }
-
 }
 
 // method id "bigquery.rowAccessPolicies.testIamPermissions":
