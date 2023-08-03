@@ -5,7 +5,7 @@ go 1.20
 require (
 	cloud.google.com/go/bigquery v1.53.0
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/google/go-containerregistry v0.15.2
+	github.com/google/go-containerregistry v0.16.1
 	github.com/jackc/pgx/v5 v5.4.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.1
