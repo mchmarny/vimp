@@ -11,7 +11,7 @@ require (
 	github.com/rs/zerolog v1.29.1
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.25.7
-	google.golang.org/api v0.134.0
+	google.golang.org/api v0.135.0
 	modernc.org/sqlite v1.24.0
 )
 
