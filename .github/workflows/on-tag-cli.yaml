@@ -76,7 +76,7 @@ jobs:
       with:
         version: ${{ needs.conf.outputs.syft_version }}
     - name: Build CLI
-      uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b  # v4.2.0
+      uses: goreleaser/goreleaser-action@5fdedb94abba051217030cc86d4523cf3f02243d  # v4.6.0
       id: releaser
       with:
         distribution: goreleaser
