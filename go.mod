@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/urfave/cli/v2 v2.25.7
 	google.golang.org/api v0.134.0
-	modernc.org/sqlite v1.24.0
+	modernc.org/sqlite v1.26.0
 )
 
 require (
