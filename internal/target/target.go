@@ -32,7 +32,9 @@ type Importer func(ctx context.Context, uri string, vuls []*data.ImageVulnerabil
 type Querier func(ctx context.Context, opt *query.Options) (any, error)
 
 func GetSampleTargets() []string {
-	list := []string{}
+	capacity := len(sqlite.SampleURIs) + len(bq.SampleURIs) + len(file.SampleURIs) +
+		len(console.SampleURIs) + len(postgres.SampleURIs)
+	list := make([]string, 0, capacity)
 	list = append(list, sqlite.SampleURIs...)
 	list = append(list, bq.SampleURIs...)
 	list = append(list, file.SampleURIs...)

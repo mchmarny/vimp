@@ -116,7 +116,8 @@ scan: ## Scans for vulnerabilities with grype
 
 .PHONY: build
 build: tidy ## Builds binaries for the current OS and architecture
-	@KO_DOCKER_REPO=$(IMAGE_REGISTRY) goreleaser build --clean --single-target --snapshot --timeout 10m0s || exit 1;
+	@KO_DOCKER_REPO=$(IMAGE_REGISTRY) goreleaser build --clean --single-target --snapshot --timeout 10m0s || exit 1
+	@mkdir -p bin && find dist -name vimp -type f -perm +111 -exec cp {} bin/vimp \;
 
 .PHONY: image
 image: ## Builds and pushes container image
