@@ -89,4 +89,9 @@ var (
 		Aliases: []string{"y"},
 		Usage:   "skip confirmation prompt (auto-yes)",
 	}
+
+	scanOnlyFlag = &c.BoolFlag{
+		Name:  "scan-only",
+		Usage: "skip auto-import after scanning (only save JSON reports)",
+	}
 )

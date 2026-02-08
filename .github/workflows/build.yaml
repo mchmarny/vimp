@@ -72,17 +72,18 @@ jobs:
         echo "${AUTH_TOKEN}" | ko login ${reg} --username oauth2accesstoken --password-stdin
 
     - name: Get Version
+      id: version
       run: |
         set -euo pipefail
-        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+        echo "release=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
 
     - name: Build Image
       id: image
       env:
         KO_DOCKER_REPO: ${{ inputs.image_repo }}/${{ inputs.image_name }}
-        GOFLAGS: "-ldflags=-X=main.version=${{ env.RELEASE_VERSION }}"
+        GOFLAGS: "-ldflags=-X=main.version=${{ steps.version.outputs.release }}"
         COSIGN_EXPERIMENTAL: "true"
       run: |
         set -euo pipefail
-        ko build main.go --image-refs .digest --bare --tags ${{ env.RELEASE_VERSION }}
+        ko build main.go --image-refs .digest --bare --tags ${{ steps.version.outputs.release }}
         echo "digest=$(cat .digest)" >> "$GITHUB_OUTPUT"

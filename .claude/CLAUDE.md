@@ -72,6 +72,7 @@ Primary key (6-part): `(image, digest, source, exposure, package, version)`
 ### Key Packages
 
 **`internal/cmd/`** - CLI commands using urfave/cli/v2
+- `scan` - Scan container images using installed scanners (grype, trivy, snyk, osv)
 - `import` - Import vulnerability reports from file or auto-scan image
 - `query` - Query stored vulnerability data (supports JSON and SARIF output)
 

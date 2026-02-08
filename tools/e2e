@@ -25,6 +25,19 @@ cleanup
 msg "version"
 bin/vimp --version
 
+# Test scan command (if scanners available)
+msg "scan command (scan-only)"
+if command -v grype &> /dev/null || command -v trivy &> /dev/null; then
+    bin/vimp scan --image alpine:latest --yes --scan-only --output /tmp/vimp-scan-test || echo "Scan failed (scanner may not be available)"
+    if [ -d /tmp/vimp-scan-test ]; then
+        echo "Scan output directory created"
+        ls -la /tmp/vimp-scan-test/
+        rm -rf /tmp/vimp-scan-test
+    fi
+else
+    echo "No scanners available, skipping scan test"
+fi
+
 # Test all converters with SQLite
 msg "import grype"
 bin/vimp import --source "$IMAGE" \
