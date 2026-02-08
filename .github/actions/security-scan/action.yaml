@@ -1,0 +1,54 @@
+name: 'Security Scan'
+description: 'Run security vulnerability scan with Trivy'
+
+inputs:
+  severity:
+    description: 'Severity levels to scan for'
+    required: false
+    default: 'HIGH,CRITICAL'
+  category:
+    description: 'SARIF category for GitHub Security'
+    required: false
+    default: 'trivy-fs'
+  scan_type:
+    description: 'Type of scan (fs, image)'
+    required: false
+    default: 'fs'
+  scan_ref:
+    description: 'Reference to scan'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Trivy scan
+      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+      with:
+        scan-type: ${{ inputs.scan_type }}
+        scan-ref: ${{ inputs.scan_ref }}
+        vuln-type: 'os,library'
+        scanners: 'vuln,secret'
+        ignore-unfixed: true
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: ${{ inputs.severity }}
+        skip-dirs: 'vendor,node_modules'
+        limit-severities-for-sarif: true
+
+    - name: Check SARIF exists
+      id: check_sarif
+      shell: bash
+      run: |
+        if [ -f "trivy-results.sarif" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload SARIF
+      if: steps.check_sarif.outputs.exists == 'true'
+      uses: github/codeql-action/upload-sarif@a65a038433a26f4363cf9f029e3b9ceac831ad5d  # v3.28.10
+      with:
+        sarif_file: 'trivy-results.sarif'
+        category: ${{ inputs.category }}

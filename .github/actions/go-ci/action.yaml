@@ -1,0 +1,73 @@
+name: 'Go CI'
+description: 'Run Go CI pipeline: setup, test, lint'
+
+inputs:
+  go_version:
+    description: 'Go version to use'
+    required: true
+  golangci_lint_version:
+    description: 'golangci-lint version'
+    required: true
+  coverage_report:
+    description: 'Upload coverage report'
+    required: false
+    default: 'false'
+  coverage_threshold:
+    description: 'Minimum coverage percentage'
+    required: false
+    default: '70'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a  # v5.2.0
+      with:
+        go-version: ${{ inputs.go_version }}
+        cache: true
+
+    - name: Verify Go version
+      shell: bash
+      run: go version
+
+    - name: Tidy modules
+      shell: bash
+      run: |
+        go mod tidy
+        go mod verify
+
+    - name: Run tests
+      shell: bash
+      run: |
+        go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Check coverage threshold
+      shell: bash
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Coverage: ${COVERAGE}%"
+        if (( $(echo "$COVERAGE < ${{ inputs.coverage_threshold }}" | bc -l) )); then
+          echo "Coverage ${COVERAGE}% is below threshold ${{ inputs.coverage_threshold }}%"
+          exit 1
+        fi
+
+    - name: Upload coverage
+      if: inputs.coverage_report == 'true'
+      uses: codecov/codecov-action@af2c6347526edfe5ff45ad690affad475d77ddb4  # v5.3.1
+      with:
+        files: coverage.out
+        flags: unittests
+
+    - name: Lint Go
+      uses: golangci/golangci-lint-action@1b6671e713fd51c7f28eb88acf29c9bf3c2eb15f  # v6.5.0
+      with:
+        version: ${{ inputs.golangci_lint_version }}
+        args: --timeout=5m
+
+    - name: Lint YAML
+      shell: bash
+      run: |
+        if [ -f ".yamllint" ]; then
+          pip install yamllint
+          yamllint -c .yamllint .
+        fi
