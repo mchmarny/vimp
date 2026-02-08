@@ -1,4 +1,4 @@
-name: On Push Qualification
+name: On-Push Qualification
 
 on:
   push:

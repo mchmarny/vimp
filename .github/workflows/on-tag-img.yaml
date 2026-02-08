@@ -1,4 +1,4 @@
-name: release-img
+name: On-Tag Release Image
 on:
   push:
     tags:
