@@ -1,14 +1,29 @@
-name: test
+name: On Push Qualification
+
 on:
   push:
     branches:
-      - '**'
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE'
+  workflow_dispatch: {}
 
 permissions:
   contents: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -16,7 +31,3 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    with:
-      go-version: ^1.20.5
-      scan-severity: 'CRITICAL,HIGH,MEDIUM'
-      golangci_version: v1.53.2
