@@ -56,4 +56,10 @@ var (
 		Name:  "diff",
 		Usage: "only return differences between sources",
 	}
+
+	formatFlag = &c.StringFlag{
+		Name:  "format",
+		Usage: "output format (json, sarif)",
+		Value: "json",
+	}
 )
