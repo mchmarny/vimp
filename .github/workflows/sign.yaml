@@ -64,7 +64,7 @@ jobs:
             -a sha=${{ github.sha }} \
             -a run_id=${{ github.run_id }} \
             -a run_attempt=${{ github.run_attempt }} \
-            -a tag=${{ env.GITHUB_REF_NAME }}
+            -a tag=${{ github.ref_name }}
 
     - name: Verify Signature
       run: |
