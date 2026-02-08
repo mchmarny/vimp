@@ -14,8 +14,8 @@ const (
 
 // FromVulnerabilities converts a slice of ImageVulnerability to a SARIF report.
 func FromVulnerabilities(vuls []*data.ImageVulnerability, tool, version string) *Report {
-	rules := make([]Rule, 0)
-	results := make([]Result, 0)
+	rules := make([]Rule, 0, len(vuls))
+	results := make([]Result, 0, len(vuls))
 	ruleIndex := make(map[string]int)
 
 	for _, v := range vuls {

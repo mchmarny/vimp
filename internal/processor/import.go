@@ -30,6 +30,7 @@ type ImportOptions struct {
 	Target string
 
 	// FormatType is the type of the format (e.g. json, yaml, etc.).
+	//
 	// Deprecated: Use detectedConverter instead.
 	FormatType Format
 

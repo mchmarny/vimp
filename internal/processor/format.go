@@ -17,6 +17,7 @@ const (
 )
 
 // Format represents the source format.
+//
 // Deprecated: Use converter.Registry.Detect() instead.
 type Format int64
 
@@ -50,6 +51,7 @@ func ParseFormat(s string) (Format, error) {
 }
 
 // GetFormats returns the supported source formats.
+//
 // Deprecated: Use GetConverterNames() instead.
 func GetFormats() []Format {
 	return []Format{
@@ -60,6 +62,7 @@ func GetFormats() []Format {
 }
 
 // GetFormatNames returns the names of the supported source formats.
+//
 // Deprecated: Use GetConverterNames() instead.
 func GetFormatNames() []string {
 	return GetConverterNames()

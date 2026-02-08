@@ -62,7 +62,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 }
 
 func makeVulnerabilityRows(in []*data.ImageVulnerability) []*VulnerabilityRow {
-	list := make([]*VulnerabilityRow, 0)
+	list := make([]*VulnerabilityRow, 0, len(in))
 
 	for _, r := range in {
 		list = append(list, &VulnerabilityRow{
