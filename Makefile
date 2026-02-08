@@ -159,15 +159,17 @@ clean-all: clean ## Deep cleans including module cache
 version: ## Prints the current version
 	@echo $(VERSION)
 
-.PHONY: tag
-tag: ## Creates release tag
-	@git tag -s -m "release $(VERSION)" $(VERSION)
-	@git push origin $(VERSION)
+.PHONY: bump-major
+bump-major: ## Bumps major version (1.2.3 → 2.0.0)
+	tools/bump major
 
-.PHONY: tagless
-tagless: ## Deletes the current release tag
-	@git tag -d $(VERSION)
-	@git push --delete origin $(VERSION)
+.PHONY: bump-minor
+bump-minor: ## Bumps minor version (1.2.3 → 1.3.0)
+	tools/bump minor
+
+.PHONY: bump-patch
+bump-patch: ## Bumps patch version (1.2.3 → 1.2.4)
+	tools/bump patch
 
 # =============================================================================
 # Help
