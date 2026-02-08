@@ -15,6 +15,9 @@ type Scanner interface {
 	// Scan runs the scanner against the given image and returns the output file path.
 	Scan(ctx context.Context, image string) (outputPath string, err error)
 
+	// ScanToPath runs the scanner and writes output to the specified path.
+	ScanToPath(ctx context.Context, image, outputPath string) error
+
 	// ConverterName returns the name of the converter to use for this scanner's output.
 	ConverterName() string
 }

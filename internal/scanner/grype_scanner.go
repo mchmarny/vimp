@@ -29,13 +29,16 @@ func (g *GrypeScanner) IsAvailable() bool {
 // Scan runs grype against the given image.
 func (g *GrypeScanner) Scan(ctx context.Context, image string) (string, error) {
 	outputPath := config.GetTempFilePath(grype.Name)
-	cmd := g.makeCmd(ctx, image, outputPath)
-
-	if err := runCmdWithContext(ctx, cmd, outputPath); err != nil {
+	if err := g.ScanToPath(ctx, image, outputPath); err != nil {
 		return "", err
 	}
-
 	return outputPath, nil
+}
+
+// ScanToPath runs grype and writes output to the specified path.
+func (g *GrypeScanner) ScanToPath(ctx context.Context, image, outputPath string) error {
+	cmd := g.makeCmd(ctx, image, outputPath)
+	return runCmdWithContext(ctx, cmd, outputPath)
 }
 
 // ConverterName returns the converter name for grype output.
