@@ -118,19 +118,14 @@ jobs:
       packages: write
       attestations: write
     steps:
-      - name: Login to GHCR
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Attest Image
-        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2  # v2.2.3
+        uses: ./.github/actions/attest-image
         with:
-          subject-name: ghcr.io/mchmarny/vimp
-          subject-digest: ${{ needs.release.outputs.image_digest }}
-          push-to-registry: true
+          image_name: ghcr.io/mchmarny/vimp
+          image_digest: ${{ needs.release.outputs.image_digest }}
 
   # Verify provenance
   verify:
@@ -139,30 +134,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions: read-all
-    env:
-      ATT_FILE_NAME: "multiple.intoto.jsonl"
     steps:
-      - name: Install SLSA Verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0  # v2.7.0
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
-      - name: Download Assets
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vimp*"
-          gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$ATT_FILE_NAME"
-
-      - name: Verify Assets
-        env:
-          CHECKSUMS: ${{ needs.release.outputs.hashes }}
-        run: |
-          set -euo pipefail
-          checksums=$(echo "$CHECKSUMS" | base64 -d)
-          while read -r line; do
-              artifact=$(echo $line | cut -d ' ' -f2)
-              slsa-verifier verify-artifact --provenance-path "$ATT_FILE_NAME" \
-                                            --source-uri "github.com/$GITHUB_REPOSITORY" \
-                                            --source-tag "$GITHUB_REF_NAME" \
-                                            "$artifact"
-          done <<<"$checksums"
+      - name: Verify Provenance
+        uses: ./.github/actions/verify-provenance
+        with:
+          checksums: ${{ needs.release.outputs.hashes }}
