@@ -1,0 +1,36 @@
+name: 'Attest Image'
+description: 'Generates build provenance attestation for container images'
+
+inputs:
+  image_name:
+    description: 'Full image name (without tag or digest)'
+    required: true
+  image_digest:
+    description: 'Image digest (sha256:...)'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Authenticate to registry
+      uses: ./.github/actions/ghcr-login
+
+    - name: Validate inputs
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ -z "${{ inputs.image_name }}" ]]; then
+          echo "::error::image_name is required"
+          exit 1
+        fi
+        if [[ ! "${{ inputs.image_digest }}" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+          echo "::error::image_digest must be in the form sha256:<64 hex>"
+          exit 1
+        fi
+
+    - name: Attest build provenance
+      uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2  # v2.2.3
+      with:
+        subject-name: ${{ inputs.image_name }}
+        subject-digest: ${{ inputs.image_digest }}
+        push-to-registry: true

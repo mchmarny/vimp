@@ -1,0 +1,22 @@
+name: 'GHCR Login'
+description: 'Authenticate to GitHub Container Registry'
+
+inputs:
+  registry:
+    description: 'Container registry URL'
+    required: false
+    default: 'ghcr.io'
+  username:
+    description: 'Registry username (defaults to github.actor)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Login to Container Registry
+      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.username != '' && inputs.username || github.actor }}
+        password: ${{ github.token }}
