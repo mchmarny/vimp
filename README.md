@@ -1,66 +1,84 @@
 # vimp
 
-Compare data from multiple vulnerability scanners to get a more complete picture of potential exposures. 
+Compare data from multiple vulnerability scanners to get a more complete picture of potential exposures.
 
-`vimp` CLI currently supports output from common open source vulnerability scanners like [grype](https://github.com/anchore/grype), [snyk](https://github.com/snyk/cli), and [trivy](https://github.com/aquasecurity/trivy). The CLI also comes with an embedded data store (`sqlite`) and support for other databases, like [BigQuery](https://cloud.google.com/bigquery). Alternatively, `vimp` can also output to local file (`JSON` or `CVS`) or `stdout`.
+`vimp` normalizes output from common container image vulnerability scanners into a unified format, enabling cross-scanner comparison and trend analysis. Results can be stored in SQLite, PostgreSQL, or BigQuery, and exported as JSON or SARIF for GitHub Code Scanning integration.
+
+## Supported Scanners
+
+| Scanner | Detection | Notes |
+|---------|-----------|-------|
+| [Grype](https://github.com/anchore/grype) | `descriptor.name == "grype"` | Full CVSS support |
+| [Trivy](https://github.com/aquasecurity/trivy) | `SchemaVersion` + `Results` | Full CVSS support |
+| [Snyk](https://github.com/snyk/cli) | `vulnerabilities` + `applications` | Full CVSS support |
+| [Clair](https://github.com/quay/clair) | `manifest_hash` + `vulnerabilities` | No CVSS scores |
+| [OSV-Scanner](https://github.com/google/osv-scanner) | `results[*].packages[*].ecosystem` | SBOM-based |
+| [Anchore Engine](https://github.com/anchore/anchore-engine) | `imageDigest` + `vulnerabilities` | Legacy support |
+
+## Quick Start
+
+```shell
+# Set target image
+export IMAGE="docker.io/redis:latest"
+
+# Import from file
+vimp import --source $IMAGE --file grype-report.json
+
+# Or auto-scan with installed scanners
+vimp import --source $IMAGE
+
+# Query results
+vimp query --image docker.io/redis
+```
 
 ## Usage
 
-Start by using a container image, tor example, the official Redis image in Docker Hub:
+### Import
+
+Import vulnerability data from scanner output or automatically scan an image:
 
 ```shell
-export image="docker.io/redis"
+# Import from file (auto-detects scanner format)
+vimp import --source docker.io/redis --file report.json
+
+# Auto-scan with all installed scanners
+vimp import --source docker.io/redis
+
+# Import to PostgreSQL
+vimp import --source docker.io/redis --file report.json --target postgres://localhost:5432/vulns
+
+# Import to BigQuery
+vimp import --source docker.io/redis --file report.json --target bq://project.dataset.table
 ```
 
-> Note, image can have a tag or or digest or both (yes, it looks weird but it's a valid URI). Either way, the image URI will be resolved to its digest during import.
+### Query
 
-`vimp` currently recognizes the output from the following OSS scanners/formats:
-
-*  `grype --add-cpes-if-none -s AllLayers -o json --file report.json $image`
-*  `snyk container test --app-vulns --json-file-output=report.json $image`
-*  `trivy image --format json --output report.json $image`
-
-You can either import the resulting reports from any of the above commands into the local data store:
+Query stored vulnerability data with hierarchical drill-down:
 
 ```shell
-vimp import --source $image --file report.json
-```
-
-Or, omit the `--file` flag all together and `vimp` will automatically scan and import the provided image with any of the installed scanners:
-
-```shell
-vimp import --source $image
-```
-
-By default, `vimp` will store the imported data in Sqlite DB (`.vimp.db`) in your home directory. You can use the `--target` flag to save it to another location (e.g. `sqlite://data/vimp.db`) or another data store (e.g. `postgres://localhost:5432/vulns`). Find all the scanner and target data store options using `vimp import -h`.
-
-The output for the above command should look something like this: 
-
-```shell
-vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
-INF v0.6.0
-INF scanning image docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
-INF grype scan completed: grype-110213000.json
-INF found 83 unique vulnerabilities
-INF snyk scan completed: snyk-255733000.json
-INF found 78 unique vulnerabilities
-INF trivy scan completed: trivy-658830000.json
-INF found 79 unique vulnerabilities
-INF importing: digest=sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 image=docker.io/redis target=sqlite://.vimp.db
-```
-
-Once you data is imported, you can then run queries against that data. The default query against the same data will provide summary of all the data in your store: 
-
-```shell
+# Summary of all images
 vimp query
+
+# Digests for an image
+vimp query --image docker.io/redis
+
+# Vulnerabilities for a specific digest
+vimp query --image docker.io/redis --digest sha256:abc123...
+
+# Show only cross-scanner differences
+vimp query --image docker.io/redis --digest sha256:abc123... --diff
+
+# Packages affected by a CVE
+vimp query --image docker.io/redis --digest sha256:abc123... --exposure CVE-2021-44228
+
+# SARIF output for GitHub Code Scanning
+vimp query --image docker.io/redis --format sarif > results.sarif
 ```
 
-> Note, by default, `vimp` will query (`.vimp.db`) in your home directory. You can target different database using the `--target` flag (e.g. `sqlite://data/vimp.db`).
+### Example Output
 
-After importing data for one image from three sources the response will look something like this: 
-
+Summary query:
 ```json
-INF found 1 records
 {
   "docker.io/redis": {
     "versions": {
@@ -77,129 +95,51 @@ INF found 1 records
 }
 ```
 
-To dig deeper into the data for that image, you can list all the vulnerabilities found that image across all of the sources: 
-
-```shell
-vimp query --image docker.io/redis \
-           --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
-```
-
-The results for that query should look something like this: 
-
-> Notice the differences in `severity` and `score` reported by the different scanners:
-
+Cross-scanner comparison (with `--diff`):
 ```json
 {
-  "image": "docker.io/redis",
-  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-  "exposures": {
-    "CVE-2013-4392": [
-      {
-        "source": "grype",
-        "severity": "low",
-        "score": 3.3,
-        "last_discovered": "2023-04-08T12:30:45Z"
-      },
-      {
-        "source": "snyk",
-        "severity": "medium",
-        "score": 4.4,
-        "last_discovered": "2023-04-08T12:30:45Z"
-      },
-      {
-        "source": "trivy",
-        "severity": "low",
-        "last_discovered": "2023-04-08T12:30:45Z"
-      }
-    ],
-    ...
-  }
-}
-```
-
-There will be a lot of commonalities in the data returned by each one of the scanners. You can append the `--diff` flag to return only the data where the severity and scores are not the same across all of the sources.
-
-Additionally, to drill into the packages impacted by each vulnerability, you can use the additional `--exposure` flag: 
-
-```shell
-vimp query --image docker.io/redis \
-           --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-           --exposure CVE-2013-4392
-```
-
-The results should look something like this: 
-
-```json
-{
-  "image": "docker.io/redis",
-  "digest": "sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
-  "exposure": "CVE-2013-4392",
-  "packages": [
-    {
-      "source": "grype",
-      "package": "libsystemd0",
-      "version": "247.3-7+deb11u1",
-      "severity": "low",
-      "score": 3.3,
-      "last_discovered": "2023-04-08T12:30:45Z"
-    },
-    {
-      "source": "grype",
-      "package": "libudev1",
-      "version": "247.3-7+deb11u1",
-      "severity": "low",
-      "score": 3.3,
-      "last_discovered": "2023-04-08T12:30:45Z"
-    },
-    {
-      "source": "snyk",
-      "package": "systemd/libsystemd0",
-      "version": "247.3-7+deb11u1",
-      "severity": "medium",
-      "score": 4.4,
-      "last_discovered": "2023-04-08T12:30:45Z"
-    },
-    ...
+  "CVE-2013-4392": [
+    {"source": "grype", "severity": "low", "score": 3.3},
+    {"source": "snyk", "severity": "medium", "score": 4.4},
+    {"source": "trivy", "severity": "low", "score": 0}
   ]
 }
 ```
 
-## Data Store
+## Storage Targets
 
-The schema created by `vimp` in the target DB will look something like this (adjusted for DB-specific data types):
+| Target | URI Format | Query Support |
+|--------|------------|---------------|
+| SQLite | `sqlite://path/to/db.db` | Yes |
+| PostgreSQL | `postgres://host:port/db` | Yes |
+| BigQuery | `bq://project.dataset.table` | Import only |
+| File | `file://path/to/output.json` | No |
+| Console | `console://` | No |
+
+Default: `sqlite://~/.vimp.db`
+
+### Database Schema
 
 ```sql
-image       TEXT      NOT NULL
-digest      TEXT      NOT NULL
-source      TEXT      NOT NULL
-processed   TIMESTAMP NOT NULL
-cve         TEXT      NOT NULL
-package     TEXT      NOT NULL
-version     TEXT      NOT NULL
-severity    TEXT      NOT NULL
-score       FLOAT     NOT NULL
-fixed       BOOL      NOT NULL
+CREATE TABLE vul (
+    image      TEXT    NOT NULL,
+    digest     TEXT    NOT NULL,
+    source     TEXT    NOT NULL,
+    processed  TEXT    NOT NULL,
+    exposure   TEXT    NOT NULL,
+    package    TEXT    NOT NULL,
+    version    TEXT    NOT NULL,
+    severity   TEXT    NOT NULL,
+    score      REAL    NOT NULL,
+    fixed      BOOLEAN NOT NULL,
+    PRIMARY KEY (image, digest, source, exposure, package, version)
+);
+CREATE INDEX idx_image_processed ON vul(image, processed);
 ```
 
-See [examples/query.sql](examples/query.sql) for examples of queries against the imported data. 
-
-> See https://github.com/mchmarny/artifact-events for how to set up `vimp` as an import for all new images in GCR or AR on GCP.
-
-## Installation 
-
-You can install `vimp` CLI using one of the following ways:
-
-* [Go](#go)
-* [Homebrew](#homebrew)
-* [RHEL/CentOS](#rhelcentos)
-* [Debian/Ubuntu](#debianubuntu)
-* [Binary](#binary)
-
-See the [release section](https://github.com/mchmarny/vimp/releases/latest) for `vimp` checksums and SBOMs.
+## Installation
 
 ### Go
-
-If you have Go 1.17 or newer, you can install latest `vimp` using:
 
 ```shell
 go install github.com/mchmarny/vimp@latest
@@ -207,33 +147,46 @@ go install github.com/mchmarny/vimp@latest
 
 ### Homebrew
 
-On Mac or Linux, you can install `vimp` with [Homebrew](https://brew.sh/):
-
 ```shell
 brew tap mchmarny/vimp
 brew install vimp
 ```
 
-New release will be automatically picked up when you run `brew upgrade`
+### Container Image
 
-### RHEL/CentOS
+```shell
+docker pull ghcr.io/mchmarny/vimp:latest
+```
 
+### Binary
+
+Download from [releases](https://github.com/mchmarny/vimp/releases/latest). Releases include checksums, SBOMs, and SLSA provenance attestations.
+
+### Linux Packages
+
+**RHEL/CentOS:**
 ```shell
 rpm -ivh https://github.com/mchmarny/vimp/releases/download/v$VERSION/vimp-$VERSION_Linux-amd64.rpm
 ```
 
-### Debian/Ubuntu
-
+**Debian/Ubuntu:**
 ```shell
-wget https://github.com/aquasecurity/vimp/releases/download/v$VERSION/vimp-$VERSION_Linux-amd64.deb
-sudo dpkg -i vimp-$VERSION_Linux-64bit.deb
+wget https://github.com/mchmarny/vimp/releases/download/v$VERSION/vimp-$VERSION_Linux-amd64.deb
+sudo dpkg -i vimp-$VERSION_Linux-amd64.deb
 ```
 
-### Binary 
+## Development
 
-You can also download the [latest release](https://github.com/mchmarny/vimp/releases/latest) version of `vimp` for your operating system/architecture from [here](https://github.com/mchmarny/vimp/releases/latest). Put the binary somewhere in your $PATH, and make sure it has that executable bit.
+```shell
+make build      # Build binary
+make test       # Run tests with coverage
+make lint       # Run linters
+make qualify    # Full quality gate (test + lint + scan)
+```
 
-> The official `vimp` releases include SBOMs
+## License
+
+Apache 2.0
 
 ## Disclaimer
 

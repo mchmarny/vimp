@@ -27,8 +27,8 @@ func configureTarget(ctx context.Context, t *targetConfig) error {
 	}
 
 	if !exists {
-		if err := createDataset(ctx, t); err != nil {
-			return errors.Wrap(err, "failed to create dataset")
+		if createErr := createDataset(ctx, t); createErr != nil {
+			return errors.Wrap(createErr, "failed to create dataset")
 		}
 	}
 
@@ -38,8 +38,8 @@ func configureTarget(ctx context.Context, t *targetConfig) error {
 	}
 
 	if !exists {
-		if err := createTable(ctx, t, vulnerabilitySchema); err != nil {
-			return errors.Wrapf(err, "failed to create table with ID: %s", t.TableID)
+		if createErr := createTable(ctx, t, vulnerabilitySchema); createErr != nil {
+			return errors.Wrapf(createErr, "failed to create table with ID: %s", t.TableID)
 		}
 	}
 

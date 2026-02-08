@@ -59,7 +59,7 @@ func newApp(version string) (*c.App, error) {
 }
 
 func printVersion(c *c.Context) {
-	log.Info().Msgf(c.App.Version)
+	log.Info().Str("version", c.App.Version).Msg("starting")
 }
 
 func initLogging() {

@@ -1,14 +1,44 @@
 package snyk
 
 import (
+	"context"
+
 	"github.com/Jeffail/gabs/v2"
 	"github.com/mchmarny/vimp/internal/parser"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
 )
 
+const Name = "snyk"
+
+// Converter implements the converter.Converter interface for Snyk scanner output.
+type Converter struct{}
+
+// New creates a new Snyk converter.
+func New() *Converter {
+	return &Converter{}
+}
+
+// Name returns the converter identifier.
+func (s *Converter) Name() string {
+	return Name
+}
+
+// CanHandle returns true if the JSON container is Snyk output.
+func (s *Converter) CanHandle(c *gabs.Container) bool {
+	if c == nil {
+		return false
+	}
+	return c.Search("vulnerabilities").Exists() && c.Search("applications").Exists()
+}
+
+// Convert transforms Snyk JSON output into normalized vulnerabilities.
+func (s *Converter) Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
+	return Convert(ctx, c)
+}
+
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
+func Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
 	if c == nil {
 		return nil, errors.New("source required")
 	}
@@ -21,6 +51,12 @@ func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
 	list := make([]*data.Vulnerability, 0)
 
 	for _, r := range v.Children() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
 		vul := mapVulnerability(r)
 		if vul == nil {
 			continue

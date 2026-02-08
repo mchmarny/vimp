@@ -1,16 +1,26 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-if [[ "$(docker images -q /postgres 2> /dev/null)" == "" ]]; then
-   docker stop postgres
-   docker remove postgres
+CONTAINER_NAME="vimp-postgres"
+
+# Check if container exists (running or stopped)
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    docker stop "$CONTAINER_NAME" 2>/dev/null || true
+    docker rm "$CONTAINER_NAME" 2>/dev/null || true
 fi
 
+# Create data directory if needed
+mkdir -p "${PWD}/data"
+
+# Start PostgreSQL
 docker run \
-   --name postgres \
-   -e POSTGRES_USER=test \
-   -e POSTGRES_PASSWORD=test \
-   -p 5432:5432 \
-   -v ${PWD}/data:/var/lib/postgresql/data \
-   -d postgres
+    --name "$CONTAINER_NAME" \
+    -e POSTGRES_USER=test \
+    -e POSTGRES_PASSWORD=test \
+    -p 5432:5432 \
+    -v "${PWD}/data:/var/lib/postgresql/data" \
+    -d postgres:16-alpine
+
+echo "Services started:"
+echo "  - PostgreSQL: postgres://test:test@localhost:5432/test"

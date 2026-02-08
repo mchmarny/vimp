@@ -1,43 +1,60 @@
+version: 2
+
 project_name: vimp
 
 env:
-- GO111MODULE=on
+  - GO111MODULE=on
 
 before:
   hooks:
-  - go mod tidy
+    - go mod tidy
 
 gomod:
   proxy: false
 
-sboms:
-- artifacts: binary
-
 builds:
-- binary: vimp
-  mod_timestamp: '{{ .CommitTimestamp }}'
-  dir: .
-  env:
-  - CGO_ENABLED=0
-  flags:
-  - -trimpath
-  ldflags:
-  - -s -w -X main.version={{.Version}}
-  - -s -w -X main.commit={{.ShortCommit}}
-  - -s -w -X main.date={{.Date}}
-  goos:
-  - linux
-  - darwin
-  - windows
-  goarch:
-  - amd64
-  - arm64
+  - id: vimp
+    binary: vimp
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    dir: .
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -w
+      - -s
+      - -extldflags "-static"
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{.Date}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+universal_binaries:
+  - id: vimp
+    name_template: 'vimp'
+    replace: true
+
+sboms:
+  - artifacts: binary
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: '{{ .ProjectName }}_checksums.txt'
+  algorithm: sha256
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: '{{ .Tag }}-next'
+
+report_sizes: true
+
+metadata:
+  mod_timestamp: '{{ .CommitTimestamp }}'
 
 release:
   github:
@@ -45,47 +62,80 @@ release:
     name: vimp
   prerelease: auto
 
+kos:
+  - id: vimp
+    build: vimp
+    repositories:
+      - ghcr.io/mchmarny/vimp
+    base_image: gcr.io/distroless/static:nonroot
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    tags:
+      - latest
+      - '{{.Tag}}'
+    preserve_import_paths: false
+    bare: true
+
 archives:
-- format: binary
-  name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  format_overrides:
-  - goos: windows
-    format: zip
+  - id: vimp
+    ids:
+      - vimp
+    formats:
+      - binary
+    name_template: '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
 
 changelog:
   sort: asc
+  use: github
   filters:
     exclude:
-    - "^docs:"
-    - "^test:"
-    - readme
-    - typo
-    - "version bump"
+      - '^build:'
+      - '^docs:'
+      - '^test:'
+      - '^lint:'
+      - '^chore: readme'
+      - '^chore: bump version'
+      - typo
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?(fix|bug)(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Tasks
+      regexp: '^.*?chore(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
 
 brews:
-- tap:
-    owner: mchmarny
-    name: homebrew-vimp
-    token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-  homepage: "https://github.com/mchmarny/vimp"
-  description: "Vulnerability Import CLI"
-  folder: Formula
-  license: "Apache-2.0"
-  test: |
-    system "#{bin}/vimp --version"
+  - ids:
+      - vimp
+    repository:
+      owner: mchmarny
+      name: homebrew-vimp
+      token: '{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}'
+    homepage: 'https://github.com/mchmarny/vimp'
+    description: 'Vulnerability Import CLI'
+    directory: Formula
+    license: 'Apache-2.0'
+    test: |
+      system "#{bin}/vimp --version"
 
 nfpms:
-- file_name_template: "vimp-{{.Version}}_{{.Os}}-{{.Arch}}"
-  homepage: https://github.com/mchmarny/vimp/
-  description: "Vulnerability Import CLI"
-  maintainer: vimp developers <vimp@thingz.io>
-  license: Apache 2.0
-  vendor: vimp developers
-  formats:
-  - deb
-  - rpm
-  bindir: /usr/bin
-
-universal_binaries:
-- replace: true
-  name_template: 'vimp'
+  - file_name_template: 'vimp-{{.Version}}_{{.Os}}-{{.Arch}}'
+    homepage: https://github.com/mchmarny/vimp/
+    description: 'Vulnerability Import CLI'
+    maintainer: vimp developers <vimp@thingz.io>
+    license: Apache 2.0
+    vendor: vimp developers
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin

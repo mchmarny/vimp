@@ -1,21 +1,140 @@
+version: "2"
+
 run:
+  go: "1.23"
   timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  sort-order:
+    - linter
+    - severity
+    - file
 
 linters:
   enable:
-  - asciicheck
-  - unused
-  # - depguard
-  - errorlint
-  - gofmt
-  - gosec
-  - goimports
-  - importas
-  - prealloc
-  - revive
-  - misspell
-  - stylecheck
-  - tparallel
-  - unconvert
-  - unparam
-  - whitespace
+    # Bug detection
+    - bodyclose       # HTTP response body must be closed
+    - copyloopvar     # Loop variable capture issues (Go 1.22+)
+    - errorlint       # Error wrapping and comparison
+    - nilnil          # Nil/nil returns
+    - staticcheck     # Advanced static analysis
+
+    # Code quality
+    - asciicheck      # Non-ASCII identifiers
+    - dogsled         # Too many blank identifiers
+    - dupl            # Duplicate code detection
+    - exhaustive      # Enum exhaustiveness
+    - funlen          # Function length
+    - goconst         # Repeated strings
+    - gocritic        # Opinionated checks
+    - govet           # Go vet checks
+    - misspell        # Spelling
+    - nakedret        # Naked returns
+    - prealloc        # Slice preallocation
+    - revive          # Golint replacement
+    - unconvert       # Unnecessary conversions
+    - unparam         # Unused parameters
+    - whitespace      # Whitespace issues
+
+    # Security
+    - gosec           # Security checks
+
+    # HTTP/Context
+    - contextcheck    # Context propagation in function calls
+    - noctx           # HTTP requests without context
+
+    # Dependency management
+    - depguard        # Ban deprecated/unwanted packages
+
+    # Testing
+    - tparallel       # t.Parallel() usage
+
+    # Style
+    - importas        # Import aliasing
+
+  settings:
+    funlen:
+      lines: 200
+      statements: 70
+      ignore-comments: true
+
+    govet:
+      enable:
+        - shadow
+
+    misspell:
+      mode: restricted
+      locale: US
+
+    unparam:
+      check-exported: true
+
+    whitespace:
+      multi-if: true
+      multi-func: true
+
+    dupl:
+      threshold: 200
+
+    revive:
+      rules:
+        - name: exported
+          disabled: false
+          arguments:
+            - disableStutteringCheck
+
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          deny:
+            - pkg: io/ioutil
+              desc: "Deprecated since Go 1.16. Use io and os packages instead."
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Relaxed rules for test files
+      - linters:
+          - dupl
+          - errcheck
+          - funlen
+          - gocognit
+          - gocyclo
+          - gosec
+          - noctx
+        path: _test\.go
+      # Relaxed rules for main entry points
+      - linters:
+          - funlen
+        path: cmd/.*/main\.go
+    paths:
+      - vendor$
+      - third_party$
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - vendor$
+      - third_party$

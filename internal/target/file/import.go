@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"os"
@@ -19,7 +20,7 @@ var (
 )
 
 // Import prints the vulnerabilities to stdout.
-func Import(uri string, vuls []*data.ImageVulnerability) error {
+func Import(_ context.Context, uri string, vuls []*data.ImageVulnerability) error {
 	if uri == "" {
 		return errors.New("empty import target")
 	}

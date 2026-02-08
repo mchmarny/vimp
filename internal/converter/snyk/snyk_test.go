@@ -1,6 +1,7 @@
 package snyk
 
 import (
+	"context"
 	"testing"
 
 	"github.com/mchmarny/vimp/internal/parser"
@@ -10,7 +11,7 @@ import (
 func TestSnykConverter(t *testing.T) {
 	c, err := parser.GetContainer("test.json")
 	assert.NoError(t, err)
-	list, err := Convert(c)
+	list, err := Convert(context.Background(), c)
 	assert.NoErrorf(t, err, "failed to convert: %v", err)
 	assert.NotNil(t, list)
 	assert.Greater(t, len(list), 0)

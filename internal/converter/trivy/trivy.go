@@ -1,6 +1,7 @@
 package trivy
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
@@ -9,8 +10,36 @@ import (
 	"github.com/pkg/errors"
 )
 
+const Name = "trivy"
+
+// Converter implements the converter.Converter interface for Trivy scanner output.
+type Converter struct{}
+
+// New creates a new Trivy converter.
+func New() *Converter {
+	return &Converter{}
+}
+
+// Name returns the converter identifier.
+func (t *Converter) Name() string {
+	return Name
+}
+
+// CanHandle returns true if the JSON container is Trivy output.
+func (t *Converter) CanHandle(c *gabs.Container) bool {
+	if c == nil {
+		return false
+	}
+	return c.ExistsP("SchemaVersion") && c.ExistsP("Results")
+}
+
+// Convert transforms Trivy JSON output into normalized vulnerabilities.
+func (t *Converter) Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
+	return Convert(ctx, c)
+}
+
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
+func Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
 	if c == nil {
 		return nil, errors.New("source required")
 	}
@@ -19,6 +48,12 @@ func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
 
 	for _, r := range c.Search("Results").Children() {
 		for _, v := range r.Search("Vulnerabilities").Children() {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			default:
+			}
+
 			vul := mapVulnerability(v)
 			if vul == nil {
 				continue
