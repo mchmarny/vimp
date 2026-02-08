@@ -36,7 +36,7 @@ builds:
 
 universal_binaries:
   - name_template: 'vimp'
-    replace: true
+    replace: false  # keep platform-specific binaries too
 
 sboms:
   - artifacts: binary
