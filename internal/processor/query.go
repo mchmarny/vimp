@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/mchmarny/vimp/internal/target"
+	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/mchmarny/vimp/pkg/query"
+	"github.com/mchmarny/vimp/pkg/sarif"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -79,6 +81,18 @@ func QueryWithContext(ctx context.Context, opt *query.Options) error {
 
 	if list == nil {
 		return errors.New("expected non-nil result")
+	}
+
+	// Handle SARIF output format
+	if opt.Format == query.FormatSARIF {
+		switch v := list.(type) {
+		case []*data.ImageVulnerability:
+			list = sarif.FromVulnerabilities(v, "vimp", "1.0.0")
+		case *query.ImageExposureResult:
+			list = sarif.FromExposureResult(v, "vimp", "1.0.0")
+		default:
+			return errors.New("SARIF output is only supported for vulnerability queries (use --image and --digest)")
+		}
 	}
 
 	f := os.Stdout

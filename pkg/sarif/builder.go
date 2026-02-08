@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/mchmarny/vimp/pkg/data"
+	"github.com/mchmarny/vimp/pkg/query"
 )
 
 const (
@@ -82,6 +83,14 @@ func FromVulnerabilities(vuls []*data.ImageVulnerability, tool, version string) 
 	}
 }
 
+// capitalizeFirst capitalizes the first letter of a string.
+func capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
 // mapSeverityToLevel converts vulnerability severity to SARIF level.
 // SARIF levels: error, warning, note, none
 func mapSeverityToLevel(severity string) string {
@@ -94,6 +103,94 @@ func mapSeverityToLevel(severity string) string {
 		return "note"
 	default:
 		return "warning"
+	}
+}
+
+// FromExposureResult converts an ImageExposureResult to a SARIF report.
+func FromExposureResult(result *query.ImageExposureResult, tool, version string) *Report {
+	rules := make([]Rule, 0, len(result.Exposures))
+	results := make([]Result, 0)
+	ruleIndex := make(map[string]int)
+
+	for exposure, sources := range result.Exposures {
+		// Create rule for this exposure
+		if _, exists := ruleIndex[exposure]; !exists {
+			ruleIndex[exposure] = len(rules)
+
+			// Get the highest severity/score for the rule
+			var maxSeverity string
+			var maxScore float32
+			for _, s := range sources {
+				if s.Score > maxScore {
+					maxScore = s.Score
+					maxSeverity = s.Severity
+				}
+			}
+
+			rules = append(rules, Rule{
+				ID:   exposure,
+				Name: exposure,
+				ShortDescription: Message{
+					Text: fmt.Sprintf("Vulnerability %s", exposure),
+				},
+				FullDescription: Message{
+					Text: fmt.Sprintf("Vulnerability %s found in image %s", exposure, result.Image),
+				},
+				HelpURI: fmt.Sprintf("https://nvd.nist.gov/vuln/detail/%s", exposure),
+				DefaultConfig: DefaultConfig{
+					Level: mapSeverityToLevel(maxSeverity),
+				},
+			})
+		}
+
+		// Create a result for each source reporting this exposure
+		for _, source := range sources {
+			r := Result{
+				RuleID:    exposure,
+				RuleIndex: ruleIndex[exposure],
+				Level:     mapSeverityToLevel(source.Severity),
+				Message: Message{
+					Text: fmt.Sprintf(
+						"%s vulnerability %s (severity: %s, score: %.1f, source: %s)",
+						capitalizeFirst(source.Severity),
+						exposure,
+						source.Severity,
+						source.Score,
+						source.Source,
+					),
+				},
+				Locations: []Location{
+					{
+						LogicalLocations: []LogicalLocation{
+							{
+								Name:               result.Image,
+								FullyQualifiedName: fmt.Sprintf("%s@%s", result.Image, result.Digest),
+								Kind:               "container-image",
+							},
+						},
+					},
+				},
+			}
+			results = append(results, r)
+		}
+	}
+
+	return &Report{
+		Schema:  SchemaURI,
+		Version: Version,
+		Runs: []Run{
+			{
+				Tool: Tool{
+					Driver: Driver{
+						Name:           tool,
+						Version:        version,
+						InformationURI: "https://github.com/mchmarny/vimp",
+						Rules:          rules,
+					},
+				},
+				Results: results,
+			},
+		},
 	}
 }
 
