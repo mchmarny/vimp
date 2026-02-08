@@ -1,123 +1,150 @@
-name: release-cli
+name: Release CLI
+
 on:
   push:
     tags:
-    - 'v[0-9]+.[0-9]+.[0-9]+'  # Only build tag with semantic versioning format
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-
-  conf:
-    env:
-      GO_VERSION: ^1.20.5
-      SYFT_VERSION: v0.14.1
-      LINTER_VERSION: v1.53.2
-      ERR_VULNERABILITY_SEV: "CRITICAL,HIGH,MEDIUM"
-
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      go_version: ${{ steps.conf.outputs.go_version }}
-      syft_version: ${{ steps.conf.outputs.syft_version }}
-      err_on_vulnerability_sev: ${{ steps.conf.outputs.err_on_vulnerability_sev }}
-      linter_version: ${{ steps.conf.outputs.linter_version }}
-    steps:
-
-    - name: Export Config
-      id: conf
-      run: |
-        echo "go_version=${{ env.GO_VERSION }}" >> $GITHUB_OUTPUT
-        echo "syft_version=${{ env.SYFT_VERSION }}" >> $GITHUB_OUTPUT
-        echo "err_on_vulnerability_sev=${{ env.ERR_VULNERABILITY_SEV }}" >> $GITHUB_OUTPUT
-        echo "linter_version=${{ env.LINTER_VERSION }}" >> $GITHUB_OUTPUT
-
+  # Run all tests before release
   test:
     uses: ./.github/workflows/test.yaml
     permissions:
       contents: read
       security-events: write
-    with:
-      go-version: ${{ needs.conf.outputs.go_version }}
-      scan-severity: ${{ needs.conf.outputs.err_on_vulnerability_sev }}
-      golangci_version: ${{ needs.conf.outputs.linter_version }}
 
+  # Build and release after tests pass
   release:
-    outputs:
-      hashes: ${{ steps.checksum.outputs.hashes }}
+    name: Build and Release
     runs-on: ubuntu-latest
-    needs:
-    - test
+    needs: [test]
+    timeout-minutes: 30
     permissions:
       contents: write
+      packages: write
+      id-token: write
+    outputs:
+      hashes: ${{ steps.checksum.outputs.hashes }}
+      image_digest: ${{ steps.release.outputs.image_digest }}
     steps:
-    - name: Setup Go
-      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753  # v4.0.1
-      with:
-        go-version: ${{ needs.conf.outputs.go_version }}
-    - run: go version
-    - name: Cache Go Modules
-      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8  # v3.3.1
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Checkout Code
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9  # v3.5.3
-    - name: Prune Git History
-      run: git fetch --prune --unshallow
-    - name: Install Syft
-      uses: anchore/sbom-action/download-syft@4d571ad1038a9cc29d676154ef265ab8f9027042  # v0.14.2
-      with:
-        version: ${{ needs.conf.outputs.syft_version }}
-    - name: Build CLI
-      uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b  # v4.2.0
-      id: releaser
-      with:
-        distribution: goreleaser
-        version: latest
-        args: release --clean
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-    - name: Gen Hashes
-      id: checksum
-      env:
-        ARTIFACTS: "${{ steps.releaser.outputs.artifacts }}"
-      run: |
-        set -euo pipefail
-        checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-        echo "hashes=$(cat $checksum_file | base64 -w0)" >> $GITHUB_OUTPUT
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
 
+      - name: Load versions
+        id: versions
+        uses: ./.github/actions/load-versions
+
+      - name: Setup Go
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a  # v5.2.0
+        with:
+          go-version: ${{ steps.versions.outputs.go }}
+          cache: true
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0  # v0.18.0
+        with:
+          syft-version: ${{ steps.versions.outputs.syft }}
+
+      - name: Setup ko
+        uses: ko-build/setup-ko@d982fec422852203cfb2053a8ec6ad302280d04d  # v0.8
+
+      - name: Login to GHCR
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Release
+        id: release
+        uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3  # v6.2.1
+        with:
+          distribution: goreleaser
+          version: ${{ steps.versions.outputs.goreleaser }}
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          KO_DOCKER_REPO: ghcr.io/mchmarny/vimp
+
+      - name: Generate Checksums
+        id: checksum
+        env:
+          ARTIFACTS: "${{ steps.release.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          echo "hashes=$(cat $checksum_file | base64 -w0)" >> $GITHUB_OUTPUT
+
+      - name: Get Image Digest
+        id: image_digest
+        run: |
+          DIGEST=$(crane digest ghcr.io/mchmarny/vimp:${{ github.ref_name }} 2>/dev/null || echo "")
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+  # Generate SLSA provenance
   provenance:
-    needs:
-    - release
+    name: Generate Provenance
+    needs: [release]
     permissions:
-      actions: read    # To read the workflow path.
-      id-token: write  # To sign the provenance.
-      contents: write  # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects: "${{ needs.release.outputs.hashes }}"
       upload-assets: true
       compile-generator: true
 
+  # Attest container image
+  attest:
+    name: Attest Image
+    runs-on: ubuntu-latest
+    needs: [release]
+    if: needs.release.outputs.image_digest != ''
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+      attestations: write
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attest Image
+        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2  # v2.2.3
+        with:
+          subject-name: ghcr.io/mchmarny/vimp
+          subject-digest: ${{ needs.release.outputs.image_digest }}
+          push-to-registry: true
+
+  # Verify provenance
   verify:
+    name: Verify Provenance
+    needs: [release, provenance]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions: read-all
     env:
       ATT_FILE_NAME: "multiple.intoto.jsonl"
-    needs:
-    - release
-    - provenance
-    runs-on: ubuntu-latest
-    permissions: read-all
     steps:
       - name: Install SLSA Verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@c9abffe4d2ab2ffa0b2ea9b2582b84164f390adc  # v2.3.0
+        uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0  # v2.7.0
+
       - name: Download Assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -125,6 +152,7 @@ jobs:
           set -euo pipefail
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vimp*"
           gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "$ATT_FILE_NAME"
+
       - name: Verify Assets
         env:
           CHECKSUMS: ${{ needs.release.outputs.hashes }}

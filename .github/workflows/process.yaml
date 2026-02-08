@@ -9,14 +9,14 @@ on:
 
 jobs:
 
-  process-gryp:
+  process-grype:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
 
     - name: Install grype
-      uses: anchore/scan-action/download-grype@4be3c24559b430723e51858969965e163b196957  # v3.3.5
+      uses: anchore/scan-action/download-grype@869c549e657a088dc0441b08ce4fc0ecdac2bb65  # v5.3.0
 
     - name: Scan grype
       run: |-
@@ -39,7 +39,7 @@ jobs:
     steps:
 
     - name: Scan trivy
-      uses: aquasecurity/trivy-action@41f05d9ecffa2ed3f1580af306000f734b733e54  # v0.11.2
+      uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
       with:
         image-ref: ${{ inputs.image }}
         scan-type: image
@@ -60,7 +60,7 @@ jobs:
     steps:
 
     - name: Scan snyk
-      uses: snyk/actions/docker@b98d498629f1c368650224d6d212bf7dfa89e4bf  # v0.4.0
+      uses: snyk/actions/docker@de2dda699bf7276d103ed6a72a5bc5a1871ad658  # v0.5.0
       continue-on-error: true
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
