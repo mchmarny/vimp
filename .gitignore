@@ -95,3 +95,7 @@ images.txt
 /data
 *.db
 .digest
+
+
+# Reports 
+/reports
