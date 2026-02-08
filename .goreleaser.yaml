@@ -2,15 +2,12 @@ version: 2
 
 project_name: vimp
 
-env:
-  - GO111MODULE=on
+gomod:
+  proxy: false
 
 before:
   hooks:
     - go mod tidy
-
-gomod:
-  proxy: false
 
 builds:
   - id: vimp
@@ -19,6 +16,7 @@ builds:
     dir: .
     env:
       - CGO_ENABLED=0
+      - GO111MODULE=on
     flags:
       - -trimpath
     ldflags:
@@ -37,8 +35,7 @@ builds:
       - arm64
 
 universal_binaries:
-  - id: vimp
-    name_template: 'vimp'
+  - name_template: 'vimp'
     replace: true
 
 sboms:
