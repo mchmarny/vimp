@@ -108,8 +108,14 @@ func mapSeverityToLevel(severity string) string {
 
 // FromExposureResult converts an ImageExposureResult to a SARIF report.
 func FromExposureResult(result *query.ImageExposureResult, tool, version string) *Report {
+	// Count total results for preallocation
+	totalResults := 0
+	for _, sources := range result.Exposures {
+		totalResults += len(sources)
+	}
+
 	rules := make([]Rule, 0, len(result.Exposures))
-	results := make([]Result, 0)
+	results := make([]Result, 0, totalResults)
 	ruleIndex := make(map[string]int)
 
 	for exposure, sources := range result.Exposures {
