@@ -26,6 +26,7 @@ var (
 			digestFlag,
 			exposureFlag,
 			diffsOnlyFlag,
+			formatFlag,
 		},
 	}
 )
@@ -37,6 +38,7 @@ func runQuery(cc *c.Context) error {
 		Digest:    cc.String(digestFlag.Name),
 		Exposure:  cc.String(exposureFlag.Name),
 		DiffsOnly: cc.Bool(diffsOnlyFlag.Name),
+		Format:    query.ParseOutputFormat(cc.String(formatFlag.Name)),
 	}
 
 	printVersion(cc)
