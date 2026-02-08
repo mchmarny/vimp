@@ -67,7 +67,6 @@ kos:
     build: vimp
     repositories:
       - ghcr.io/mchmarny/vimp
-    base_image: gcr.io/distroless/static:nonroot
     platforms:
       - linux/amd64
       - linux/arm64
