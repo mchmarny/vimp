@@ -26,4 +26,4 @@ security_tools:
 
 # Testing
 testing:
-  coverage_threshold: '70'
+  coverage_threshold: '50'

@@ -18,20 +18,40 @@ Compare data from multiple vulnerability scanners to get a more complete picture
 ## Quick Start
 
 ```shell
-# Set target image
-export IMAGE="docker.io/redis:latest"
-
-# Import from file
-vimp import --source $IMAGE --file grype-report.json
-
-# Or auto-scan with installed scanners
-vimp import --source $IMAGE
+# Scan an image (discovers installed scanners, saves reports, imports to SQLite)
+vimp scan --image alpine:latest --yes
 
 # Query results
-vimp query --image docker.io/redis
+vimp query --image docker.io/alpine:latest
+
+# Or import from existing scanner output
+vimp import --source docker.io/redis:latest --file grype-report.json
 ```
 
 ## Usage
+
+### Scan
+
+Scan container images for vulnerabilities using installed scanners:
+
+```shell
+# Discover scanners and scan (prompts for confirmation)
+vimp scan --image alpine:latest
+
+# Scan with specific scanners (no confirmation needed)
+vimp scan --image alpine:latest --scanner grype --scanner trivy
+
+# Skip confirmation prompt
+vimp scan --image alpine:latest --yes
+
+# Custom output directory
+vimp scan --image alpine:latest --output ./my-reports
+
+# Scan only (skip auto-import to database)
+vimp scan --image alpine:latest --yes --scan-only
+```
+
+Results are saved to `./reports/<image>/<scanner>.json` and automatically imported into the default SQLite database unless `--scan-only` is specified.
 
 ### Import
 

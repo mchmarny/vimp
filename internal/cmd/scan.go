@@ -47,6 +47,7 @@ Examples:
 			outputDirFlag,
 			targetFlag,
 			yesFlag,
+			scanOnlyFlag,
 		},
 	}
 )
@@ -59,6 +60,7 @@ func runScan(cc *c.Context) error {
 	outputDir := cc.String(outputDirFlag.Name)
 	target := cc.String(targetFlag.Name)
 	autoYes := cc.Bool(yesFlag.Name)
+	scanOnly := cc.Bool(scanOnlyFlag.Name)
 
 	// Validate image name (security: prevent shell injection)
 	if err := validateImageName(image); err != nil {
@@ -95,9 +97,11 @@ func runScan(cc *c.Context) error {
 		return err
 	}
 
-	// Auto-import results into target
-	if err := importResults(ctx, results, image, target); err != nil {
-		return errors.Wrap(err, "failed to import scan results")
+	// Auto-import results into target (unless --scan-only)
+	if !scanOnly {
+		if err := importResults(ctx, results, image, target); err != nil {
+			return errors.Wrap(err, "failed to import scan results")
+		}
 	}
 
 	log.Info().
