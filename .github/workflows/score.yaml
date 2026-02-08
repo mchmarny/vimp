@@ -1,10 +1,10 @@
-name: score
+name: Scorecard
+
 on:
   schedule:
-    - cron: '15 */3 * * 2'
-  push:
-    branches:
-    - main
+    - cron: '15 6 * * 2'  # Weekly on Tuesday at 6:15am UTC
+  workflow_dispatch: {}
+
 permissions: read-all
 jobs:
   score:
