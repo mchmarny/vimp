@@ -1,4 +1,4 @@
-name: On-Tag Release CLI
+name: On-Tag Release
 
 on:
   push:
