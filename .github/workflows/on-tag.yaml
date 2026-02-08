@@ -28,11 +28,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
-      packages: write
       id-token: write
-    outputs:
-      hashes: ${{ steps.checksum.outputs.hashes }}
-      image_digest: ${{ steps.release.outputs.image_digest }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -54,18 +50,7 @@ jobs:
         with:
           syft-version: ${{ steps.versions.outputs.syft }}
 
-      - name: Setup ko
-        uses: ko-build/setup-ko@d982fec422852203cfb2053a8ec6ad302280d04d  # v0.8
-
-      - name: Login to GHCR
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and Release
-        id: release
         uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3  # v6.2.1
         with:
           distribution: goreleaser
@@ -74,71 +59,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
-          KO_DOCKER_REPO: ghcr.io/mchmarny/vimp
 
-      - name: Generate Checksums
-        id: checksum
-        env:
-          ARTIFACTS: "${{ steps.release.outputs.artifacts }}"
-        run: |
-          set -euo pipefail
-          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-          echo "hashes=$(cat $checksum_file | base64 -w0)" >> $GITHUB_OUTPUT
-
-      - name: Get Image Digest
-        id: image_digest
-        run: |
-          DIGEST=$(crane digest ghcr.io/mchmarny/vimp:${{ github.ref_name }} 2>/dev/null || echo "")
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-
-  # Generate SLSA provenance
-  provenance:
-    name: Generate Provenance
-    needs: [release]
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
-    with:
-      base64-subjects: "${{ needs.release.outputs.hashes }}"
-      upload-assets: true
-      compile-generator: true
-
-  # Attest container image
+  # Attest release binaries
   attest:
-    name: Attest Image
+    name: Attest Binaries
     runs-on: ubuntu-latest
     needs: [release]
-    if: needs.release.outputs.image_digest != ''
     timeout-minutes: 10
     permissions:
       contents: read
       id-token: write
-      packages: write
       attestations: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
-      - name: Attest Image
-        uses: ./.github/actions/attest-image
-        with:
-          image_name: ghcr.io/mchmarny/vimp
-          image_digest: ${{ needs.release.outputs.image_digest }}
-
-  # Verify provenance
-  verify:
-    name: Verify Provenance
-    needs: [release, provenance]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions: read-all
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-
-      - name: Verify Provenance
-        uses: ./.github/actions/verify-provenance
-        with:
-          checksums: ${{ needs.release.outputs.hashes }}
+      - name: Attest Binaries
+        uses: ./.github/actions/attest-binaries
