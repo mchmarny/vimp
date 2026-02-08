@@ -1,4 +1,4 @@
-name: sign-image
+name: Sign Image
 
 on:
   workflow_call:
