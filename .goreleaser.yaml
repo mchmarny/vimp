@@ -62,20 +62,6 @@ release:
     name: vimp
   prerelease: auto
 
-kos:
-  - id: vimp
-    build: vimp
-    repositories:
-      - ghcr.io/mchmarny/vimp
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    tags:
-      - latest
-      - '{{.Tag}}'
-    preserve_import_paths: false
-    bare: true
-
 archives:
   - id: vimp
     ids:

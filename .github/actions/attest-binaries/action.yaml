@@ -1,0 +1,25 @@
+name: 'Attest Binaries'
+description: 'Generates build provenance attestation for release binaries using GitHub native attestation'
+
+inputs:
+  checksums:
+    description: 'Base64-encoded checksums from release'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download release artifacts
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        gh -R "$GITHUB_REPOSITORY" release download "$GITHUB_REF_NAME" -p "vimp*"
+
+    - name: Attest binaries
+      uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2  # v2.2.3
+      with:
+        subject-path: |
+          vimp_*
+          vimp-*
