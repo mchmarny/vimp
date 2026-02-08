@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -23,16 +24,17 @@ func TestData(t *testing.T) {
 	deleteDB()
 	defer deleteDB()
 
+	ctx := context.Background()
 	uri := fmt.Sprintf("sqlite://%s", testFile)
 	list := makeVulns(3)
 
-	err := Import(uri, list)
+	err := Import(ctx, uri, list)
 	assert.NoError(t, err)
 
-	err = Import(uri, list)
+	err = Import(ctx, uri, list)
 	assert.NoError(t, err)
 
-	r, err := Query(&query.Options{
+	r, err := Query(ctx, &query.Options{
 		Target: uri,
 	})
 	assert.NoError(t, err)

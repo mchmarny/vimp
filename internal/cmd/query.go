@@ -1,10 +1,18 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
 	c "github.com/urfave/cli/v2"
+)
+
+const (
+	// defaultQueryTimeout is the default timeout for query operations.
+	defaultQueryTimeout = 5 * time.Minute
 )
 
 var (
@@ -22,18 +30,21 @@ var (
 	}
 )
 
-func runQuery(c *c.Context) error {
+func runQuery(cc *c.Context) error {
 	opt := &query.Options{
-		Target:    c.String(targetFlag.Name),
-		Image:     c.String(imageFlag.Name),
-		Digest:    c.String(digestFlag.Name),
-		Exposure:  c.String(exposureFlag.Name),
-		DiffsOnly: c.Bool(diffsOnlyFlag.Name),
+		Target:    cc.String(targetFlag.Name),
+		Image:     cc.String(imageFlag.Name),
+		Digest:    cc.String(digestFlag.Name),
+		Exposure:  cc.String(exposureFlag.Name),
+		DiffsOnly: cc.Bool(diffsOnlyFlag.Name),
 	}
 
-	printVersion(c)
+	printVersion(cc)
 
-	if err := processor.Query(opt); err != nil {
+	ctx, cancel := context.WithTimeout(cc.Context, defaultQueryTimeout)
+	defer cancel()
+
+	if err := processor.QueryWithContext(ctx, opt); err != nil {
 		return errors.Wrap(err, "error executing command")
 	}
 

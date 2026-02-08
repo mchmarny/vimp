@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"fmt"
@@ -26,7 +27,7 @@ var (
 	driverPrefix = fmt.Sprintf("%s://", dataDriver)
 )
 
-func getStore(path string) (*sql.DB, error) {
+func getStore(ctx context.Context, path string) (*sql.DB, error) {
 	if path == "" {
 		return nil, errors.New("directory not specified")
 	}
@@ -54,7 +55,7 @@ func getStore(path string) (*sql.DB, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read the schema creation file")
 		}
-		if _, err := db.Exec(string(b)); err != nil {
+		if _, err := db.ExecContext(ctx, string(b)); err != nil {
 			return nil, errors.Wrapf(err, "failed to create database schema in: %s", path)
 		}
 	}

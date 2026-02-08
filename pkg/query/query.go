@@ -15,7 +15,38 @@ const (
 	Digests
 	Exposure
 	Packages
+	TimeSeries  // Vulnerability count over time for an image
+	CommonVulns // CVEs shared across multiple images
 )
+
+// OutputFormat represents the output format for query results.
+type OutputFormat int64
+
+const (
+	FormatJSON OutputFormat = iota
+	FormatSARIF
+)
+
+// String returns the string representation of the output format.
+func (f OutputFormat) String() string {
+	switch f {
+	case FormatJSON:
+		return "json"
+	case FormatSARIF:
+		return "sarif"
+	}
+	return "json"
+}
+
+// ParseOutputFormat parses an output format from a string.
+func ParseOutputFormat(s string) OutputFormat {
+	switch strings.ToLower(s) {
+	case "sarif":
+		return FormatSARIF
+	default:
+		return FormatJSON
+	}
+}
 
 // Type represents the query type.
 type Query int64
@@ -23,6 +54,8 @@ type Query int64
 // String returns the string representation of the query type.
 func (q Query) String() string {
 	switch q {
+	case Undefined:
+		return "undefined"
 	case Images:
 		return "images"
 	case Digests:
@@ -31,9 +64,12 @@ func (q Query) String() string {
 		return "exposure"
 	case Packages:
 		return "packages"
-	default:
-		return "undefined"
+	case TimeSeries:
+		return "timeseries"
+	case CommonVulns:
+		return "common"
 	}
+	return "undefined"
 }
 
 // Options represents the input options.
@@ -52,6 +88,21 @@ type Options struct {
 
 	// DiffsOnly indicates if only diffs should be returned.
 	DiffsOnly bool
+
+	// Format is the output format (json, sarif).
+	Format OutputFormat
+
+	// QueryType is the explicit query type (optional, auto-detected if not set).
+	QueryType Query
+
+	// Images is a list of images for cross-image queries.
+	Images []string
+
+	// StartDate is the start date for time-series queries.
+	StartDate string
+
+	// EndDate is the end date for time-series queries.
+	EndDate string
 }
 
 func (o *Options) String() string {
@@ -59,9 +110,26 @@ func (o *Options) String() string {
 		o.Image, o.Digest, o.Exposure, o.Target, o.DiffsOnly)
 }
 
-// GetTope returns the query type.
-// TODO: this is a bit of a hack, need to refactor
+// GetQuery returns the query type.
+//
+//nolint:unparam // error return kept for future validation
 func (o *Options) GetQuery() (Query, error) {
+	// Use explicit query type if set
+	if o.QueryType != Undefined {
+		return o.QueryType, nil
+	}
+
+	// Check for cross-image queries
+	if len(o.Images) > 0 {
+		return CommonVulns, nil
+	}
+
+	// Check for time-series query (has date range)
+	if o.StartDate != "" || o.EndDate != "" {
+		return TimeSeries, nil
+	}
+
+	// Auto-detect based on what's set
 	// if nothing set, return all images
 	if o.Exposure == "" && o.Digest == "" && o.Image == "" {
 		return Images, nil

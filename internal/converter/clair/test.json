@@ -1,0 +1,87 @@
+{
+  "manifest_hash": "sha256:abc123",
+  "state": "IndexFinished",
+  "packages": {
+    "pkg1": {
+      "id": "pkg1",
+      "name": "openssl",
+      "version": "1.1.1k-1",
+      "kind": "binary",
+      "source": {
+        "id": "src1",
+        "name": "openssl",
+        "version": "1.1.1k-1",
+        "kind": "source"
+      }
+    },
+    "pkg2": {
+      "id": "pkg2",
+      "name": "curl",
+      "version": "7.79.1-1",
+      "kind": "binary",
+      "source": {
+        "id": "src2",
+        "name": "curl",
+        "version": "7.79.1-1",
+        "kind": "source"
+      }
+    }
+  },
+  "distributions": {
+    "dist1": {
+      "id": "dist1",
+      "did": "debian",
+      "name": "Debian GNU/Linux",
+      "version": "11",
+      "version_code_name": "bullseye",
+      "version_id": "11"
+    }
+  },
+  "vulnerabilities": {
+    "vuln1": {
+      "id": "vuln1",
+      "updater": "debian",
+      "name": "CVE-2021-3711",
+      "description": "OpenSSL vulnerability",
+      "issued": "2021-08-24T00:00:00Z",
+      "links": "https://nvd.nist.gov/vuln/detail/CVE-2021-3711",
+      "severity": "Unknown",
+      "normalized_severity": "High",
+      "package": {
+        "id": "pkg1",
+        "name": "openssl",
+        "version": "1.1.1k-1"
+      },
+      "dist": {
+        "id": "dist1",
+        "did": "debian"
+      },
+      "fixed_in_version": "1.1.1l-1"
+    },
+    "vuln2": {
+      "id": "vuln2",
+      "updater": "debian",
+      "name": "CVE-2021-22945",
+      "description": "Curl vulnerability",
+      "issued": "2021-09-15T00:00:00Z",
+      "links": "https://nvd.nist.gov/vuln/detail/CVE-2021-22945",
+      "severity": "Unknown",
+      "normalized_severity": "Medium",
+      "package": {
+        "id": "pkg2",
+        "name": "curl",
+        "version": "7.79.1-1"
+      },
+      "dist": {
+        "id": "dist1",
+        "did": "debian"
+      },
+      "fixed_in_version": ""
+    }
+  },
+  "package_vulnerabilities": {
+    "pkg1": ["vuln1"],
+    "pkg2": ["vuln2"]
+  },
+  "enrichments": {}
+}

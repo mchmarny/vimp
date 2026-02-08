@@ -41,13 +41,12 @@ var (
 	}
 )
 
-func Import(uri string, vuls []*data.ImageVulnerability) error {
+func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) error {
 	t, err := parseTarget(uri)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse target")
 	}
 
-	ctx := context.Background()
 	if err := configureTarget(ctx, t); err != nil {
 		return errors.Wrap(err, "errors checking target configuration")
 	}
@@ -78,6 +77,7 @@ type VulnerabilityRow struct {
 	vul *data.ImageVulnerability
 }
 
+//nolint:unparam // error return required by bigquery.ValueSaver interface
 func (v *VulnerabilityRow) Save() (map[string]bigquery.Value, string, error) {
 	return map[string]bigquery.Value{
 		columnImage:     v.vul.Image,

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.oasis-open.org)",
+      "WebFetch(domain:go.googlesource.com)",
+      "WebFetch(domain:google.github.io)",
+      "WebFetch(domain:quay.github.io)",
+      "WebFetch(domain:docs.anchore.com)"
+    ]
+  }
+}

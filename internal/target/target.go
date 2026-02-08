@@ -1,6 +1,7 @@
 package target
 
 import (
+	"context"
 	"strings"
 
 	"github.com/mchmarny/vimp/internal/target/bq"
@@ -25,10 +26,10 @@ const (
 )
 
 // Importer is the interface for importers.
-type Importer func(uri string, vuls []*data.ImageVulnerability) error
+type Importer func(ctx context.Context, uri string, vuls []*data.ImageVulnerability) error
 
 // Querier is the interface for queriers.
-type Querier func(opt *query.Options) (any, error)
+type Querier func(ctx context.Context, opt *query.Options) (any, error)
 
 func GetSampleTargets() []string {
 	list := []string{}

@@ -1,0 +1,94 @@
+{
+  "imageDigest": "sha256:abc123def456",
+  "vulnerabilities": [
+    {
+      "vuln": "CVE-2021-3711",
+      "severity": "High",
+      "package": "openssl-libs",
+      "package_name": "openssl-libs",
+      "package_version": "1:1.1.1k-1.el8",
+      "package_type": "rpm",
+      "package_cpe": "cpe:2.3:a:openssl:openssl:1.1.1k:*:*:*:*:*:*:*",
+      "package_path": "pkgdb",
+      "feed": "vulnerabilities",
+      "feed_group": "rhel:8",
+      "fix": "1:1.1.1l-1.el8",
+      "url": "https://access.redhat.com/security/cve/CVE-2021-3711",
+      "nvd_data": [
+        {
+          "id": "CVE-2021-3711",
+          "cvss_v2": {
+            "base_score": 7.5,
+            "exploitability_score": 10.0,
+            "impact_score": 6.4
+          },
+          "cvss_v3": {
+            "base_score": 9.8,
+            "exploitability_score": 3.9,
+            "impact_score": 5.9
+          }
+        }
+      ],
+      "will_not_fix": false,
+      "inherited_from_base": false
+    },
+    {
+      "vuln": "CVE-2021-22945",
+      "severity": "Medium",
+      "package": "curl",
+      "package_name": "curl",
+      "package_version": "7.61.1-22.el8",
+      "package_type": "rpm",
+      "package_cpe": "cpe:2.3:a:curl:curl:7.61.1:*:*:*:*:*:*:*",
+      "package_path": "pkgdb",
+      "feed": "vulnerabilities",
+      "feed_group": "rhel:8",
+      "fix": "None",
+      "url": "https://access.redhat.com/security/cve/CVE-2021-22945",
+      "nvd_data": [
+        {
+          "id": "CVE-2021-22945",
+          "cvss_v2": {
+            "base_score": 5.8,
+            "exploitability_score": 8.6,
+            "impact_score": 4.9
+          },
+          "cvss_v3": {
+            "base_score": 7.5,
+            "exploitability_score": 2.8,
+            "impact_score": 4.7
+          }
+        }
+      ],
+      "will_not_fix": false,
+      "inherited_from_base": false
+    },
+    {
+      "vuln": "CVE-2022-1292",
+      "severity": "Critical",
+      "package": "openssl-libs",
+      "package_name": "openssl-libs",
+      "package_version": "1:1.1.1k-1.el8",
+      "package_type": "rpm",
+      "package_cpe": "cpe:2.3:a:openssl:openssl:1.1.1k:*:*:*:*:*:*:*",
+      "package_path": "pkgdb",
+      "feed": "vulnerabilities",
+      "feed_group": "rhel:8",
+      "fix": "1:1.1.1n-1.el8",
+      "url": "https://access.redhat.com/security/cve/CVE-2022-1292",
+      "nvd_data": [
+        {
+          "id": "CVE-2022-1292",
+          "cvss_v3": {
+            "base_score": 9.8,
+            "exploitability_score": 3.9,
+            "impact_score": 5.9
+          }
+        }
+      ],
+      "will_not_fix": false,
+      "inherited_from_base": false
+    }
+  ],
+  "vulnerability_type": "all"
+}

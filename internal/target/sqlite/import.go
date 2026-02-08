@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -34,25 +35,32 @@ var (
 	}
 )
 
-func Import(uri string, vuls []*data.ImageVulnerability) error {
-	db, err := getStore(uri)
+func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) error {
+	db, err := getStore(ctx, uri)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get store")
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(insertSQL)
+	stmt, err := db.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to prepare batch import statement")
 	}
 
-	tx, err := db.Begin()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return errors.Wrapf(err, "failed to begin transaction")
 	}
 
 	for _, v := range vuls {
-		_, err = tx.Stmt(stmt).Exec(
+		select {
+		case <-ctx.Done():
+			_ = tx.Rollback()
+			return ctx.Err()
+		default:
+		}
+
+		_, err = tx.StmtContext(ctx, stmt).ExecContext(ctx,
 			v.Image,
 			v.Digest,
 			v.Source,

@@ -1,6 +1,7 @@
 package grype
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
@@ -9,8 +10,37 @@ import (
 	"github.com/pkg/errors"
 )
 
+const Name = "grype"
+
+// Converter implements the converter.Converter interface for Grype scanner output.
+type Converter struct{}
+
+// New creates a new Grype converter.
+func New() *Converter {
+	return &Converter{}
+}
+
+// Name returns the converter identifier.
+func (g *Converter) Name() string {
+	return Name
+}
+
+// CanHandle returns true if the JSON container is Grype output.
+func (g *Converter) CanHandle(c *gabs.Container) bool {
+	if c == nil {
+		return false
+	}
+	d := c.Search("descriptor", "name")
+	return d.Exists() && parser.ToString(d.Data()) == "grype"
+}
+
+// Convert transforms Grype JSON output into normalized vulnerabilities.
+func (g *Converter) Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
+	return Convert(ctx, c)
+}
+
 // Convert converts JSON to a list of common vulnerabilities.
-func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
+func Convert(ctx context.Context, c *gabs.Container) ([]*data.Vulnerability, error) {
 	if c == nil {
 		return nil, errors.New("source required")
 	}
@@ -22,8 +52,14 @@ func Convert(c *gabs.Container) ([]*data.Vulnerability, error) {
 
 	list := make([]*data.Vulnerability, 0)
 
-	for _, c := range m.Children() {
-		vul := mapVulnerability(c)
+	for _, child := range m.Children() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
+		vul := mapVulnerability(child)
 		if vul == nil {
 			continue
 		}

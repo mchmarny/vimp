@@ -1,15 +1,36 @@
 #!/bin/bash
-
 set -euo pipefail
 
-image="us-west1-docker.pkg.dev/cloudy-build/vimp/vimp@sha256:5b1bf63d4dee3c829cc116b00394117b83406d75a4f3e549f96c7df33b4dcce5"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/common
+. "${DIR}/common"
 
-version=$(cat .version)
+has_tools gcloud slsa-verifier
+
+# Usage: ./tools/provenance [image@sha256:digest]
+image="${1:-${VIMP_IMAGE:-}}"
+if [ -z "$image" ]; then
+    echo "Usage: $0 <image@sha256:digest>" >&2
+    echo "Or set VIMP_IMAGE environment variable" >&2
+    exit 1
+fi
+
+# Get version from git tags
+version=$(git describe --tags --abbrev=0 2>/dev/null || err "No git tags found")
 provenance="provenance.json"
 
-gcloud artifacts docker images describe $image --show-provenance --format json > $provenance
+cleanup() {
+    rm -f "$provenance"
+}
+trap cleanup EXIT
 
-slsa-verifier verify-image $image \
-    --provenance-path $provenance \
+msg "Fetching provenance for $image..."
+gcloud artifacts docker images describe "$image" --show-provenance --format json > "$provenance"
+
+msg "Verifying SLSA provenance..."
+slsa-verifier verify-image "$image" \
+    --provenance-path "$provenance" \
     --source-uri "github.com/mchmarny/vimp" \
     --source-tag "$version"
+
+msg "Provenance verified successfully for $image"

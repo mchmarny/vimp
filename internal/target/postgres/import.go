@@ -11,18 +11,18 @@ import (
 )
 
 const (
-	insertSQL = `INSERT INTO vulns VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
-		ON CONFLICT (image, digest, source, imported, exposure, package, version) 
+	insertSQL = `INSERT INTO vul (image, digest, source, processed, exposure, package, version, severity, score, fixed)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		ON CONFLICT (image, digest, source, exposure, package, version)
 		DO UPDATE SET
+			processed = EXCLUDED.processed,
 			severity = EXCLUDED.severity,
 			score = EXCLUDED.score,
-			fixed = EXCLUDED.fixed,
-			processed = EXCLUDED.processed
+			fixed = EXCLUDED.fixed
   `
 )
 
-func Import(uri string, vuls []*data.ImageVulnerability) error {
-	ctx := context.Background()
+func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) error {
 	db, err := getDB(ctx, uri)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get store")
@@ -35,18 +35,24 @@ func Import(uri string, vuls []*data.ImageVulnerability) error {
 	}
 
 	for _, v := range vuls {
+		select {
+		case <-ctx.Done():
+			_ = tx.Rollback(ctx)
+			return ctx.Err()
+		default:
+		}
+
 		_, err = tx.Exec(ctx, insertSQL,
 			v.Image,
 			v.Digest,
 			v.Source,
-			v.ProcessedAt.Format(time.DateOnly),
+			v.ProcessedAt.Format(time.RFC3339),
 			strings.ToUpper(v.Exposure),
 			v.Package,
 			v.Version,
 			v.Severity,
 			v.Score,
 			v.IsFixed,
-			v.ProcessedAt,
 		)
 		if err != nil {
 			log.Err(err).Msgf("insert: %s", insertSQL)
