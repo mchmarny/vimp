@@ -62,4 +62,31 @@ var (
 		Usage: "output format (json, sarif)",
 		Value: "json",
 	}
+
+	// Scan command flags
+	scanImageFlag = &c.StringFlag{
+		Name:     "image",
+		Aliases:  []string{"i"},
+		Usage:    "container image to scan (e.g. alpine:latest, ghcr.io/repo/img@sha256:...)",
+		Required: true,
+	}
+
+	scannerFlag = &c.StringSliceFlag{
+		Name:    "scanner",
+		Aliases: []string{"s"},
+		Usage:   fmt.Sprintf("scanner to use (can be repeated, supported: %s)", strings.Join(scanner.GetAllScannerNames(), ", ")),
+	}
+
+	outputDirFlag = &c.StringFlag{
+		Name:    "output",
+		Aliases: []string{"o"},
+		Usage:   "output directory for scan reports",
+		Value:   "./reports",
+	}
+
+	yesFlag = &c.BoolFlag{
+		Name:    "yes",
+		Aliases: []string{"y"},
+		Usage:   "skip confirmation prompt (auto-yes)",
+	}
 )

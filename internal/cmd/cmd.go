@@ -50,6 +50,7 @@ func newApp(version string) (*c.App, error) {
 			},
 		},
 		Commands: []*c.Command{
+			scanCmd,
 			impCmd,
 			queryCmd,
 		},

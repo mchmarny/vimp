@@ -29,13 +29,16 @@ func (t *TrivyScanner) IsAvailable() bool {
 // Scan runs trivy against the given image.
 func (t *TrivyScanner) Scan(ctx context.Context, image string) (string, error) {
 	outputPath := config.GetTempFilePath(trivy.Name)
-	cmd := t.makeCmd(ctx, image, outputPath)
-
-	if err := runCmdWithContext(ctx, cmd, outputPath); err != nil {
+	if err := t.ScanToPath(ctx, image, outputPath); err != nil {
 		return "", err
 	}
-
 	return outputPath, nil
+}
+
+// ScanToPath runs trivy and writes output to the specified path.
+func (t *TrivyScanner) ScanToPath(ctx context.Context, image, outputPath string) error {
+	cmd := t.makeCmd(ctx, image, outputPath)
+	return runCmdWithContext(ctx, cmd, outputPath)
 }
 
 // ConverterName returns the converter name for trivy output.

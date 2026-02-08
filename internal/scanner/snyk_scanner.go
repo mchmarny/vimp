@@ -30,13 +30,16 @@ func (s *SnykScanner) IsAvailable() bool {
 // Scan runs snyk against the given image.
 func (s *SnykScanner) Scan(ctx context.Context, image string) (string, error) {
 	outputPath := config.GetTempFilePath(snyk.Name)
-	cmd := s.makeCmd(ctx, image, outputPath)
-
-	if err := runCmdWithContext(ctx, cmd, outputPath); err != nil {
+	if err := s.ScanToPath(ctx, image, outputPath); err != nil {
 		return "", err
 	}
-
 	return outputPath, nil
+}
+
+// ScanToPath runs snyk and writes output to the specified path.
+func (s *SnykScanner) ScanToPath(ctx context.Context, image, outputPath string) error {
+	cmd := s.makeCmd(ctx, image, outputPath)
+	return runCmdWithContext(ctx, cmd, outputPath)
 }
 
 // ConverterName returns the converter name for snyk output.
