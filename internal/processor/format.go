@@ -2,9 +2,6 @@ package processor
 
 import (
 	"fmt"
-
-	"github.com/Jeffail/gabs/v2"
-	"github.com/mchmarny/vimp/internal/parser"
 )
 
 const (
@@ -20,20 +17,22 @@ const (
 )
 
 // Format represents the source format.
+// Deprecated: Use converter.Registry.Detect() instead.
 type Format int64
 
 // String returns the string representation of the source format.
 func (f Format) String() string {
 	switch f {
+	case FormatUnknown:
+		return FormatUnknownName
 	case FormatGrypeJSON:
 		return FormatGrypeJSONName
 	case FormatTrivyJSON:
 		return FormatTrivyJSONName
 	case FormatSnykJSON:
 		return FormatSnykJSONName
-	default:
-		return FormatUnknownName
 	}
+	return FormatUnknownName
 }
 
 // ParseFormat parses the source format.
@@ -51,6 +50,7 @@ func ParseFormat(s string) (Format, error) {
 }
 
 // GetFormats returns the supported source formats.
+// Deprecated: Use GetConverterNames() instead.
 func GetFormats() []Format {
 	return []Format{
 		FormatGrypeJSON,
@@ -60,34 +60,7 @@ func GetFormats() []Format {
 }
 
 // GetFormatNames returns the names of the supported source formats.
+// Deprecated: Use GetConverterNames() instead.
 func GetFormatNames() []string {
-	return []string{
-		FormatGrypeJSONName,
-		FormatTrivyJSONName,
-		FormatSnykJSONName,
-	}
-}
-
-func discoverFormat(c *gabs.Container) Format {
-	if c == nil {
-		return FormatUnknown
-	}
-
-	// grype
-	d := c.Search("descriptor", "name")
-	if d.Exists() && parser.ToString(d.Data()) == "grype" {
-		return FormatGrypeJSON
-	}
-
-	// trivy
-	if c.ExistsP("SchemaVersion") && c.ExistsP("Results") {
-		return FormatTrivyJSON
-	}
-
-	// snyk
-	if c.Search("vulnerabilities").Exists() && c.Search("applications").Exists() {
-		return FormatSnykJSON
-	}
-
-	return FormatUnknown
+	return GetConverterNames()
 }

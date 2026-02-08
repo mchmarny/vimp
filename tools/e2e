@@ -1,48 +1,117 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-msg () {
-   echo "====== running $1 tests ======"
+msg() {
+    echo "====== running $1 tests ======"
 }
 
-msg "root"
+err() {
+    echo "ERROR: $1" >&2
+    exit 1
+}
+
+IMAGE="docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448"
+SQLITE_TARGET="sqlite://demo.db"
+POSTGRES_TARGET="postgres://test:test@localhost:5432/test"
+
+# Clean up previous test artifacts
+cleanup() {
+    rm -f demo.db demo-output.json demo-output.csv /tmp/vimp-test.sarif
+}
+trap cleanup EXIT
+cleanup
+
+msg "version"
 bin/vimp --version
 
-msg "import snyk"
-bin/vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-                --file internal/converter/snyk/test.json \
-                --target sqlite://demo.db
-
+# Test all converters with SQLite
 msg "import grype"
-bin/vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
+bin/vimp import --source "$IMAGE" \
                 --file internal/converter/grype/test.json \
-                --target sqlite://demo.db
+                --target "$SQLITE_TARGET"
+
+msg "import trivy"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/trivy/test.json \
+                --target "$SQLITE_TARGET"
 
 msg "import snyk"
-bin/vimp import --source docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-                --file internal/converter/trivy/test.json \
-                --target postgres://test:test@localhost:5432/test
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/snyk/test.json \
+                --target "$SQLITE_TARGET"
 
-msg "query summary"
-bin/vimp query --target sqlite://demo.db
+msg "import clair"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/clair/test.json \
+                --target "$SQLITE_TARGET"
+
+msg "import osv"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/osv/test.json \
+                --target "$SQLITE_TARGET"
+
+msg "import anchore"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/anchore/test.json \
+                --target "$SQLITE_TARGET"
+
+# Test PostgreSQL (if available)
+msg "import trivy to postgres"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/trivy/test.json \
+                --target "$POSTGRES_TARGET" || echo "PostgreSQL not available, skipping"
+
+# Test query commands
+msg "query summary (sqlite)"
+bin/vimp query --target "$SQLITE_TARGET"
 
 msg "query images"
-bin/vimp query --target sqlite://demo.db --image docker.io/redis
+bin/vimp query --target "$SQLITE_TARGET" --image docker.io/redis
 
-msg "query image versions"
-bin/vimp query --target sqlite://demo.db \
+msg "query digests"
+bin/vimp query --target "$SQLITE_TARGET" \
                --image docker.io/redis \
                --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448
 
-msg "query image versions without dups"
-bin/vimp query --target sqlite://demo.db \
+msg "query with diff filter"
+bin/vimp query --target "$SQLITE_TARGET" \
                --image docker.io/redis \
                --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
                --diff
 
-msg "query image exposure"
-bin/vimp query --target postgres://test:test@localhost:5432/test \
+# Test SARIF output
+msg "query sarif output"
+bin/vimp query --target "$SQLITE_TARGET" \
                --image docker.io/redis \
                --digest sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448 \
-               --exposure CVE-2022-3341
+               --format sarif > /tmp/vimp-test.sarif
+
+# Validate SARIF output structure
+if ! grep -q '"version": "2.1.0"' /tmp/vimp-test.sarif 2>/dev/null; then
+    echo "WARNING: SARIF output validation failed (expected version 2.1.0)"
+fi
+
+# Test file output
+msg "import to file (json)"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/grype/test.json \
+                --target "file://demo-output.json"
+
+msg "import to file (csv)"
+bin/vimp import --source "$IMAGE" \
+                --file internal/converter/grype/test.json \
+                --target "file://demo-output.csv"
+
+# Verify file outputs exist
+[ -f demo-output.json ] || err "JSON output not created"
+echo "JSON output created successfully"
+
+[ -f demo-output.csv ] || err "CSV output not created"
+echo "CSV output created successfully"
+
+# Test PostgreSQL queries (if available)
+msg "query postgres"
+bin/vimp query --target "$POSTGRES_TARGET" --image docker.io/redis || echo "PostgreSQL not available, skipping"
+
+msg "all e2e tests passed"

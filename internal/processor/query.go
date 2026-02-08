@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
@@ -10,8 +11,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Query imports the vulnerability report to the target data store.
+// Query queries the vulnerability data from the target data store.
 func Query(opt *query.Options) error {
+	return QueryWithContext(context.Background(), opt)
+}
+
+// QueryWithContext queries the vulnerability data with context support.
+func QueryWithContext(ctx context.Context, opt *query.Options) error {
 	if opt == nil {
 		return errors.New("options required")
 	}
@@ -25,6 +31,10 @@ func Query(opt *query.Options) error {
 	}
 
 	switch gt {
+	case query.Undefined:
+		log.Info().
+			Str("target", opt.Target).
+			Msg("querying (undefined):")
 	case query.Images:
 		log.Info().
 			Str("target", opt.Target).
@@ -45,16 +55,26 @@ func Query(opt *query.Options) error {
 			Str("image", opt.Image).
 			Str("digest", opt.Digest).
 			Msg("querying:")
+	case query.TimeSeries:
+		log.Info().
+			Str("target", opt.Target).
+			Str("image", opt.Image).
+			Msg("querying time-series:")
+	case query.CommonVulns:
+		log.Info().
+			Str("target", opt.Target).
+			Int("images", len(opt.Images)).
+			Msg("querying common vulnerabilities:")
 	}
 
 	q, err := target.GetQuerier(opt.Target)
 	if err != nil {
-		return errors.Wrap(err, "error getting importer")
+		return errors.Wrap(err, "error getting querier")
 	}
 
-	list, err := q(opt)
+	list, err := q(ctx, opt)
 	if err != nil {
-		return errors.Wrap(err, "error converting source")
+		return errors.Wrap(err, "error querying data")
 	}
 
 	if list == nil {

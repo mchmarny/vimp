@@ -1,6 +1,7 @@
 package console
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ import (
 
 func TestConsoleImport(t *testing.T) {
 	list := makeVulns(3)
-	err := Import("console://stdout", list)
+	err := Import(context.Background(), "console://stdout", list)
 	assert.NoError(t, err)
 }
 

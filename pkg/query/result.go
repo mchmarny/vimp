@@ -108,3 +108,32 @@ type PackageResult struct {
 	// Last is the last time the image was discovered.
 	Last time.Time `json:"last_discovered"`
 }
+
+// TimeSeriesResult represents vulnerability counts over time for an image.
+type TimeSeriesResult struct {
+	Image      string                 `json:"image"`
+	DataPoints []*TimeSeriesDataPoint `json:"data_points"`
+}
+
+// TimeSeriesDataPoint represents vulnerability counts for a specific date.
+type TimeSeriesDataPoint struct {
+	Date     string `json:"date"`
+	Total    int    `json:"total"`
+	Critical int    `json:"critical"`
+	High     int    `json:"high"`
+	Medium   int    `json:"medium"`
+	Low      int    `json:"low"`
+}
+
+// CommonVulnsResult represents vulnerabilities shared across multiple images.
+type CommonVulnsResult struct {
+	Images []string                   `json:"images"`
+	Common map[string]*CommonVulnInfo `json:"common"`
+}
+
+// CommonVulnInfo represents information about a common vulnerability.
+type CommonVulnInfo struct {
+	Severity       string   `json:"severity"`
+	Score          float32  `json:"score"`
+	AffectedImages []string `json:"affected_images"`
+}

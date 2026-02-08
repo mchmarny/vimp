@@ -10,14 +10,18 @@ const (
 	Grype
 	Snyk
 	Trivy
+	OSV
 
 	allScannersStr = "all"
 	grypeStr       = "grype"
 	snykStr        = "snyk"
 	trivyStr       = "trivy"
+	osvStr         = "osv"
 )
 
 var (
+	// allScanners contains scanners that support direct container image scanning.
+	// OSV is excluded as it requires lockfile/SBOM scanning, not direct image scanning.
 	allScanners = []ScanType{Grype, Snyk, Trivy}
 )
 
@@ -25,15 +29,18 @@ type ScanType int64
 
 func (s ScanType) String() string {
 	switch s {
+	case AllScans:
+		return allScannersStr
 	case Grype:
 		return grypeStr
 	case Snyk:
 		return snykStr
 	case Trivy:
 		return trivyStr
-	default:
-		return allScannersStr
+	case OSV:
+		return osvStr
 	}
+	return allScannersStr
 }
 
 // ParseScans parses the scans.
@@ -66,6 +73,8 @@ func ParseScan(s string) (ScanType, error) {
 		return Snyk, nil
 	case trivyStr:
 		return Trivy, nil
+	case osvStr:
+		return OSV, nil
 	default:
 		return AllScans, fmt.Errorf("unknown scan: %s", s)
 	}

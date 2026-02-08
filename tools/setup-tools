@@ -1,0 +1,210 @@
+#!/usr/bin/env bash
+# vimp Development Environment Setup
+#
+# Usage:
+#   ./tools/setup-tools           # Interactive mode
+#   ./tools/setup-tools --auto    # Non-interactive mode
+#   ./tools/setup-tools --help    # Show help
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/common
+. "${DIR}/common"
+VERSIONS_FILE="${REPO_ROOT}/.versions.yaml"
+
+AUTO_MODE=${AUTO_MODE:-false}
+
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+
+case "${ARCH}" in
+    x86_64) GO_ARCH="amd64" ;;
+    aarch64|arm64) GO_ARCH="arm64"; ARCH="arm64" ;;
+    *) err "Unsupported architecture: ${ARCH}" ;;
+esac
+
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+prompt_continue() {
+    if [[ "${AUTO_MODE}" == "true" ]]; then
+        return 0
+    fi
+    read -p "Continue? [Y/n] " -r
+    REPLY=${REPLY:-Y}
+    [[ $REPLY =~ ^[Yy]$ ]]
+}
+
+show_help() {
+    cat << EOF
+vimp Development Environment Setup
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --auto    Non-interactive mode
+    --help    Show this help
+
+ENVIRONMENT VARIABLES:
+    AUTO_MODE=true    Same as --auto
+    DEBUG=true        Enable debug output
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --auto) AUTO_MODE=true; shift ;;
+        --help|-h) show_help; exit 0 ;;
+        *) err "Unknown option: $1" ;;
+    esac
+done
+
+echo ""
+echo "vimp Development Environment Setup"
+echo "==================================="
+echo ""
+log_info "Platform: ${OS}-${GO_ARCH}"
+echo ""
+
+if [[ ! -f "${VERSIONS_FILE}" ]]; then
+    err "Version file not found: ${VERSIONS_FILE}"
+fi
+
+# Install yq if not present
+if ! command_exists yq; then
+    log_info "Installing yq..."
+    if [[ "${OS}" == "darwin" ]]; then
+        brew install yq
+    elif [[ "${OS}" == "linux" ]]; then
+        sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${GO_ARCH}"
+        sudo chmod +x /usr/local/bin/yq
+    fi
+    log_success "yq installed"
+fi
+
+cd "${REPO_ROOT}"
+
+GO_VERSION=$(yq '.languages.go' .versions.yaml)
+GOLANGCI_LINT_VERSION=$(yq '.linting.golangci_lint' .versions.yaml)
+GRYPE_VERSION=$(yq '.security_tools.grype' .versions.yaml)
+GIT_CLIFF_VERSION=$(yq '.build_tools.git_cliff' .versions.yaml)
+
+log_info "Target Versions:"
+echo "  Go:              ${GO_VERSION}"
+echo "  golangci-lint:   ${GOLANGCI_LINT_VERSION}"
+echo "  grype:           ${GRYPE_VERSION}"
+echo "  git-cliff:       ${GIT_CLIFF_VERSION}"
+echo ""
+
+# Go check
+echo "=== Go Installation ==="
+if command_exists go; then
+    CURRENT_GO=$(go version | grep -o 'go[0-9]\+\.[0-9]\+' | sed 's/go//' || echo "unknown")
+    if [[ "${CURRENT_GO}" == "${GO_VERSION}"* ]]; then
+        log_success "Go ${GO_VERSION} installed"
+    else
+        log_warning "Go version mismatch (current: ${CURRENT_GO}, target: ${GO_VERSION})"
+    fi
+else
+    log_warning "Go not found - install from https://go.dev/dl/"
+fi
+echo ""
+
+# Docker check
+echo "=== Docker Check ==="
+if command_exists docker; then
+    if docker info >/dev/null 2>&1; then
+        log_success "Docker running: $(docker version --format '{{.Server.Version}}')"
+    else
+        log_warning "Docker installed but not running"
+    fi
+else
+    log_warning "Docker not found"
+fi
+echo ""
+
+# Development tools
+echo "=== Development Tools ==="
+
+# yamllint
+if command_exists yamllint; then
+    log_success "yamllint installed"
+else
+    log_info "Installing yamllint..."
+    if prompt_continue; then
+        if [[ "${OS}" == "darwin" ]]; then
+            brew install yamllint
+        else
+            pip3 install --user yamllint
+        fi
+    fi
+fi
+
+# grype
+if command_exists grype; then
+    log_success "grype installed"
+else
+    log_info "Installing grype..."
+    if prompt_continue; then
+        if [[ "${OS}" == "darwin" ]]; then
+            brew install grype
+        else
+            curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin "${GRYPE_VERSION}"
+        fi
+    fi
+fi
+
+# git-cliff
+if command_exists git-cliff; then
+    log_success "git-cliff installed"
+else
+    log_info "Installing git-cliff..."
+    if prompt_continue; then
+        if [[ "${OS}" == "darwin" ]]; then
+            brew install git-cliff
+        else
+            cargo install git-cliff || log_warning "Install Rust first or use: brew install git-cliff"
+        fi
+    fi
+fi
+
+# goreleaser
+if command_exists goreleaser; then
+    log_success "goreleaser installed"
+else
+    log_info "Installing goreleaser..."
+    if prompt_continue; then
+        if [[ "${OS}" == "darwin" ]]; then
+            brew install goreleaser
+        else
+            curl -sfL https://goreleaser.com/static/run | bash -s -- --version
+        fi
+    fi
+fi
+
+echo ""
+
+# Go tools
+if command_exists go; then
+    echo "=== Go Development Tools ==="
+
+    if command_exists golangci-lint; then
+        log_success "golangci-lint installed"
+    else
+        log_info "Installing golangci-lint..."
+        if prompt_continue; then
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" "${GOLANGCI_LINT_VERSION}"
+        fi
+    fi
+    echo ""
+fi
+
+echo "=== Setup Complete ==="
+echo ""
+log_info "Next Steps:"
+echo "  1. Verify tools: ./tools/check-tools"
+echo "  2. Run tests: make test"
+echo "  3. Build: make build"
+echo ""

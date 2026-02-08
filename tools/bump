@@ -1,0 +1,112 @@
+#!/bin/bash
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/common
+. "${DIR}/common"
+ROOT=$(dirname "${DIR}")
+
+has_tools git git-cliff
+
+bump_version() {
+    local bump_type=${1:-patch}
+
+    # Check if git working directory is clean
+    if ! git diff-index --quiet HEAD --; then
+        err "Working directory is not clean. Commit and push all changes first."
+    fi
+
+    # Check if there are unpushed commits
+    if [ "$(git rev-list '@{u}..HEAD' --count 2>/dev/null || echo 0)" -gt 0 ]; then
+        err "There are unpushed commits. Push all changes first."
+    fi
+
+    # Get current version from git tags
+    local current_version
+    current_version=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+
+    msg "Current version: $current_version"
+
+    # Parse version components
+    local version_without_v=${current_version#v}
+    local IFS='.'
+    read -ra version_parts <<< "$version_without_v"
+    local major=${version_parts[0]:-0}
+    local minor=${version_parts[1]:-0}
+    local patch=${version_parts[2]:-0}
+
+    # Validate current version format
+    if [[ ! "$current_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        err "Current version '$current_version' is not in semver format (vX.Y.Z)"
+    fi
+
+    # Bump version based on type
+    case "$bump_type" in
+        major)
+            major=$((major + 1))
+            minor=0
+            patch=0
+            ;;
+        minor)
+            minor=$((minor + 1))
+            patch=0
+            ;;
+        patch)
+            patch=$((patch + 1))
+            ;;
+        *)
+            err "Invalid bump type '$bump_type'. Use: major, minor, or patch"
+            ;;
+    esac
+
+    local new_version="v${major}.${minor}.${patch}"
+
+    # Check if new version tag already exists
+    if git tag --list | grep -q "^${new_version}$"; then
+        err "Version tag '${new_version}' already exists locally."
+    fi
+
+    if git ls-remote --tags origin | grep -q "refs/tags/${new_version}$"; then
+        err "Version tag '${new_version}' already exists on remote."
+    fi
+
+    msg "Bumping $bump_type version: $current_version -> $new_version"
+
+    # Generate changelog
+    msg "Generating CHANGELOG.md for $new_version..."
+    if [ -f "${ROOT}/CHANGELOG.md" ]; then
+        git-cliff --tag "$new_version" --unreleased --prepend "${ROOT}/CHANGELOG.md"
+    else
+        git-cliff --tag "$new_version" -o "${ROOT}/CHANGELOG.md"
+    fi
+
+    # Commit changelog
+    git add "${ROOT}/CHANGELOG.md"
+    if git diff --cached --quiet; then
+        msg "No changelog changes to commit"
+    else
+        git commit -s -m "build: release $new_version"
+        msg "Committed CHANGELOG.md update"
+    fi
+
+    # Create tag and push
+    git tag -a "$new_version" -m "Release $new_version"
+    git push origin HEAD
+    git push origin "$new_version"
+
+    msg "Released $new_version"
+}
+
+# Show usage
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <bump_type>"
+    echo "Bump types: major, minor, patch"
+    echo ""
+    echo "Examples:"
+    echo "  $0 patch   # v1.2.3 -> v1.2.4"
+    echo "  $0 minor   # v1.2.3 -> v1.3.0"
+    echo "  $0 major   # v1.2.3 -> v2.0.0"
+    exit 1
+fi
+
+bump_version "$1"

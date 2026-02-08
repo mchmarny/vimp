@@ -2,12 +2,23 @@
 
 set -euo pipefail
 
-docker stop /postgres
-docker remove /postgres
+CONTAINER_NAME="vimp-postgres"
+
+# Stop and remove existing container if running
+docker stop "$CONTAINER_NAME" 2>/dev/null || true
+docker rm "$CONTAINER_NAME" 2>/dev/null || true
+
+# Create data directory if needed
+mkdir -p "${PWD}/data"
+
+# Start PostgreSQL
 docker run \
-    --name postgres \
+    --name "$CONTAINER_NAME" \
     -e POSTGRES_USER=test \
     -e POSTGRES_PASSWORD=test \
     -p 5432:5432 \
-    -v ${PWD}/data:/var/lib/postgresql/data \
-    -d postgres
+    -v "${PWD}/data:/var/lib/postgresql/data" \
+    -d postgres:16-alpine
+
+echo "PostgreSQL started on localhost:5432"
+echo "Connection: postgres://test:test@localhost:5432/test"

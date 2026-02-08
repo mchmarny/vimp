@@ -1,0 +1,140 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "/app/go.mod",
+        "type": "lockfile"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "golang.org/x/crypto",
+            "version": "0.0.0-20210921155107-089bfa567519",
+            "ecosystem": "Go"
+          },
+          "vulnerabilities": [
+            {
+              "id": "GO-2022-0969",
+              "aliases": ["CVE-2022-27191"],
+              "summary": "Denial of service via crafted Signer",
+              "details": "Attackers can cause a crash in SSH servers...",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Go",
+                    "name": "golang.org/x/crypto"
+                  },
+                  "ranges": [
+                    {
+                      "type": "SEMVER",
+                      "events": [
+                        {"introduced": "0"},
+                        {"fixed": "0.0.0-20220314234659-1baeb1ce4c0b"}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "url": "https://pkg.go.dev/vuln/GO-2022-0969"
+              }
+            }
+          ],
+          "groups": [
+            {
+              "ids": ["GO-2022-0969"],
+              "aliases": ["CVE-2022-27191"]
+            }
+          ]
+        },
+        {
+          "package": {
+            "name": "github.com/gin-gonic/gin",
+            "version": "1.7.0",
+            "ecosystem": "Go"
+          },
+          "vulnerabilities": [
+            {
+              "id": "GO-2023-1571",
+              "aliases": ["CVE-2023-26125", "GHSA-2cff-2hqq-68g2"],
+              "summary": "Improper input validation in Gin",
+              "details": "Gin does not properly validate...",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "Go",
+                    "name": "github.com/gin-gonic/gin"
+                  },
+                  "ranges": [
+                    {
+                      "type": "SEMVER",
+                      "events": [
+                        {"introduced": "0"},
+                        {"fixed": "1.9.0"}
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "database_specific": {
+                "url": "https://pkg.go.dev/vuln/GO-2023-1571"
+              }
+            }
+          ],
+          "groups": [
+            {
+              "ids": ["GO-2023-1571"],
+              "aliases": ["CVE-2023-26125", "GHSA-2cff-2hqq-68g2"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source": {
+        "path": "/app/package-lock.json",
+        "type": "lockfile"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "lodash",
+            "version": "4.17.20",
+            "ecosystem": "npm"
+          },
+          "vulnerabilities": [
+            {
+              "id": "GHSA-29mw-wpgm-hmr9",
+              "aliases": ["CVE-2020-28500"],
+              "summary": "Regular expression denial of service in lodash",
+              "details": "lodash is vulnerable to ReDoS...",
+              "affected": [
+                {
+                  "package": {
+                    "ecosystem": "npm",
+                    "name": "lodash"
+                  },
+                  "ranges": [
+                    {
+                      "type": "SEMVER",
+                      "events": [
+                        {"introduced": "0"},
+                        {"fixed": "4.17.21"}
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "groups": [
+            {
+              "ids": ["GHSA-29mw-wpgm-hmr9"],
+              "aliases": ["CVE-2020-28500"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

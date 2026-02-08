@@ -1,7 +1,10 @@
 package sqlite
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
@@ -9,8 +12,8 @@ import (
 )
 
 var (
-	querySummary = `SELECT 
-						image, 
+	querySummary = `SELECT
+						image,
 						digest,
 						COUNT(*) exposures,
 						COUNT(DISTINCT source) sources,
@@ -18,7 +21,7 @@ var (
 						MAX(score) max_score,
 						MIN(processed) first_processed,
 						MAX(processed) last_processed
-					  FROM vul 
+					  FROM vul
 					  WHERE image = COALESCE(?, image)
 					  GROUP BY image, digest
 					  `
@@ -49,15 +52,40 @@ var (
 					GROUP BY source, package, version, severity, score
 					ORDER BY 1, 2, 3, 4, 5 DESC
 `
+
+	queryTimeSeries = `SELECT
+						date(processed) as scan_date,
+						COUNT(*) as total,
+						SUM(CASE WHEN severity='critical' THEN 1 ELSE 0 END) as critical,
+						SUM(CASE WHEN severity='high' THEN 1 ELSE 0 END) as high,
+						SUM(CASE WHEN severity='medium' THEN 1 ELSE 0 END) as medium,
+						SUM(CASE WHEN severity='low' THEN 1 ELSE 0 END) as low
+					FROM vul
+					WHERE image = ?
+					GROUP BY date(processed)
+					ORDER BY scan_date
+`
+
+	queryCommonVulns = `SELECT
+						exposure,
+						severity,
+						MAX(score) as max_score,
+						GROUP_CONCAT(DISTINCT image) as images
+					FROM vul
+					WHERE image IN (%s)
+					GROUP BY exposure
+					HAVING COUNT(DISTINCT image) > 1
+					ORDER BY max_score DESC
+`
 )
 
 // Query returns all rows from the table.
-func Query(opt *query.Options) (any, error) {
+func Query(ctx context.Context, opt *query.Options) (any, error) {
 	if opt == nil {
 		return nil, errors.New("options are required")
 	}
 
-	db, err := getStore(opt.Target)
+	db, err := getStore(ctx, opt.Target)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get store")
 	}
@@ -70,6 +98,8 @@ func Query(opt *query.Options) (any, error) {
 	}
 
 	switch qt {
+	case query.Undefined:
+		return nil, errors.New("undefined query type")
 	case query.Images:
 		q = querySummary
 		a = []any{nil}
@@ -82,22 +112,34 @@ func Query(opt *query.Options) (any, error) {
 	case query.Packages:
 		q = queryPackages
 		a = []any{opt.Image, opt.Digest, opt.Exposure}
-	default:
-		return nil, errors.Errorf("unsupported query type: %v", qt)
+	case query.TimeSeries:
+		q = queryTimeSeries
+		a = []any{opt.Image}
+	case query.CommonVulns:
+		// Build placeholder string for IN clause
+		placeholders := make([]string, len(opt.Images))
+		a = make([]any, len(opt.Images))
+		for i, img := range opt.Images {
+			placeholders[i] = "?"
+			a[i] = img
+		}
+		q = fmt.Sprintf(queryCommonVulns, strings.Join(placeholders, ","))
 	}
 
-	stmt, err := db.Prepare(q)
+	stmt, err := db.PrepareContext(ctx, q)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to prepare select statement")
 	}
 
-	rows, err := stmt.Query(a...)
+	rows, err := stmt.QueryContext(ctx, a...)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.Wrapf(err, "failed to execute select statement")
 	}
 	defer rows.Close()
 
 	switch qt {
+	case query.Undefined:
+		return nil, errors.New("undefined query type")
 	case query.Images:
 		return scanSummary(rows)
 	case query.Digests:
@@ -106,6 +148,10 @@ func Query(opt *query.Options) (any, error) {
 		return scanExposure(opt, rows)
 	case query.Packages:
 		return scanPackages(opt, rows)
+	case query.TimeSeries:
+		return scanTimeSeries(opt, rows)
+	case query.CommonVulns:
+		return scanCommonVulns(opt, rows)
 	}
 
 	return nil, errors.Errorf("unsupported query type: %v", qt)
@@ -232,6 +278,61 @@ func scanPackages(opt *query.Options, rows *sql.Rows) (any, error) {
 	}
 
 	log.Info().Msgf("found %d records", len(r.Packages))
+
+	return r, nil
+}
+
+func scanTimeSeries(opt *query.Options, rows *sql.Rows) (any, error) {
+	r := &query.TimeSeriesResult{
+		Image:      opt.Image,
+		DataPoints: make([]*query.TimeSeriesDataPoint, 0),
+	}
+
+	for rows.Next() {
+		var date string
+		var total, critical, high, medium, low int
+
+		if err := rows.Scan(&date, &total, &critical, &high, &medium, &low); err != nil {
+			return nil, errors.Wrapf(err, "failed to scan timeseries row")
+		}
+
+		r.DataPoints = append(r.DataPoints, &query.TimeSeriesDataPoint{
+			Date:     date,
+			Total:    total,
+			Critical: critical,
+			High:     high,
+			Medium:   medium,
+			Low:      low,
+		})
+	}
+
+	log.Info().Msgf("found %d data points", len(r.DataPoints))
+
+	return r, nil
+}
+
+func scanCommonVulns(opt *query.Options, rows *sql.Rows) (any, error) {
+	r := &query.CommonVulnsResult{
+		Images: opt.Images,
+		Common: make(map[string]*query.CommonVulnInfo),
+	}
+
+	for rows.Next() {
+		var exposure, severity, imagesStr string
+		var score float32
+
+		if err := rows.Scan(&exposure, &severity, &score, &imagesStr); err != nil {
+			return nil, errors.Wrapf(err, "failed to scan common vulns row")
+		}
+
+		r.Common[exposure] = &query.CommonVulnInfo{
+			Severity:       severity,
+			Score:          score,
+			AffectedImages: strings.Split(imagesStr, ","),
+		}
+	}
+
+	log.Info().Msgf("found %d common vulnerabilities", len(r.Common))
 
 	return r, nil
 }

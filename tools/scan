@@ -2,13 +2,31 @@
 
 set -euo pipefail
 
-digest=$1
+# Usage: ./tools/scan <image-digest>
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <image-digest>" >&2
+    exit 1
+fi
+
+digest="$1"
+outdir="${2:-tmp}"
+
+# Create output directory
+mkdir -p "$outdir"
+
+echo "Scanning $digest..."
 
 # grype
-grype -q --add-cpes-if-none -s AllLayers -o json --file tmp/grype.json $digest
+echo "Running grype..."
+grype -q --add-cpes-if-none -s AllLayers -o json --file "$outdir/grype.json" "$digest"
 
 # trivy
-trivy image --format json --output tmp/trivy.json $digest
+echo "Running trivy..."
+trivy image --format json --output "$outdir/trivy.json" "$digest"
 
-# snyk
-snyk container test --app-vulns --json-file-output=tmp/snyk.json $digest
+# snyk (returns non-zero on findings, so continue on error)
+echo "Running snyk..."
+snyk container test --app-vulns --json-file-output="$outdir/snyk.json" "$digest" || true
+
+echo "Scan results saved to $outdir/"
+ls -la "$outdir/"

@@ -1,9 +1,17 @@
 package cmd
 
 import (
+	"context"
+	"time"
+
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/pkg/errors"
 	c "github.com/urfave/cli/v2"
+)
+
+const (
+	// defaultImportTimeout is the default timeout for import operations.
+	defaultImportTimeout = 10 * time.Minute
 )
 
 var (
@@ -20,17 +28,20 @@ var (
 	}
 )
 
-func runImport(c *c.Context) error {
+func runImport(cc *c.Context) error {
 	opt := &processor.ImportOptions{
-		Source:   c.String(sourceFlag.Name),
-		File:     c.String(fileFlag.Name),
-		Target:   c.String(targetFlag.Name),
-		Scanners: c.String(scannersFlag.Name),
+		Source:   cc.String(sourceFlag.Name),
+		File:     cc.String(fileFlag.Name),
+		Target:   cc.String(targetFlag.Name),
+		Scanners: cc.String(scannersFlag.Name),
 	}
 
-	printVersion(c)
+	printVersion(cc)
 
-	if err := processor.Import(opt); err != nil {
+	ctx, cancel := context.WithTimeout(cc.Context, defaultImportTimeout)
+	defer cancel()
+
+	if err := processor.ImportWithContext(ctx, opt); err != nil {
 		return errors.Wrap(err, "error executing command")
 	}
 

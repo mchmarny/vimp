@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -25,15 +26,19 @@ const (
 )
 
 func TestData(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgres test in short mode")
+	}
+	ctx := context.Background()
 	list := makeVulns(3)
 
-	err := Import(testConnection, list)
+	err := Import(ctx, testConnection, list)
 	assert.NoError(t, err)
 
-	err = Import(testConnection, list)
+	err = Import(ctx, testConnection, list)
 	assert.NoError(t, err)
 
-	r, err := Query(&query.Options{
+	r, err := Query(ctx, &query.Options{
 		Target: testConnection,
 	})
 	assert.NoError(t, err)
