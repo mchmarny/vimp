@@ -1,0 +1,59 @@
+name: 'Load Versions'
+description: 'Load tool versions from .versions.yaml'
+
+outputs:
+  go:
+    description: 'Go version'
+    value: ${{ steps.versions.outputs.go }}
+  golangci_lint:
+    description: 'golangci-lint version'
+    value: ${{ steps.versions.outputs.golangci_lint }}
+  goreleaser:
+    description: 'GoReleaser version'
+    value: ${{ steps.versions.outputs.goreleaser }}
+  ko:
+    description: 'ko version'
+    value: ${{ steps.versions.outputs.ko }}
+  crane:
+    description: 'crane version'
+    value: ${{ steps.versions.outputs.crane }}
+  syft:
+    description: 'syft version'
+    value: ${{ steps.versions.outputs.syft }}
+  cosign:
+    description: 'cosign version'
+    value: ${{ steps.versions.outputs.cosign }}
+  trivy:
+    description: 'trivy version'
+    value: ${{ steps.versions.outputs.trivy }}
+  grype:
+    description: 'grype version'
+    value: ${{ steps.versions.outputs.grype }}
+  coverage_threshold:
+    description: 'Coverage threshold percentage'
+    value: ${{ steps.versions.outputs.coverage_threshold }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse versions file
+      id: versions
+      shell: bash
+      run: |
+        # Check if yq is available, install if not
+        if ! command -v yq &> /dev/null; then
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+        fi
+
+        # Parse .versions.yaml and export as outputs
+        echo "go=$(yq '.languages.go' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "golangci_lint=$(yq '.linting.golangci_lint' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "goreleaser=$(yq '.build_tools.goreleaser' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "ko=$(yq '.build_tools.ko' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "crane=$(yq '.build_tools.crane' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "syft=$(yq '.build_tools.syft' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "cosign=$(yq '.security_tools.cosign' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "trivy=$(yq '.security_tools.trivy' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "grype=$(yq '.security_tools.grype' .versions.yaml)" >> $GITHUB_OUTPUT
+        echo "coverage_threshold=$(yq '.testing.coverage_threshold' .versions.yaml)" >> $GITHUB_OUTPUT
