@@ -94,4 +94,15 @@ var (
 		Name:  "scan-only",
 		Usage: "skip auto-import after scanning (only save JSON reports)",
 	}
+
+	discoFlag = &c.BoolFlag{
+		Name:  "disco",
+		Usage: "discover recent tags from registry (ignores tag in image URI)",
+	}
+
+	tagsFlag = &c.IntFlag{
+		Name:  "tags",
+		Usage: "number of tags to discover (requires --disco)",
+		Value: 5,
+	}
 )

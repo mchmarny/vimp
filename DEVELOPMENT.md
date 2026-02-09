@@ -78,6 +78,7 @@ vimp/
 │   │   └── anchore/
 │   ├── parser/         # JSON parsing with gabs
 │   ├── processor/      # Import/query orchestration
+│   ├── registry/       # OCI registry operations (tag discovery)
 │   ├── scanner/        # Scanner execution
 │   └── target/         # Storage backends
 │       ├── sqlite/

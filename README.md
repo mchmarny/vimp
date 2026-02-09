@@ -106,6 +106,18 @@ vimp scan --image nginx:1.25 --scanner grype --scanner trivy --yes
 vimp query --image docker.io/library/nginx --digest sha256:... --diff
 ```
 
+### Tag Discovery
+
+Scan multiple recent tags from a registry automatically:
+
+```bash
+# Discover and scan the 5 most recent tags
+vimp scan --image alpine --disco --yes
+
+# Scan the 3 most recent tags
+vimp scan --image nginx --disco --tags 3 --yes
+```
+
 ### Import Existing Reports
 
 ```bash
