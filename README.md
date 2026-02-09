@@ -13,7 +13,7 @@ Different vulnerability scanners often report different findings for the same co
 
 - **Compare results** across scanners to identify gaps in coverage
 - **Track trends** over time with persistent storage
-- **Integrate with CI/CD** using SARIF output for GitHub Code Scanning
+- **Integrate with CI/CD** using `SARIF` output for GitHub Code Scanning
 - **Reduce noise** by correlating findings across sources
 
 ## Quick Start
