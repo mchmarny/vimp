@@ -1,0 +1,150 @@
+{{define "image.html"}}
+{{template "head" .}}
+<div class="page-header">
+    <h1>{{shortImage .Detail.Image}}</h1>
+    <p class="text-muted">Image vulnerability details</p>
+</div>
+
+<!-- Time Series Chart -->
+{{if .TimeSeries}}
+<div class="card">
+    <div class="card-header">
+        <h3>Vulnerability Trend</h3>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="timeSeriesChart"></canvas>
+        </div>
+    </div>
+</div>
+{{end}}
+
+<!-- Digests -->
+<div class="card">
+    <div class="card-header">
+        <h3>Scanned Versions</h3>
+        <span class="text-muted">{{len .Detail.Digests}} digest(s)</span>
+    </div>
+    <div class="card-body">
+        {{if .Detail.Digests}}
+        <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Digest</th>
+                    <th class="text-right">Exposures</th>
+                    <th class="text-right">Packages</th>
+                    <th class="text-right">Critical</th>
+                    <th class="text-right">High</th>
+                    <th class="text-right">Medium</th>
+                    <th class="text-right">Low</th>
+                    <th class="text-right">Max Score</th>
+                    <th>Sources</th>
+                    <th>Last Scan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Detail.Digests}}
+                <tr>
+                    <td><a href="/images/{{$.Detail.Image}}?digest={{.Digest}}">{{shortDigest .Digest}}</a></td>
+                    <td class="text-right">{{.Exposures}}</td>
+                    <td class="text-right">{{.Packages}}</td>
+                    <td class="text-right {{if gt .Critical 0}}severity-critical{{end}}">{{.Critical}}</td>
+                    <td class="text-right {{if gt .High 0}}severity-high{{end}}">{{.High}}</td>
+                    <td class="text-right {{if gt .Medium 0}}severity-medium{{end}}">{{.Medium}}</td>
+                    <td class="text-right {{if gt .Low 0}}severity-low{{end}}">{{.Low}}</td>
+                    <td class="text-right">{{formatScore .MaxScore}}</td>
+                    <td>{{range $i, $s := .Sources}}{{if $i}}, {{end}}{{$s}}{{end}}</td>
+                    <td>{{formatTime .LastScan}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        </div>
+        {{else}}
+        <p class="text-muted">No digests found</p>
+        {{end}}
+    </div>
+</div>
+
+{{if .TimeSeries}}
+<script src="/static/chart.min.js"></script>
+<script>
+(function() {
+    const data = [
+        {{range .TimeSeries}}
+        {date: "{{.Date}}", total: {{.Total}}, critical: {{.Critical}}, high: {{.High}}, medium: {{.Medium}}, low: {{.Low}}},
+        {{end}}
+    ];
+
+    const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#f1f5f9' : '#1a1a1a';
+    const gridColor = isDark ? '#334155' : '#e5e7eb';
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.date),
+            datasets: [
+                {
+                    label: 'Critical',
+                    data: data.map(d => d.critical),
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'High',
+                    data: data.map(d => d.high),
+                    borderColor: '#f97316',
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Medium',
+                    data: data.map(d => d.medium),
+                    borderColor: '#eab308',
+                    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Low',
+                    data: data.map(d => d.low),
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: textColor }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                }
+            }
+        }
+    });
+})();
+</script>
+{{end}}
+{{template "foot" .}}
+{{end}}

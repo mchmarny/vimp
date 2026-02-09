@@ -1,0 +1,55 @@
+{{define "exposures.html"}}
+{{template "head" .}}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/images">Images</a> /
+        <a href="/images/{{.Image}}">{{shortImage .Image}}</a> /
+        <span>{{shortDigest .Digest}}</span>
+    </div>
+    <h1>Exposures</h1>
+    <p class="text-muted">{{.Total}} vulnerabilities found</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Vulnerability List</h3>
+    </div>
+    <div class="card-body">
+        {{if .Exposures}}
+        <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>CVE</th>
+                    <th>Severity</th>
+                    <th class="text-right">Score</th>
+                    <th>Package</th>
+                    <th>Version</th>
+                    <th>Source</th>
+                    <th>Fixed</th>
+                    <th>Last Scan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Exposures}}
+                <tr>
+                    <td class="monospace">{{.Exposure}}</td>
+                    <td><span class="severity-badge {{severityClass .Severity}}">{{.Severity}}</span></td>
+                    <td class="text-right">{{formatScore .Score}}</td>
+                    <td class="monospace">{{.Package}}</td>
+                    <td class="monospace">{{.Version}}</td>
+                    <td>{{.Source}}</td>
+                    <td>{{if .Fixed}}<span class="badge badge-success">Yes</span>{{else}}<span class="badge badge-muted">No</span>{{end}}</td>
+                    <td>{{formatTime .LastScan}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        </div>
+        {{else}}
+        <p class="text-muted">No exposures found</p>
+        {{end}}
+    </div>
+</div>
+{{template "foot" .}}
+{{end}}

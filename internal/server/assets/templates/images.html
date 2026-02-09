@@ -1,0 +1,64 @@
+{{define "images.html"}}
+{{template "head" .}}
+<div class="page-header">
+    <h1>Images</h1>
+    <p class="text-muted">All scanned container images</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="search-box">
+            <input type="text"
+                   id="search"
+                   name="search"
+                   placeholder="Search images..."
+                   value="{{.Search}}"
+                   hx-get="/partials/images"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#image-table"
+                   hx-include="this"
+                   class="input">
+        </div>
+        <span class="text-muted">{{.Total}} images</span>
+    </div>
+    <div class="card-body" id="image-table">
+        {{template "image-table" .}}
+    </div>
+</div>
+{{template "foot" .}}
+{{end}}
+
+{{define "image-table"}}
+{{if .Images}}
+<div class="table-responsive">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Digest</th>
+            <th class="text-right">Exposures</th>
+            <th class="text-right">Critical</th>
+            <th class="text-right">High</th>
+            <th class="text-right">Score</th>
+            <th>Last Scan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Images}}
+        <tr>
+            <td><a href="/images/{{.Image}}">{{shortImage .Image}}</a></td>
+            <td><a href="/images/{{.Image}}?digest={{.Digest}}">{{shortDigest .Digest}}</a></td>
+            <td class="text-right">{{.Exposures}}</td>
+            <td class="text-right {{if gt .Critical 0}}severity-critical{{end}}">{{.Critical}}</td>
+            <td class="text-right {{if gt .High 0}}severity-high{{end}}">{{.High}}</td>
+            <td class="text-right">{{formatScore .MaxScore}}</td>
+            <td>{{formatTime .LastScan}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+{{else}}
+<p class="text-muted">No images found{{if .Search}} matching "{{.Search}}"{{end}}</p>
+{{end}}
+{{end}}

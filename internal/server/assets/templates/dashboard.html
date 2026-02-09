@@ -1,0 +1,142 @@
+{{define "dashboard.html"}}
+{{template "head" .}}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p class="text-muted">Vulnerability scan overview</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalImages}}</div>
+        <div class="stat-label">Images</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalDigests}}</div>
+        <div class="stat-label">Digests</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalExposures}}</div>
+        <div class="stat-label">Exposures</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{.Stats.TotalPackages}}</div>
+        <div class="stat-label">Packages</div>
+    </div>
+</div>
+
+<!-- Severity Distribution -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Severity Distribution</h3>
+            </div>
+            <div class="card-body">
+                <div class="severity-list">
+                    <div class="severity-item">
+                        <span class="severity-badge severity-critical">Critical</span>
+                        <span class="severity-count">{{.Stats.CriticalCount}}</span>
+                    </div>
+                    <div class="severity-item">
+                        <span class="severity-badge severity-high">High</span>
+                        <span class="severity-count">{{.Stats.HighCount}}</span>
+                    </div>
+                    <div class="severity-item">
+                        <span class="severity-badge severity-medium">Medium</span>
+                        <span class="severity-count">{{.Stats.MediumCount}}</span>
+                    </div>
+                    <div class="severity-item">
+                        <span class="severity-badge severity-low">Low</span>
+                        <span class="severity-count">{{.Stats.LowCount}}</span>
+                    </div>
+                </div>
+                <div class="fixable-stats">
+                    <span class="badge badge-success">{{.Stats.FixableCount}} Fixable</span>
+                    <span class="badge badge-muted">{{.Stats.UnfixableCount}} Unfixable</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Registries -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3>Top Registries</h3>
+            </div>
+            <div class="card-body">
+                {{if .Registries}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Registry</th>
+                            <th class="text-right">Images</th>
+                            <th class="text-right">Exposures</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .Registries}}
+                        <tr>
+                            <td>{{.Registry}}</td>
+                            <td class="text-right">{{.ImageCount}}</td>
+                            <td class="text-right">{{.ExposureCount}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <p class="text-muted">No data available</p>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Images -->
+<div class="card">
+    <div class="card-header">
+        <h3>Recent Scans</h3>
+        <span class="text-muted">Last scan: {{formatTime .Stats.LastScan}}</span>
+    </div>
+    <div class="card-body">
+        {{template "recent-table" .}}
+    </div>
+</div>
+{{template "foot" .}}
+{{end}}
+
+{{define "recent-table"}}
+{{if .Recent}}
+<div class="table-responsive">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Image</th>
+            <th>Digest</th>
+            <th class="text-right">Exposures</th>
+            <th class="text-right">Critical</th>
+            <th class="text-right">High</th>
+            <th class="text-right">Score</th>
+            <th>Last Scan</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Recent}}
+        <tr>
+            <td><a href="/images/{{.Image}}">{{shortImage .Image}}</a></td>
+            <td><a href="/images/{{.Image}}?digest={{.Digest}}">{{shortDigest .Digest}}</a></td>
+            <td class="text-right">{{.Exposures}}</td>
+            <td class="text-right {{if gt .Critical 0}}severity-critical{{end}}">{{.Critical}}</td>
+            <td class="text-right {{if gt .High 0}}severity-high{{end}}">{{.High}}</td>
+            <td class="text-right">{{formatScore .MaxScore}}</td>
+            <td>{{formatTime .LastScan}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+</div>
+{{else}}
+<p class="text-muted">No images scanned yet</p>
+{{end}}
+{{end}}

@@ -71,6 +71,7 @@ identify discrepancies and get comprehensive exposure analysis.`,
 			scanCmd,
 			impCmd,
 			queryCmd,
+			serverCmd,
 		},
 		ShellComplete: commandLister,
 	}

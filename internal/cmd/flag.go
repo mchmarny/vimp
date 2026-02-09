@@ -105,4 +105,17 @@ var (
 		Usage: "number of tags to discover (requires --disco)",
 		Value: 5,
 	}
+
+	// Server command flags
+	portFlag = &c.IntFlag{
+		Name:    "port",
+		Aliases: []string{"p"},
+		Usage:   "port to listen on",
+		Value:   8080,
+	}
+
+	openFlag = &c.BoolFlag{
+		Name:  "open",
+		Usage: "open browser automatically",
+	}
 )
