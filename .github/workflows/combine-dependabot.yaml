@@ -83,6 +83,7 @@ jobs:
           # Track merged PRs for the PR body
           merged_prs=""
           failed_prs=""
+          merged_pr_numbers=""
 
           # Merge each Dependabot branch
           while IFS='|' read -r pr_number branch title; do
@@ -95,6 +96,7 @@ jobs:
             if git merge --no-edit "origin/$branch"; then
               echo "Successfully merged: $branch"
               merged_prs="$merged_prs- #$pr_number: $title\n"
+              merged_pr_numbers="$merged_pr_numbers $pr_number"
             else
               echo "Failed to merge: $branch (conflict)"
               git merge --abort
@@ -105,6 +107,7 @@ jobs:
           # Save for PR body
           echo -e "$merged_prs" > /tmp/merged.txt
           echo -e "$failed_prs" > /tmp/failed.txt
+          echo "$merged_pr_numbers" > /tmp/merged_numbers.txt
 
           # Push combined branch
           git push origin "$combined_branch"
@@ -141,6 +144,17 @@ jobs:
             --body "$body" \
             --head "${{ steps.combine.outputs.branch }}" \
             --base main
+
+      - name: Close original PRs
+        if: steps.get-prs.outputs.has_prs == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDABOT_PR_MERGE }}
+        run: |
+          merged_numbers=$(cat /tmp/merged_numbers.txt)
+          for pr_number in $merged_numbers; do
+            echo "Closing PR #$pr_number"
+            gh pr close "$pr_number" --comment "Closed in favor of combined PR #${{ steps.combine.outputs.branch }}" --delete-branch || true
+          done
 
       - name: Summary
         if: steps.get-prs.outputs.has_prs == 'true'
