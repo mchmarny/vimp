@@ -8,6 +8,9 @@ import (
 )
 
 func TestGetDigestFromBasicDocker(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	u, err := GetDigest("https://docker.io/redis")
 	assert.NoError(t, err)
@@ -15,6 +18,9 @@ func TestGetDigestFromBasicDocker(t *testing.T) {
 }
 
 func TestGetDigestWithTag(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	u, err := GetDigest("docker.io/redis:latest")
 	assert.NoError(t, err)
@@ -31,6 +37,9 @@ func TestGetDigestWithDigest(t *testing.T) {
 // TestGetDigestSimpleImageWithTag verifies that simple image names like "nginx:1.25"
 // get the docker.io/library/ prefix added correctly.
 func TestGetDigestSimpleImageWithTag(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	u, err := GetDigest("nginx:1.25")
 	assert.NoError(t, err)
@@ -42,17 +51,23 @@ func TestGetDigestSimpleImageWithTag(t *testing.T) {
 
 // TestGetDigestSimpleImageNoTag verifies simple image names without tags.
 func TestGetDigestSimpleImageNoTag(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	u, err := GetDigest("redis")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, u)
-	// Should have docker.io/library/ prefix
-	assert.True(t, strings.HasPrefix(u, "docker.io/library/redis"),
-		"expected docker.io/library/redis..., got %s", u)
+	// Should have docker.io/library/ prefix and :latest tag
+	assert.True(t, strings.HasPrefix(u, "docker.io/library/redis:latest@sha256:"),
+		"expected docker.io/library/redis:latest@sha256:..., got %s", u)
 }
 
 // TestGetDigestUserImage verifies Docker Hub user images get docker.io/ prefix.
 func TestGetDigestUserImage(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	// Using a known public image
 	u, err := GetDigest("library/redis:latest")
@@ -65,6 +80,9 @@ func TestGetDigestUserImage(t *testing.T) {
 
 // TestGetDigestFullyQualified verifies fully qualified images are unchanged.
 func TestGetDigestFullyQualified(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access")
+	}
 	t.Parallel()
 	u, err := GetDigest("docker.io/library/nginx:1.25")
 	assert.NoError(t, err)

@@ -106,6 +106,12 @@ var (
 		Value: 5,
 	}
 
+	dockerMirrorFlag = &c.StringFlag{
+		Name:    "docker-mirror",
+		Sources: c.EnvVars("VIMP_DOCKER_MIRROR"),
+		Usage:   "Docker Hub mirror URL (e.g., mirror.gcr.io)",
+	}
+
 	// Server command flags
 	portFlag = &c.IntFlag{
 		Name:    "port",

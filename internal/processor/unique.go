@@ -5,8 +5,8 @@ type Hashible interface {
 }
 
 func unique[T Hashible](list []T) []T {
-	seen := map[string]bool{}
-	result := make([]T, 0)
+	seen := make(map[string]bool, len(list))
+	result := make([]T, 0, len(list))
 	for _, item := range list {
 		h := item.GetID()
 		if !seen[h] {

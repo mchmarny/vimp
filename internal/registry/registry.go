@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"github.com/mchmarny/vimp/internal/config"
 	"github.com/pkg/errors"
 	"golang.org/x/mod/semver"
 )
@@ -16,6 +17,7 @@ import (
 // DiscoverTags returns the N most recent tags for an image.
 // Tags are sorted by semantic versioning (descending).
 // Assumes user is authenticated via default keychain.
+// Respects VIMP_DOCKER_MIRROR for Docker Hub images.
 func DiscoverTags(ctx context.Context, imageRef string, count int) ([]string, error) {
 	if count < 1 {
 		return nil, errors.New("count must be at least 1")
@@ -23,14 +25,17 @@ func DiscoverTags(ctx context.Context, imageRef string, count int) ([]string, er
 
 	slog.Debug("parsing image reference", "ref", imageRef)
 
+	// Apply Docker mirror if configured (for registry fetch only)
+	fetchRef := config.ApplyDockerMirror(imageRef)
+
 	// Parse reference to get repository
-	ref, err := name.ParseReference(imageRef)
+	ref, err := name.ParseReference(fetchRef)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse image reference: %s", imageRef)
 	}
 
 	repo := ref.Context()
-	slog.Debug("resolved repository", "repo", repo.String())
+	slog.Debug("resolved repository", "repo", repo.String(), "fetchRef", fetchRef)
 
 	// List all tags
 	slog.Debug("listing tags from registry")
@@ -107,11 +112,12 @@ func BuildImageURIs(baseRef string, tags []string) ([]string, error) {
 		return nil, errors.Wrapf(err, "failed to parse base reference: %s", baseRef)
 	}
 
-	repo := ref.Context()
+	// Normalize registry name (index.docker.io -> docker.io)
+	repoName := strings.Replace(ref.Context().String(), "index.docker.io", "docker.io", 1)
 	uris := make([]string, len(tags))
 
 	for i, tag := range tags {
-		uris[i] = repo.String() + ":" + tag
+		uris[i] = repoName + ":" + tag
 	}
 
 	slog.Debug("built image URIs", "uris", uris)

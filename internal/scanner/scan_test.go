@@ -7,6 +7,10 @@ import (
 )
 
 func TestAllScanners(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test that requires registry access and scanners")
+	}
+
 	o := &Options{
 		Image: "docker.io/redis@sha256:7b83a0167532d4320a87246a815a134e19e31504d85e8e55f0bb5bb9edf70448",
 	}

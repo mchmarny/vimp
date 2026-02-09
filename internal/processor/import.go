@@ -29,11 +29,6 @@ type ImportOptions struct {
 	// Target is the target data store uri.
 	Target string
 
-	// FormatType is the type of the format (e.g. json, yaml, etc.).
-	//
-	// Deprecated: Use detectedConverter instead.
-	FormatType Format
-
 	container         *gabs.Container
 	uri               string
 	digest            string
@@ -85,9 +80,6 @@ func (o *ImportOptions) validate(_ context.Context) error {
 		return errors.New("unknown source file format, supported formats are: " + strings.Join(GetConverterNames(), ", "))
 	}
 	o.detectedConverter = conv
-
-	// Set legacy FormatType for compatibility
-	o.FormatType, _ = ParseFormat(conv.Name())
 
 	return nil
 }

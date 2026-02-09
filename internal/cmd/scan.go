@@ -61,6 +61,7 @@ Examples:
 			scanOnlyFlag,
 			discoFlag,
 			tagsFlag,
+			dockerMirrorFlag,
 		},
 	}
 )
@@ -82,6 +83,12 @@ func runScan(ctx context.Context, cmd *c.Command) error {
 	scanOnly := cmd.Bool(scanOnlyFlag.Name)
 	disco := cmd.Bool(discoFlag.Name)
 	tagsCount := cmd.Int(tagsFlag.Name)
+	dockerMirror := cmd.String(dockerMirrorFlag.Name)
+
+	// Configure Docker proxy if specified
+	if dockerMirror != "" {
+		config.SetDockerMirror(dockerMirror)
+	}
 
 	// Use default database if target not specified and not scan-only
 	if target == "" && !scanOnly {
@@ -95,6 +102,7 @@ func runScan(ctx context.Context, cmd *c.Command) error {
 		"scanOnly", scanOnly,
 		"outputDir", outputDir,
 		"target", target,
+		"dockerMirror", dockerMirror,
 	)
 
 	// Validate image name (security: prevent shell injection)
@@ -264,9 +272,10 @@ func buildOutputPath(outputDir, image, scannerName string) string {
 func executeConcurrentScans(ctx context.Context, images []string, scanners []scanner.Scanner,
 	outputDir, target string, scanOnly bool) []scanResult {
 
+	totalOps := len(images) * len(scanners)
 	var (
 		mu      sync.Mutex
-		results []scanResult
+		results = make([]scanResult, 0, totalOps)
 	)
 
 	// Semaphore for limiting concurrency
@@ -301,9 +310,12 @@ func executeConcurrentScans(ctx context.Context, images []string, scanners []sca
 				slog.Info("running scan", "scanner", s.Name(), "image", img)
 				slog.Debug("scan output path", "path", outputPath)
 
+				// Apply Docker mirror for scanning (use original img for storage)
+				scanImg := config.ApplyDockerMirror(img)
+
 				// Scan
-				if err := s.ScanToPath(ctx, img, outputPath); err != nil {
-					slog.Debug("scan failed", "scanner", s.Name(), "image", img, "error", err)
+				if err := s.ScanToPath(ctx, scanImg, outputPath); err != nil {
+					slog.Debug("scan failed", "scanner", s.Name(), "image", img, "scanImg", scanImg, "error", err)
 					result.Error = errors.Wrapf(err, "scan failed: %s/%s", s.Name(), img)
 					mu.Lock()
 					results = append(results, result)

@@ -3,6 +3,7 @@ package scanner
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -149,15 +150,41 @@ func runCmdWithContext(ctx context.Context, cmd *exec.Cmd, outputPath string) er
 		}
 		return ctx.Err()
 	case err := <-done:
-		// Command completed
-		if _, e := os.Stat(outputPath); errors.Is(e, os.ErrNotExist) {
-			// Only error if the file doesn't exist
-			// Some scanners (snyk) return non-zero when they find vulnerabilities
+		// Command completed - verify output file
+		info, statErr := os.Stat(outputPath)
+		if errors.Is(statErr, os.ErrNotExist) {
+			// File doesn't exist
 			slog.Error("scanner command failed", "error", err, "stdout", outb.String(), "stderr", errb.String())
 			return errors.Wrapf(err, "error executing scanner command: %s", cmd.String())
 		}
+
+		// Verify file has content (not empty/truncated)
+		if info.Size() < 2 {
+			slog.Error("scanner output file is empty or truncated", "path", outputPath, "size", info.Size())
+			return errors.Errorf("scanner output file is empty or truncated: %s", outputPath)
+		}
+
+		// Verify JSON is valid by checking it can be parsed
+		if validateErr := validateJSONFile(outputPath); validateErr != nil {
+			slog.Error("scanner output is invalid JSON", "path", outputPath, "error", validateErr)
+			return errors.Wrapf(validateErr, "scanner output is invalid JSON: %s", outputPath)
+		}
+
 		return nil
 	}
+}
+
+// validateJSONFile checks if a file contains valid JSON.
+func validateJSONFile(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	decoder := json.NewDecoder(f)
+	var js json.RawMessage
+	return decoder.Decode(&js)
 }
 
 func isInstalled(c string) bool {

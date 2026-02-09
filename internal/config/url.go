@@ -12,6 +12,54 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	// defaultDockerRegistry is the default Docker Hub registry.
+	defaultDockerRegistry = "docker.io"
+
+	// indexDockerRegistry is the canonical Docker Hub registry name.
+	indexDockerRegistry = "index.docker.io"
+)
+
+// dockerMirror holds the configured Docker Hub proxy/mirror URL.
+var dockerMirror string
+
+// SetDockerMirror sets the Docker proxy URL for Docker Hub image operations.
+// This should be called early in application startup if the --docker-mirror flag is set.
+func SetDockerMirror(proxy string) {
+	if proxy != "" {
+		// Remove trailing slash if present
+		dockerMirror = strings.TrimSuffix(proxy, "/")
+		slog.Debug("docker proxy configured", "proxy", dockerMirror)
+	}
+}
+
+// GetDockerMirror returns the configured Docker proxy URL.
+// Returns empty string if not set.
+func GetDockerMirror() string {
+	return dockerMirror
+}
+
+// ApplyDockerMirror replaces docker.io/index.docker.io with the proxy URL if set.
+func ApplyDockerMirror(imageRef string) string {
+	proxy := GetDockerMirror()
+	if proxy == "" {
+		return imageRef
+	}
+
+	// Replace both docker.io and index.docker.io with proxy
+	result := strings.Replace(imageRef, indexDockerRegistry, proxy, 1)
+	if result == imageRef {
+		result = strings.Replace(imageRef, defaultDockerRegistry, proxy, 1)
+	}
+
+	return result
+}
+
+// NormalizeDockerRegistry normalizes index.docker.io to docker.io for consistency.
+func NormalizeDockerRegistry(imageRef string) string {
+	return strings.Replace(imageRef, indexDockerRegistry, defaultDockerRegistry, 1)
+}
+
 // RemoveTag removes the tag from an image reference, preserving registry ports.
 // Examples:
 //   - docker.io/library/nginx:1.25 -> docker.io/library/nginx
@@ -97,6 +145,7 @@ func NormalizeImageName(v string) string {
 
 // GetDigest returns the digest of the image.
 // Could result in uri that has both a tag and a digest.
+// Respects VIMP_DOCKER_MIRROR environment variable for Docker Hub images.
 func GetDigest(v string) (string, error) {
 	v = strings.TrimPrefix(v, "https://")
 
@@ -106,12 +155,15 @@ func GetDigest(v string) (string, error) {
 
 	v = NormalizeImageName(v)
 
-	ref, err := name.ParseReference(v)
+	// Apply Docker proxy if configured (for registry fetch only)
+	fetchRef := ApplyDockerMirror(v)
+
+	ref, err := name.ParseReference(fetchRef)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to parse image URL from: %s", v)
 	}
 
-	slog.Debug("parsed reference", "ref", ref)
+	slog.Debug("parsed reference", "ref", ref, "fetchRef", fetchRef)
 
 	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
 	if err != nil {
@@ -125,5 +177,16 @@ func GetDigest(v string) (string, error) {
 
 	slog.Debug("resolved digest", "digest", dig)
 
-	return fmt.Sprintf("%s@%s", v, dig.String()), nil
+	// Parse original reference to get normalized name with tag
+	// (don't use proxy URL in stored image name)
+	origRef, err := name.ParseReference(v)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to parse original reference: %s", v)
+	}
+
+	// Use origRef.Name() to preserve the tag (defaults to :latest if not specified)
+	// Normalize index.docker.io to docker.io for consistency
+	refName := NormalizeDockerRegistry(origRef.Name())
+
+	return fmt.Sprintf("%s@%s", refName, dig.String()), nil
 }

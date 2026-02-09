@@ -83,6 +83,9 @@ func runServer(ctx context.Context, cmd *c.Command) error {
 
 // openInBrowser opens the dashboard URL in the default browser.
 func openInBrowser(ctx context.Context, port int) {
+	// Wait for server to be ready
+	time.Sleep(500 * time.Millisecond)
+
 	url := fmt.Sprintf("http://localhost:%d", port)
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -101,7 +104,7 @@ func openInBrowser(ctx context.Context, port int) {
 		return
 	}
 
-	if err := cmd.Start(); err != nil {
-		slog.Debug("failed to open browser", "error", err)
+	if err := cmd.Run(); err != nil {
+		slog.Warn("failed to open browser", "url", url, "error", err)
 	}
 }

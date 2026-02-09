@@ -136,7 +136,7 @@ func TestBuildImageURIs(t *testing.T) {
 			name:    "simple image with tags",
 			baseRef: "alpine:latest",
 			tags:    []string{"3.18", "3.19", "3.20"},
-			want:    []string{"index.docker.io/library/alpine:3.18", "index.docker.io/library/alpine:3.19", "index.docker.io/library/alpine:3.20"},
+			want:    []string{"docker.io/library/alpine:3.18", "docker.io/library/alpine:3.19", "docker.io/library/alpine:3.20"},
 			wantErr: false,
 		},
 		{

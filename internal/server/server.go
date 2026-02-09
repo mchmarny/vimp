@@ -129,8 +129,11 @@ func New(cfg *Config) (*Server, error) {
 
 // setupRoutes configures the HTTP routes.
 func (s *Server) setupRoutes() {
-	// Static files
-	staticFS, _ := fs.Sub(assets, "assets/static")
+	// Static files - panic on error since this is critical setup
+	staticFS, err := fs.Sub(assets, "assets/static")
+	if err != nil {
+		panic("failed to load embedded static assets: " + err.Error())
+	}
 	s.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	// Pages

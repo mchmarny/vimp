@@ -148,8 +148,7 @@ func (s *Server) handleImageDetail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Get image from path - handle URL encoding and @ separator
-	imagePath := r.PathValue("image")
-	imagePath, _ = url.PathUnescape(imagePath)
+	imagePath := unescapePath(r.PathValue("image"))
 
 	// Check if digest is included (image@digest or image/digest format in query)
 	digest := r.URL.Query().Get("digest")
@@ -313,8 +312,7 @@ func (s *Server) handleAPIImages(w http.ResponseWriter, r *http.Request) {
 // handleAPIImageDetail returns image detail as JSON.
 func (s *Server) handleAPIImageDetail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	imagePath := r.PathValue("image")
-	imagePath, _ = url.PathUnescape(imagePath)
+	imagePath := unescapePath(r.PathValue("image"))
 
 	digest := r.URL.Query().Get("digest")
 	if strings.Contains(imagePath, "@") {
@@ -347,8 +345,7 @@ func (s *Server) handleAPIImageDetail(w http.ResponseWriter, r *http.Request) {
 // handleAPITimeSeries returns time series data as JSON.
 func (s *Server) handleAPITimeSeries(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	imagePath := r.PathValue("image")
-	imagePath, _ = url.PathUnescape(imagePath)
+	imagePath := unescapePath(r.PathValue("image"))
 
 	timeSeries, err := s.queries.GetTimeSeries(ctx, imagePath)
 	if err != nil {
@@ -374,5 +371,17 @@ func writeJSON(w http.ResponseWriter, data any) {
 func writeJSONError(w http.ResponseWriter, message string, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": message}); err != nil {
+		slog.Error("failed to encode error response", "error", err)
+	}
+}
+
+// unescapePath safely unescapes a URL path, logging any errors.
+func unescapePath(path string) string {
+	unescaped, err := url.PathUnescape(path)
+	if err != nil {
+		slog.Warn("failed to unescape path", "path", path, "error", err)
+		return path // Return original on error
+	}
+	return unescaped
 }

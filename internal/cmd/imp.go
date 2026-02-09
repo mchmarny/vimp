@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/mchmarny/vimp/internal/config"
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/pkg/errors"
 	c "github.com/urfave/cli/v3"
@@ -25,11 +26,17 @@ var (
 			fileFlag,
 			targetFlag,
 			scannersFlag,
+			dockerMirrorFlag,
 		},
 	}
 )
 
 func runImport(ctx context.Context, cmd *c.Command) error {
+	// Configure Docker proxy if specified
+	if dockerProxy := cmd.String(dockerMirrorFlag.Name); dockerProxy != "" {
+		config.SetDockerMirror(dockerProxy)
+	}
+
 	opt := &processor.ImportOptions{
 		Source:   cmd.String(sourceFlag.Name),
 		File:     cmd.String(fileFlag.Name),
