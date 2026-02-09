@@ -9,17 +9,23 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mchmarny/vimp/internal/processor"
+	"github.com/mchmarny/vimp/internal/registry"
 	"github.com/mchmarny/vimp/internal/scanner"
 	"github.com/pkg/errors"
 	c "github.com/urfave/cli/v3"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
 	// defaultScanTimeout is the default timeout for scan operations.
 	defaultScanTimeout = 15 * time.Minute
+
+	// maxConcurrency limits parallel scan operations.
+	maxConcurrency = 10
 )
 
 var (
@@ -37,10 +43,13 @@ If no --scanner flag is provided, discovers available scanners and prompts
 for confirmation before running. Results are saved to ./reports/<image>/<scanner>.json
 by default and automatically imported into a local SQLite database.
 
+Use --disco to discover and scan recent tags from the registry.
+
 Examples:
   vimp scan --image alpine:latest
   vimp scan --image ghcr.io/repo/img:v1 --scanner grype --scanner trivy
-  vimp scan --image nginx:latest --output ./my-reports --yes`,
+  vimp scan --image nginx:latest --output ./my-reports --yes
+  vimp scan --image alpine --disco --tags 3 --yes`,
 		Action: runScan,
 		Flags: []c.Flag{
 			scanImageFlag,
@@ -49,9 +58,19 @@ Examples:
 			targetFlag,
 			yesFlag,
 			scanOnlyFlag,
+			discoFlag,
+			tagsFlag,
 		},
 	}
 )
+
+// scanResult captures the outcome of a single scan operation.
+type scanResult struct {
+	Image   string
+	Scanner string
+	Path    string
+	Error   error
+}
 
 func runScan(ctx context.Context, cmd *c.Command) error {
 	image := cmd.String(scanImageFlag.Name)
@@ -60,50 +79,87 @@ func runScan(ctx context.Context, cmd *c.Command) error {
 	target := cmd.String(targetFlag.Name)
 	autoYes := cmd.Bool(yesFlag.Name)
 	scanOnly := cmd.Bool(scanOnlyFlag.Name)
+	disco := cmd.Bool(discoFlag.Name)
+	tagsCount := cmd.Int(tagsFlag.Name)
+
+	slog.Debug("scan command started",
+		"image", image,
+		"disco", disco,
+		"tagsCount", tagsCount,
+		"scanOnly", scanOnly,
+		"outputDir", outputDir,
+	)
 
 	// Validate image name (security: prevent shell injection)
 	if err := validateImageName(image); err != nil {
 		return errors.Wrap(err, "invalid image name")
 	}
 
+	// Validate disco flags
+	if tagsCount < 1 || tagsCount > 20 {
+		return errors.New("--tags must be between 1 and 20")
+	}
+
 	// Determine which scanners to use
+	slog.Debug("resolving scanners", "selected", selectedScanners)
 	scannersToUse, err := resolveScanners(selectedScanners)
 	if err != nil {
 		return err
 	}
+	slog.Debug("resolved scanners", "count", len(scannersToUse))
+
+	// Resolve images to scan
+	var images []string
+	if disco {
+		slog.Info("discovering tags", "image", image, "count", tagsCount)
+		tags, discoErr := registry.DiscoverTags(ctx, image, tagsCount)
+		if discoErr != nil {
+			return errors.Wrap(discoErr, "failed to discover tags")
+		}
+		images, err = registry.BuildImageURIs(image, tags)
+		if err != nil {
+			return errors.Wrap(err, "failed to build image URIs")
+		}
+		slog.Info("discovered tags", "count", len(images), "tags", tags)
+	} else {
+		images = []string{image}
+	}
 
 	// If no scanners specified by user, confirm before running
 	if len(selectedScanners) == 0 && !autoYes {
-		if !confirmScan(scannersToUse, image) {
+		if !confirmScanMultiple(scannersToUse, images) {
 			slog.Info("scan cancelled by user")
 			return nil
 		}
 	}
 
-	// Create output directory
-	sanitizedImage := sanitizeImageName(image)
-	reportDir := filepath.Join(outputDir, sanitizedImage)
-	if mkdirErr := os.MkdirAll(reportDir, 0755); mkdirErr != nil {
-		return errors.Wrapf(mkdirErr, "failed to create output directory: %s", reportDir)
-	}
-
 	ctx, cancel := context.WithTimeout(ctx, defaultScanTimeout)
 	defer cancel()
 
-	// Execute scans
-	results, err := executeScanners(ctx, scannersToUse, image, reportDir)
-	if err != nil {
-		return err
-	}
+	totalOps := len(images) * len(scannersToUse)
+	slog.Info("starting scans",
+		"images", len(images),
+		"scanners", len(scannersToUse),
+		"operations", totalOps,
+	)
+	slog.Debug("concurrent scan config", "maxConcurrency", maxConcurrency)
 
-	// Auto-import results into target (unless --scan-only)
-	if !scanOnly {
-		if err := importResults(ctx, results, image, target); err != nil {
-			return errors.Wrap(err, "failed to import scan results")
+	// Execute scans concurrently
+	results := executeConcurrentScans(ctx, images, scannersToUse, outputDir, target, scanOnly)
+
+	// Report results
+	var failed, succeeded int
+	for _, r := range results {
+		if r.Error != nil {
+			failed++
+			slog.Error("scan/import failed", "image", r.Image, "scanner", r.Scanner, "error", r.Error)
+		} else {
+			succeeded++
+			slog.Info("scan complete", "image", r.Image, "scanner", r.Scanner, "output", r.Path)
 		}
 	}
 
-	slog.Info("scan complete", "scanners", len(results), "output", reportDir)
+	slog.Info("scan summary", "succeeded", succeeded, "failed", failed, "total", len(results))
 
 	return nil
 }
@@ -155,16 +211,20 @@ func resolveScanners(selectedScanners []string) ([]scanner.Scanner, error) {
 	return available, nil
 }
 
-// confirmScan prompts the user to confirm the scan operation.
-func confirmScan(scanners []scanner.Scanner, image string) bool {
+// confirmScanMultiple prompts the user to confirm scanning multiple images.
+func confirmScanMultiple(scanners []scanner.Scanner, images []string) bool {
 	names := make([]string, len(scanners))
 	for i, s := range scanners {
 		names[i] = s.Name()
 	}
 
 	fmt.Printf("\nDiscovered scanners: %s\n", strings.Join(names, ", "))
-	fmt.Printf("Image to scan: %s\n", image)
-	fmt.Print("Run scan with all discovered scanners? [y/N]: ")
+	fmt.Printf("Images to scan (%d):\n", len(images))
+	for _, img := range images {
+		fmt.Printf("  - %s\n", img)
+	}
+	fmt.Printf("Total operations: %d\n", len(images)*len(scanners))
+	fmt.Print("Run scans? [y/N]: ")
 
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
@@ -187,54 +247,90 @@ func sanitizeImageName(image string) string {
 	return replacer.Replace(image)
 }
 
-// executeScanners runs all specified scanners against the image.
-func executeScanners(ctx context.Context, scanners []scanner.Scanner, image, reportDir string) (map[string]string, error) {
-	results := make(map[string]string)
-
-	for _, s := range scanners {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		outputPath := filepath.Join(reportDir, fmt.Sprintf("%s.json", s.Name()))
-
-		slog.Info("running scan", "scanner", s.Name(), "image", image)
-
-		if err := s.ScanToPath(ctx, image, outputPath); err != nil {
-			return nil, errors.Wrapf(err, "scanner %s failed", s.Name())
-		}
-
-		slog.Info("scan complete", "scanner", s.Name(), "output", outputPath)
-
-		results[s.Name()] = outputPath
-	}
-
-	return results, nil
+// buildOutputPath creates the output path for a scan result.
+func buildOutputPath(outputDir, image, scannerName string) string {
+	sanitized := sanitizeImageName(image)
+	return filepath.Join(outputDir, sanitized, fmt.Sprintf("%s.json", scannerName))
 }
 
-// importResults imports scan results into the target database.
-func importResults(ctx context.Context, results map[string]string, image, target string) error {
-	for scannerName, filePath := range results {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
+// executeConcurrentScans runs all (image × scanner) combinations concurrently.
+func executeConcurrentScans(ctx context.Context, images []string, scanners []scanner.Scanner,
+	outputDir, target string, scanOnly bool) []scanResult {
 
-		slog.Info("importing results", "scanner", scannerName, "file", filePath)
+	var (
+		mu      sync.Mutex
+		results []scanResult
+	)
 
-		opt := &processor.ImportOptions{
-			Source: image,
-			File:   filePath,
-			Target: target,
-		}
+	// Semaphore for limiting concurrency
+	sem := make(chan struct{}, maxConcurrency)
+	g, ctx := errgroup.WithContext(ctx)
 
-		if err := processor.ImportWithContext(ctx, opt); err != nil {
-			return errors.Wrapf(err, "failed to import %s results", scannerName)
+	for _, img := range images {
+		for _, s := range scanners {
+			g.Go(func() error {
+				// Acquire semaphore
+				select {
+				case sem <- struct{}{}:
+					defer func() { <-sem }()
+				case <-ctx.Done():
+					return nil // Don't block on canceled context
+				}
+
+				result := scanResult{Image: img, Scanner: s.Name()}
+				outputPath := buildOutputPath(outputDir, img, s.Name())
+
+				slog.Debug("acquired semaphore", "scanner", s.Name(), "image", img)
+
+				// Ensure output directory exists
+				if mkdirErr := os.MkdirAll(filepath.Dir(outputPath), 0755); mkdirErr != nil {
+					result.Error = errors.Wrapf(mkdirErr, "failed to create output directory")
+					mu.Lock()
+					results = append(results, result)
+					mu.Unlock()
+					return nil
+				}
+
+				slog.Info("running scan", "scanner", s.Name(), "image", img)
+				slog.Debug("scan output path", "path", outputPath)
+
+				// Scan
+				if err := s.ScanToPath(ctx, img, outputPath); err != nil {
+					slog.Debug("scan failed", "scanner", s.Name(), "image", img, "error", err)
+					result.Error = errors.Wrapf(err, "scan failed: %s/%s", s.Name(), img)
+					mu.Lock()
+					results = append(results, result)
+					mu.Unlock()
+					return nil // Don't fail entire group
+				}
+
+				slog.Debug("scan succeeded", "scanner", s.Name(), "image", img)
+				result.Path = outputPath
+
+				// Import (unless scan-only)
+				if !scanOnly && target != "" {
+					slog.Debug("importing results", "scanner", s.Name(), "image", img, "target", target)
+					opt := &processor.ImportOptions{
+						Source: img,
+						File:   outputPath,
+						Target: target,
+					}
+					if err := processor.ImportWithContext(ctx, opt); err != nil {
+						slog.Debug("import failed", "scanner", s.Name(), "image", img, "error", err)
+						result.Error = errors.Wrapf(err, "import failed: %s/%s", s.Name(), img)
+					} else {
+						slog.Debug("import succeeded", "scanner", s.Name(), "image", img)
+					}
+				}
+
+				mu.Lock()
+				results = append(results, result)
+				mu.Unlock()
+				return nil
+			})
 		}
 	}
 
-	return nil
+	_ = g.Wait() // Errors captured in results
+	return results
 }

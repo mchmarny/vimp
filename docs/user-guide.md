@@ -74,6 +74,23 @@ vimp scan --image nginx:1.25 --yes --scan-only
 vimp scan --image nginx:1.25 --yes --output ./my-reports
 ```
 
+### Tag Discovery
+
+Use `--disco` to automatically discover and scan recent tags from a registry. This is useful for scanning multiple versions of an image at once:
+
+```bash
+# Discover and scan the 5 most recent tags (default)
+vimp scan --image alpine --disco --yes
+
+# Scan the 3 most recent tags
+vimp scan --image nginx --disco --tags 3 --yes
+
+# Tag discovery with specific scanners
+vimp scan --image redis --disco --tags 3 --scanner grype --scanner trivy --yes
+```
+
+Tags are sorted by semantic versioning (highest version first). All scans run concurrently (up to 10 parallel operations) for faster processing.
+
 ## Step 2: Import Results
 
 The `import` command loads vulnerability data into a database for querying.

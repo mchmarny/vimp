@@ -71,8 +71,8 @@ Primary key (6-part): `(image, digest, source, exposure, package, version)`
 
 ### Key Packages
 
-**`internal/cmd/`** - CLI commands using urfave/cli/v2
-- `scan` - Scan container images using installed scanners (grype, trivy, snyk, osv)
+**`internal/cmd/`** - CLI commands using urfave/cli/v3
+- `scan` - Scan container images using installed scanners (grype, trivy, snyk, osv). Supports `--disco` for tag discovery and concurrent execution.
 - `import` - Import vulnerability reports from file or auto-scan image
 - `query` - Query stored vulnerability data (supports JSON and SARIF output)
 
@@ -84,6 +84,10 @@ Primary key (6-part): `(image, digest, source, exposure, package, version)`
 **`internal/scanner/`** - Scanner execution and registry
 - Scanner interface with `Name()`, `IsAvailable()`, `Scan()`, `ConverterName()`
 - Shells out to grype/trivy/snyk/osv if installed
+
+**`internal/registry/`** - OCI registry operations
+- `DiscoverTags()` - Discover recent tags from registry (sorted by semver)
+- `BuildImageURIs()` - Build full image URIs from base ref and tags
 
 **`internal/target/`** - Storage backends
 - `sqlite/`, `postgres/`, `bq/` - Database targets with query support

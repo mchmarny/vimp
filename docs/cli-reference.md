@@ -32,6 +32,8 @@ vimp scan [options]
 
 Discovers available scanners on your system and runs them against a container image. Results are saved as JSON reports and automatically imported into a local SQLite database.
 
+Use `--disco` to automatically discover recent tags from the registry and scan them all. Tags are sorted by semantic versioning (highest version first). All scan operations run concurrently with a maximum of 10 parallel operations.
+
 **Supported scanners:** grype, trivy, snyk, osv
 
 ### Options
@@ -44,6 +46,8 @@ Discovers available scanners on your system and runs them against a container im
 | `--target` | `-t` | Database target URI | `sqlite://~/.vimp.db` |
 | `--yes` | `-y` | Skip confirmation prompt | `false` |
 | `--scan-only` | - | Skip auto-import after scanning | `false` |
+| `--disco` | - | Discover recent tags from registry | `false` |
+| `--tags` | - | Number of tags to discover (1-20, requires `--disco`) | `5` |
 
 ### Environment Variables
 
@@ -71,6 +75,15 @@ vimp scan --image alpine:latest --yes --scan-only
 
 # Import to PostgreSQL instead of SQLite
 vimp scan --image alpine:latest --yes --target postgres://localhost:5432/vulns
+
+# Discover and scan the 5 most recent tags
+vimp scan --image alpine --disco --yes
+
+# Discover and scan the 3 most recent tags
+vimp scan --image nginx --disco --tags 3 --yes
+
+# Tag discovery with specific scanners
+vimp scan --image redis --disco --tags 3 --scanner grype --yes
 ```
 
 ### Output

@@ -2,7 +2,9 @@ package scanner
 
 import (
 	"context"
+	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/mchmarny/vimp/internal/config"
 	"github.com/mchmarny/vimp/internal/converter/trivy"
@@ -48,5 +50,17 @@ func (t *TrivyScanner) ConverterName() string {
 
 // makeCmd creates the trivy command.
 func (t *TrivyScanner) makeCmd(ctx context.Context, image, outputPath string) *exec.Cmd {
-	return exec.CommandContext(ctx, "trivy", "image", "--quiet", "--security-checks", "vuln", "--format", "json", "--no-progress", "--output", outputPath, image)
+	// Use a unique cache directory to allow concurrent trivy scans.
+	// Trivy's file-based cache doesn't support concurrent access to the same directory.
+	cacheDir := filepath.Join(os.TempDir(), "vimp-trivy-cache", filepath.Base(filepath.Dir(outputPath)))
+
+	return exec.CommandContext(ctx, "trivy", "image",
+		"--quiet",
+		"--security-checks", "vuln",
+		"--format", "json",
+		"--no-progress",
+		"--cache-dir", cacheDir,
+		"--output", outputPath,
+		image,
+	)
 }
