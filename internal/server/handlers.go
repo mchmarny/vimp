@@ -5,8 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/mod/semver"
 )
 
 // PageData contains common data for all pages.
@@ -27,9 +30,22 @@ type DashboardData struct {
 // ImagesData contains data for the images page.
 type ImagesData struct {
 	PageData
-	Images []*RecentImage
-	Search string
-	Total  int
+	Images       []*RecentImage
+	Search       string
+	Total        int
+	ShowTagChart bool
+	BaseImage    string
+	TagSeries    []*TagDataPoint
+}
+
+// TagDataPoint contains vulnerability data for a single tag.
+type TagDataPoint struct {
+	Tag      string `json:"tag"`
+	Total    int    `json:"total"`
+	Critical int    `json:"critical"`
+	High     int    `json:"high"`
+	Medium   int    `json:"medium"`
+	Low      int    `json:"low"`
 }
 
 // ImageDetailData contains data for the image detail page.
@@ -128,10 +144,17 @@ func (s *Server) handleImages(w http.ResponseWriter, r *http.Request) {
 		Total:  len(images),
 	}
 
+	// Check if all images share the same base (for tag comparison chart)
+	if baseImage, tagSeries := extractTagSeries(images); baseImage != "" && len(tagSeries) > 1 {
+		data.ShowTagChart = true
+		data.BaseImage = baseImage
+		data.TagSeries = tagSeries
+	}
+
 	// Check if this is an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
-		if err := s.tmpl.ExecuteTemplate(w, "image-table", data); err != nil {
-			slog.Error("failed to render image table", "error", err)
+		if err := s.tmpl.ExecuteTemplate(w, "image-results", data); err != nil {
+			slog.Error("failed to render image results", "error", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 		return
@@ -244,8 +267,15 @@ func (s *Server) handlePartialImages(w http.ResponseWriter, r *http.Request) {
 		Total:  len(images),
 	}
 
-	if err := s.tmpl.ExecuteTemplate(w, "image-table", data); err != nil {
-		slog.Error("failed to render image table", "error", err)
+	// Check if all images share the same base (for tag comparison chart)
+	if baseImage, tagSeries := extractTagSeries(images); baseImage != "" && len(tagSeries) > 1 {
+		data.ShowTagChart = true
+		data.BaseImage = baseImage
+		data.TagSeries = tagSeries
+	}
+
+	if err := s.tmpl.ExecuteTemplate(w, "image-results", data); err != nil {
+		slog.Error("failed to render image results", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
@@ -384,4 +414,89 @@ func unescapePath(path string) string {
 		return path // Return original on error
 	}
 	return unescaped
+}
+
+// extractBaseAndTag splits an image reference into base image and tag.
+// Returns base image (without tag) and tag. If no tag, returns empty tag.
+func extractBaseAndTag(image string) (base, tag string) {
+	// Handle digest format (image@sha256:...)
+	if idx := strings.Index(image, "@"); idx != -1 {
+		return image[:idx], ""
+	}
+
+	// Find the last colon that's not part of a port number
+	lastColon := strings.LastIndex(image, ":")
+	if lastColon == -1 {
+		return image, ""
+	}
+
+	// Check if this colon is part of a port (e.g., localhost:5000/image)
+	afterColon := image[lastColon+1:]
+	if strings.Contains(afterColon, "/") {
+		return image, ""
+	}
+
+	return image[:lastColon], afterColon
+}
+
+// extractTagSeries checks if all images share the same base and extracts tag series data.
+// Returns base image and sorted tag data points, or empty if images don't share base.
+func extractTagSeries(images []*RecentImage) (string, []*TagDataPoint) {
+	if len(images) < 2 {
+		return "", nil
+	}
+
+	// Extract base image from first entry
+	firstBase, firstTag := extractBaseAndTag(images[0].Image)
+	if firstTag == "" {
+		return "", nil
+	}
+
+	// Build tag data and verify all share same base
+	tagData := make([]*TagDataPoint, 0, len(images))
+	seenTags := make(map[string]bool)
+
+	for _, img := range images {
+		base, tag := extractBaseAndTag(img.Image)
+		if base != firstBase || tag == "" {
+			return "", nil // Different base or no tag
+		}
+		if seenTags[tag] {
+			continue // Skip duplicate tags (different digests)
+		}
+		seenTags[tag] = true
+
+		tagData = append(tagData, &TagDataPoint{
+			Tag:      tag,
+			Total:    img.Exposures,
+			Critical: img.Critical,
+			High:     img.High,
+			Medium:   img.Medium,
+			Low:      img.Low,
+		})
+	}
+
+	if len(tagData) < 2 {
+		return "", nil
+	}
+
+	// Sort tags by semver (descending - newest first becomes rightmost on chart)
+	sort.Slice(tagData, func(i, j int) bool {
+		vi := normalizeVersion(tagData[i].Tag)
+		vj := normalizeVersion(tagData[j].Tag)
+		return semver.Compare(vi, vj) < 0
+	})
+
+	return firstBase, tagData
+}
+
+// normalizeVersion ensures version string has "v" prefix for semver comparison.
+func normalizeVersion(tag string) string {
+	if tag == "" {
+		return "v0.0.0"
+	}
+	if !strings.HasPrefix(tag, "v") {
+		return "v" + tag
+	}
+	return tag
 }

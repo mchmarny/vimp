@@ -16,6 +16,8 @@ Different vulnerability scanners often report different findings for the same co
 - **Integrate with CI/CD** using `SARIF` output for GitHub Code Scanning
 - **Reduce noise** by correlating findings across sources
 
+![dashboard](etc/images/dash.png)
+
 ## Quick Start
 
 ```bash
@@ -27,7 +29,12 @@ vimp scan --image alpine:latest --yes
 
 # Query results
 vimp query --image docker.io/library/alpine
+
+# Run server (view reports, CVEs over time)
+vimp server --open
 ```
+
+![dashboard](etc/images/image.png)
 
 ## Documentation
 
@@ -94,47 +101,6 @@ VERSION=$(curl -s https://api.github.com/repos/mchmarny/vimp/releases/latest | j
 sudo rpm -ivh https://github.com/mchmarny/vimp/releases/download/${VERSION}/vimp-${VERSION#v}_linux-amd64.rpm
 ```
 
-## Usage Examples
-
-### Scan and Compare
-
-```bash
-# Scan with multiple scanners
-vimp scan --image nginx:1.25 --scanner grype --scanner trivy --yes
-
-# Show cross-scanner differences
-vimp query --image docker.io/library/nginx --digest sha256:... --diff
-```
-
-### Tag Discovery
-
-Scan multiple recent tags from a registry automatically:
-
-```bash
-# Discover and scan the 5 most recent tags
-vimp scan --image alpine --disco --yes
-
-# Scan the 3 most recent tags
-vimp scan --image nginx --disco --tags 3 --yes
-```
-
-### Import Existing Reports
-
-```bash
-# Import from grype output
-vimp import --source docker.io/redis:7 --file grype-report.json
-
-# Import to PostgreSQL
-vimp import --source docker.io/redis:7 --file report.json \
-  --target postgres://localhost:5432/vulns
-```
-
-### GitHub Code Scanning Integration
-
-```bash
-# Generate SARIF output
-vimp query --image docker.io/library/nginx --format sarif > results.sarif
-```
 
 ## Contributing
 

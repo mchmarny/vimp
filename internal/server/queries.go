@@ -40,6 +40,8 @@ type RecentImage struct {
 	MaxScore  float32   `json:"max_score"`
 	Critical  int       `json:"critical"`
 	High      int       `json:"high"`
+	Medium    int       `json:"medium"`
+	Low       int       `json:"low"`
 }
 
 // ImageDetail contains detailed information about an image.
@@ -202,7 +204,9 @@ func (q *Queries) GetRecentImages(ctx context.Context, limit int) ([]*RecentImag
 			COUNT(DISTINCT exposure) as exposures,
 			MAX(score) as max_score,
 			SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical,
-			SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high
+			SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high,
+			SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium,
+			SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low
 		FROM vul
 		GROUP BY image, digest
 		ORDER BY last_scan DESC
@@ -218,7 +222,8 @@ func (q *Queries) GetRecentImages(ctx context.Context, limit int) ([]*RecentImag
 		img := &RecentImage{}
 		var lastScan string
 		if err := rows.Scan(&img.Image, &img.Digest, &lastScan,
-			&img.Exposures, &img.MaxScore, &img.Critical, &img.High); err != nil {
+			&img.Exposures, &img.MaxScore, &img.Critical, &img.High,
+			&img.Medium, &img.Low); err != nil {
 			return nil, errors.Wrap(err, "failed to scan recent image row")
 		}
 		img.LastScan = parseTime(lastScan)
@@ -241,7 +246,9 @@ func (q *Queries) SearchImages(ctx context.Context, pattern string, limit int) (
 			COUNT(DISTINCT exposure) as exposures,
 			MAX(score) as max_score,
 			SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical,
-			SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high
+			SUM(CASE WHEN severity = 'high' THEN 1 ELSE 0 END) as high,
+			SUM(CASE WHEN severity = 'medium' THEN 1 ELSE 0 END) as medium,
+			SUM(CASE WHEN severity = 'low' THEN 1 ELSE 0 END) as low
 		FROM vul
 		WHERE image LIKE ?
 		GROUP BY image, digest
@@ -258,7 +265,8 @@ func (q *Queries) SearchImages(ctx context.Context, pattern string, limit int) (
 		img := &RecentImage{}
 		var lastScan string
 		if err := rows.Scan(&img.Image, &img.Digest, &lastScan,
-			&img.Exposures, &img.MaxScore, &img.Critical, &img.High); err != nil {
+			&img.Exposures, &img.MaxScore, &img.Critical, &img.High,
+			&img.Medium, &img.Low); err != nil {
 			return nil, errors.Wrap(err, "failed to scan image row")
 		}
 		img.LastScan = parseTime(lastScan)

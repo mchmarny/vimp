@@ -15,17 +15,154 @@
                    value="{{.Search}}"
                    hx-get="/partials/images"
                    hx-trigger="keyup changed delay:300ms"
-                   hx-target="#image-table"
+                   hx-target="#image-results"
                    hx-include="this"
                    class="input">
         </div>
-        <span class="text-muted">{{.Total}} images</span>
+        <span class="text-muted" id="image-count">{{.Total}} images</span>
     </div>
-    <div class="card-body" id="image-table">
-        {{template "image-table" .}}
+    <div class="card-body">
+        <div id="image-results">
+            {{template "image-results" .}}
+        </div>
     </div>
 </div>
 {{template "foot" .}}
+{{end}}
+
+{{define "image-results"}}
+<!-- Out-of-band update for image count -->
+<span class="text-muted" id="image-count" hx-swap-oob="true">{{.Total}} images</span>
+
+{{template "image-table" .}}
+
+{{if .ShowTagChart}}
+<!-- Tag Comparison Chart -->
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-header">
+        <h3>Vulnerability Trend by Tag</h3>
+        <span class="text-muted">{{.BaseImage}}</span>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="tagComparisonChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Ensure Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        var script = document.createElement('script');
+        script.src = '/static/chart.min.js';
+        script.onload = initChart;
+        document.head.appendChild(script);
+    } else {
+        initChart();
+    }
+
+    function initChart() {
+        const data = [
+            {{range .TagSeries}}
+            {tag: "{{.Tag}}", total: {{.Total}}, critical: {{.Critical}}, high: {{.High}}, medium: {{.Medium}}, low: {{.Low}}},
+            {{end}}
+        ];
+
+        const canvas = document.getElementById('tagComparisonChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#c9d1d9' : '#1a1a1a';
+        const gridColor = isDark ? '#30363d' : '#e5e7eb';
+
+        // GitHub-style colors
+        const colors = {
+            critical: isDark ? '#f85149' : '#dc2626',
+            high: isDark ? '#db6d28' : '#f97316',
+            medium: isDark ? '#d29922' : '#eab308',
+            low: isDark ? '#3fb950' : '#22c55e'
+        };
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.tag),
+                datasets: [
+                    {
+                        label: 'Critical',
+                        data: data.map(d => d.critical),
+                        borderColor: colors.critical,
+                        backgroundColor: isDark ? 'rgba(248, 81, 73, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'High',
+                        data: data.map(d => d.high),
+                        borderColor: colors.high,
+                        backgroundColor: isDark ? 'rgba(219, 109, 40, 0.1)' : 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Medium',
+                        data: data.map(d => d.medium),
+                        borderColor: colors.medium,
+                        backgroundColor: isDark ? 'rgba(210, 153, 34, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: 'Low',
+                        data: data.map(d => d.low),
+                        borderColor: colors.low,
+                        backgroundColor: isDark ? 'rgba(63, 185, 80, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: textColor }
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tag',
+                            color: textColor
+                        },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Vulnerabilities',
+                            color: textColor
+                        },
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{{end}}
 {{end}}
 
 {{define "image-table"}}

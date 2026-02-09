@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mchmarny/vimp/internal/config"
@@ -274,13 +275,32 @@ func executeConcurrentScans(ctx context.Context, images []string, scanners []sca
 
 	totalOps := len(images) * len(scanners)
 	var (
-		mu      sync.Mutex
-		results = make([]scanResult, 0, totalOps)
+		mu        sync.Mutex
+		results   = make([]scanResult, 0, totalOps)
+		completed int32
 	)
 
 	// Semaphore for limiting concurrency
 	sem := make(chan struct{}, maxConcurrency)
 	g, ctx := errgroup.WithContext(ctx)
+
+	// Start heartbeat goroutine
+	startTime := time.Now()
+	done := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				c := atomic.LoadInt32(&completed)
+				elapsed := time.Since(startTime).Round(time.Second)
+				fmt.Printf("  ... still scanning (%d/%d completed, %v elapsed)\n", c, totalOps, elapsed)
+			}
+		}
+	}()
 
 	for _, img := range images {
 		for _, s := range scanners {
@@ -304,6 +324,7 @@ func executeConcurrentScans(ctx context.Context, images []string, scanners []sca
 					mu.Lock()
 					results = append(results, result)
 					mu.Unlock()
+					atomic.AddInt32(&completed, 1)
 					return nil
 				}
 
@@ -320,6 +341,7 @@ func executeConcurrentScans(ctx context.Context, images []string, scanners []sca
 					mu.Lock()
 					results = append(results, result)
 					mu.Unlock()
+					atomic.AddInt32(&completed, 1)
 					return nil // Don't fail entire group
 				}
 
@@ -345,11 +367,13 @@ func executeConcurrentScans(ctx context.Context, images []string, scanners []sca
 				mu.Lock()
 				results = append(results, result)
 				mu.Unlock()
+				atomic.AddInt32(&completed, 1)
 				return nil
 			})
 		}
 	}
 
 	_ = g.Wait() // Errors captured in results
+	close(done)  // Stop heartbeat goroutine
 	return results
 }
