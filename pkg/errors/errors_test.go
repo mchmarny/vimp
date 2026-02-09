@@ -40,7 +40,7 @@ func TestWrap(t *testing.T) {
 	if err.Code != ErrCodeIO {
 		t.Errorf("Code = %v, want %v", err.Code, ErrCodeIO)
 	}
-	if err.Cause != cause {
+	if !errors.Is(err.Cause, cause) {
 		t.Errorf("Cause = %v, want %v", err.Cause, cause)
 	}
 	if !errors.Is(err, cause) {
@@ -57,7 +57,7 @@ func TestWrapf(t *testing.T) {
 	if err.Message != "query failed for table vul" {
 		t.Errorf("Message = %v, want %v", err.Message, "query failed for table vul")
 	}
-	if err.Cause != cause {
+	if !errors.Is(err.Cause, cause) {
 		t.Errorf("Cause = %v, want %v", err.Cause, cause)
 	}
 }
@@ -88,7 +88,7 @@ func TestWrapWithContext(t *testing.T) {
 	}
 	err := WrapWithContext(ErrCodeTimeout, "operation timed out", cause, ctx)
 
-	if err.Cause != cause {
+	if !errors.Is(err.Cause, cause) {
 		t.Errorf("Cause = %v, want %v", err.Cause, cause)
 	}
 	if err.Context["timeout"] != "5m" {
@@ -126,7 +126,7 @@ func TestUnwrap(t *testing.T) {
 	err := Wrap(ErrCodeInternal, "wrapper", cause)
 
 	unwrapped := err.Unwrap()
-	if unwrapped != cause {
+	if !errors.Is(unwrapped, cause) {
 		t.Errorf("Unwrap() = %v, want %v", unwrapped, cause)
 	}
 }
