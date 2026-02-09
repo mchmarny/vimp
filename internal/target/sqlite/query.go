@@ -4,14 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 var (
+	// querySummary returns image/digest summary. Uses LIKE to match base image with any tag.
+	// The pattern "image = ? OR image LIKE ? || ':%'" matches both exact and tagged versions.
 	querySummary = `SELECT
 						image,
 						digest,
@@ -22,10 +24,11 @@ var (
 						MIN(processed) first_processed,
 						MAX(processed) last_processed
 					  FROM vul
-					  WHERE image = COALESCE(?, image)
+					  WHERE (? IS NULL OR image = ? OR image LIKE ? || ':%')
 					  GROUP BY image, digest
 					  `
 
+	// queryExposures returns exposures for an image/digest. Uses LIKE to match base image.
 	queryExposures = `SELECT
 						exposure,
 						source,
@@ -33,11 +36,13 @@ var (
 						score,
 						MAX(processed) last_processed
 					FROM vul
-					WHERE image = ?
+					WHERE (image = ? OR image LIKE ? || ':%')
 					AND digest = ?
 					GROUP BY exposure, source, severity, score
 					ORDER BY 1, 2, 3 DESC, 4 DESC
 				`
+
+	// queryPackages returns packages for an exposure. Uses LIKE to match base image.
 	queryPackages = `SELECT
 						source,
 						package,
@@ -46,13 +51,14 @@ var (
 						score,
 						MAX(processed) last_processed
 					FROM vul
-					WHERE image = ?
+					WHERE (image = ? OR image LIKE ? || ':%')
 					AND digest = ?
 					AND exposure = ?
 					GROUP BY source, package, version, severity, score
 					ORDER BY 1, 2, 3, 4, 5 DESC
 `
 
+	// queryTimeSeries returns vulnerability counts over time. Uses LIKE to match base image.
 	queryTimeSeries = `SELECT
 						date(processed) as scan_date,
 						COUNT(*) as total,
@@ -61,7 +67,7 @@ var (
 						SUM(CASE WHEN severity='medium' THEN 1 ELSE 0 END) as medium,
 						SUM(CASE WHEN severity='low' THEN 1 ELSE 0 END) as low
 					FROM vul
-					WHERE image = ?
+					WHERE (image = ? OR image LIKE ? || ':%')
 					GROUP BY date(processed)
 					ORDER BY scan_date
 `
@@ -102,19 +108,19 @@ func Query(ctx context.Context, opt *query.Options) (any, error) {
 		return nil, errors.New("undefined query type")
 	case query.Images:
 		q = querySummary
-		a = []any{nil}
+		a = []any{nil, nil, nil} // All three params null for "all images"
 	case query.Digests:
 		q = querySummary
-		a = []any{opt.Image}
+		a = []any{opt.Image, opt.Image, opt.Image} // image param 3x for: IS NULL check, exact match, LIKE
 	case query.Exposure:
 		q = queryExposures
-		a = []any{opt.Image, opt.Digest}
+		a = []any{opt.Image, opt.Image, opt.Digest} // image 2x for: exact match, LIKE
 	case query.Packages:
 		q = queryPackages
-		a = []any{opt.Image, opt.Digest, opt.Exposure}
+		a = []any{opt.Image, opt.Image, opt.Digest, opt.Exposure} // image 2x for: exact match, LIKE
 	case query.TimeSeries:
 		q = queryTimeSeries
-		a = []any{opt.Image}
+		a = []any{opt.Image, opt.Image} // image 2x for: exact match, LIKE
 	case query.CommonVulns:
 		// Build placeholder string for IN clause
 		placeholders := make([]string, len(opt.Images))
@@ -193,7 +199,7 @@ func scanSummary(rows *sql.Rows) (any, error) {
 		}
 	}
 
-	log.Info().Msgf("found %d records", len(r))
+	slog.Info("found records", "count", len(r))
 
 	return r, nil
 }
@@ -277,7 +283,7 @@ func scanPackages(opt *query.Options, rows *sql.Rows) (any, error) {
 		})
 	}
 
-	log.Info().Msgf("found %d records", len(r.Packages))
+	slog.Info("found records", "count", len(r.Packages))
 
 	return r, nil
 }
@@ -306,7 +312,7 @@ func scanTimeSeries(opt *query.Options, rows *sql.Rows) (any, error) {
 		})
 	}
 
-	log.Info().Msgf("found %d data points", len(r.DataPoints))
+	slog.Info("found data points", "count", len(r.DataPoints))
 
 	return r, nil
 }
@@ -332,7 +338,7 @@ func scanCommonVulns(opt *query.Options, rows *sql.Rows) (any, error) {
 		}
 	}
 
-	log.Info().Msgf("found %d common vulnerabilities", len(r.Common))
+	slog.Info("found common vulnerabilities", "count", len(r.Common))
 
 	return r, nil
 }

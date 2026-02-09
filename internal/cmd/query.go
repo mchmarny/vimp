@@ -7,7 +7,7 @@ import (
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
-	c "github.com/urfave/cli/v2"
+	c "github.com/urfave/cli/v3"
 )
 
 const (
@@ -17,9 +17,10 @@ const (
 
 var (
 	queryCmd = &c.Command{
-		Name:   "query",
-		Usage:  "query imported vulnerabilities",
-		Action: runQuery,
+		Name:     "query",
+		Category: categoryFunctional,
+		Usage:    "query imported vulnerabilities",
+		Action:   runQuery,
 		Flags: []c.Flag{
 			targetFlag,
 			imageFlag,
@@ -31,19 +32,17 @@ var (
 	}
 )
 
-func runQuery(cc *c.Context) error {
+func runQuery(ctx context.Context, cmd *c.Command) error {
 	opt := &query.Options{
-		Target:    cc.String(targetFlag.Name),
-		Image:     cc.String(imageFlag.Name),
-		Digest:    cc.String(digestFlag.Name),
-		Exposure:  cc.String(exposureFlag.Name),
-		DiffsOnly: cc.Bool(diffsOnlyFlag.Name),
-		Format:    query.ParseOutputFormat(cc.String(formatFlag.Name)),
+		Target:    cmd.String(targetFlag.Name),
+		Image:     cmd.String(imageFlag.Name),
+		Digest:    cmd.String(digestFlag.Name),
+		Exposure:  cmd.String(exposureFlag.Name),
+		DiffsOnly: cmd.Bool(diffsOnlyFlag.Name),
+		Format:    query.ParseOutputFormat(cmd.String(formatFlag.Name)),
 	}
 
-	printVersion(cc)
-
-	ctx, cancel := context.WithTimeout(cc.Context, defaultQueryTimeout)
+	ctx, cancel := context.WithTimeout(ctx, defaultQueryTimeout)
 	defer cancel()
 
 	if err := processor.QueryWithContext(ctx, opt); err != nil {

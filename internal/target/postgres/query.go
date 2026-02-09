@@ -3,29 +3,31 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 var (
-	querySummary = `SELECT 
-						image, 
-						digest, 
-						COUNT(*) exposures, 
-						COUNT(DISTINCT source) sources, 
-						COUNT(DISTINCT package) packages, 
-						MAX(score) max_score, 
-						MIN(processed) first_processed, 
-						MAX(processed) last_processed 
-					  FROM vul 
-					  WHERE image = COALESCE($1, image) 
-					  GROUP BY image, digest 
+	// querySummary returns image/digest summary. Uses LIKE to match base image with any tag.
+	querySummary = `SELECT
+						image,
+						digest,
+						COUNT(*) exposures,
+						COUNT(DISTINCT source) sources,
+						COUNT(DISTINCT package) packages,
+						MAX(score) max_score,
+						MIN(processed) first_processed,
+						MAX(processed) last_processed
+					  FROM vul
+					  WHERE ($1::text IS NULL OR image = $2 OR image LIKE $3 || ':%')
+					  GROUP BY image, digest
 				`
 
+	// queryExposures returns exposures for an image/digest. Uses LIKE to match base image.
 	queryExposures = `SELECT
 						exposure,
 						source,
@@ -33,11 +35,13 @@ var (
 						score,
 						MAX(processed) last_processed
 					FROM vul
-					WHERE image = $1
-					AND digest = $2
+					WHERE (image = $1 OR image LIKE $2 || ':%')
+					AND digest = $3
 					GROUP BY exposure, source, severity, score
 					ORDER BY 1, 2, 3 DESC, 4 DESC
 				`
+
+	// queryPackages returns packages for an exposure. Uses LIKE to match base image.
 	queryPackages = `SELECT
 						source,
 						package,
@@ -46,13 +50,14 @@ var (
 						score,
 						MAX(processed) last_processed
 					FROM vul
-					WHERE image = $1
-					AND digest = $2
-					AND exposure = $3
+					WHERE (image = $1 OR image LIKE $2 || ':%')
+					AND digest = $3
+					AND exposure = $4
 					GROUP BY source, package, version, severity, score
 					ORDER BY 1, 2, 3, 4, 5 DESC
 `
 
+	// queryTimeSeries returns vulnerability counts over time. Uses LIKE to match base image.
 	queryTimeSeries = `SELECT
 						date(processed) as scan_date,
 						COUNT(*) as total,
@@ -61,7 +66,7 @@ var (
 						SUM(CASE WHEN severity='medium' THEN 1 ELSE 0 END) as medium,
 						SUM(CASE WHEN severity='low' THEN 1 ELSE 0 END) as low
 					FROM vul
-					WHERE image = $1
+					WHERE (image = $1 OR image LIKE $2 || ':%')
 					GROUP BY date(processed)
 					ORDER BY scan_date
 `
@@ -102,19 +107,19 @@ func Query(ctx context.Context, opt *query.Options) (any, error) {
 		return nil, errors.New("undefined query type")
 	case query.Images:
 		q = querySummary
-		a = []any{nil}
+		a = []any{nil, nil, nil} // All three params null for "all images"
 	case query.Digests:
 		q = querySummary
-		a = []any{opt.Image}
+		a = []any{opt.Image, opt.Image, opt.Image} // image param 3x for: IS NULL check, exact match, LIKE
 	case query.Exposure:
 		q = queryExposures
-		a = []any{opt.Image, opt.Digest}
+		a = []any{opt.Image, opt.Image, opt.Digest} // image 2x for: exact match, LIKE
 	case query.Packages:
 		q = queryPackages
-		a = []any{opt.Image, opt.Digest, opt.Exposure}
+		a = []any{opt.Image, opt.Image, opt.Digest, opt.Exposure} // image 2x for: exact match, LIKE
 	case query.TimeSeries:
 		q = queryTimeSeries
-		a = []any{opt.Image}
+		a = []any{opt.Image, opt.Image} // image 2x for: exact match, LIKE
 	case query.CommonVulns:
 		q = queryCommonVulns
 		a = []any{opt.Images}
@@ -122,11 +127,7 @@ func Query(ctx context.Context, opt *query.Options) (any, error) {
 
 	rows, err := db.Query(ctx, q, a...)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		log.Debug().
-			Err(err).
-			Str("query", q).
-			Interface("args", a).
-			Msg("error executing query")
+		slog.Debug("error executing query", "error", err, "query", q, "args", a)
 		return nil, errors.Wrapf(err, "failed to execute select statement")
 	}
 	defer rows.Close()
@@ -175,7 +176,7 @@ func scanSummary(rows pgx.Rows) (any, error) {
 		r[image].Versions[digest] = q
 	}
 
-	log.Info().Msgf("found %d records", len(r))
+	slog.Info("found records", "count", len(r))
 
 	return r, nil
 }
@@ -237,7 +238,7 @@ func scanPackages(opt *query.Options, rows pgx.Rows) (any, error) {
 		r.Packages = append(r.Packages, q)
 	}
 
-	log.Info().Msgf("found %d records", len(r.Packages))
+	slog.Info("found records", "count", len(r.Packages))
 
 	return r, nil
 }
@@ -266,7 +267,7 @@ func scanTimeSeries(opt *query.Options, rows pgx.Rows) (any, error) {
 		})
 	}
 
-	log.Info().Msgf("found %d data points", len(r.DataPoints))
+	slog.Info("found data points", "count", len(r.DataPoints))
 
 	return r, nil
 }
@@ -292,7 +293,7 @@ func scanCommonVulns(opt *query.Options, rows pgx.Rows) (any, error) {
 		}
 	}
 
-	log.Info().Msgf("found %d common vulnerabilities", len(r.Common))
+	slog.Info("found common vulnerabilities", "count", len(r.Common))
 
 	return r, nil
 }

@@ -2,11 +2,11 @@ package bq
 
 import (
 	"context"
+	"log/slog"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -56,7 +56,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 		return errors.Wrap(err, "failed to insert rows")
 	}
 
-	log.Info().Msgf("inserted %d records into %s.%s.%s", len(rows), t.ProjectID, t.DatasetID, t.TableID)
+	slog.Info("inserted records", "count", len(rows), "project", t.ProjectID, "dataset", t.DatasetID, "table", t.TableID)
 
 	return nil
 }

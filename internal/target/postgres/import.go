@@ -2,12 +2,12 @@ package postgres
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -55,7 +55,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 			v.IsFixed,
 		)
 		if err != nil {
-			log.Err(err).Msgf("insert: %s", insertSQL)
+			slog.Error("insert failed", "error", err, "sql", insertSQL)
 			if err = tx.Rollback(ctx); err != nil {
 				return errors.Wrapf(err, "failed to rollback transaction")
 			}
@@ -67,7 +67,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 		return errors.Wrapf(err, "failed to commit transaction")
 	}
 
-	log.Debug().Int("count", len(vuls)).Msg("inserted")
+	slog.Debug("inserted", "count", len(vuls))
 
 	return nil
 }

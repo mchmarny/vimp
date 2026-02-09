@@ -160,6 +160,10 @@ func (o *Options) Validate() error {
 		if err != nil {
 			return errors.Wrap(err, "invalid image format")
 		}
+
+		// Normalize simple image names to docker.io/library/ prefix
+		// This matches the normalization done during import
+		o.Image = config.NormalizeImageName(o.Image)
 	}
 
 	if o.Target == "" {
