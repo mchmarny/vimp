@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mchmarny/vimp/internal/config"
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/mchmarny/vimp/internal/registry"
 	"github.com/mchmarny/vimp/internal/scanner"
@@ -82,12 +83,18 @@ func runScan(ctx context.Context, cmd *c.Command) error {
 	disco := cmd.Bool(discoFlag.Name)
 	tagsCount := cmd.Int(tagsFlag.Name)
 
+	// Use default database if target not specified and not scan-only
+	if target == "" && !scanOnly {
+		target = config.GetDefaultDBPath()
+	}
+
 	slog.Debug("scan command started",
 		"image", image,
 		"disco", disco,
 		"tagsCount", tagsCount,
 		"scanOnly", scanOnly,
 		"outputDir", outputDir,
+		"target", target,
 	)
 
 	// Validate image name (security: prevent shell injection)

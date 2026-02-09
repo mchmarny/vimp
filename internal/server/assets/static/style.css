@@ -18,12 +18,19 @@
 }
 
 [data-theme="dark"] {
-    --bg: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-tertiary: #334155;
-    --text: #f1f5f9;
-    --text-muted: #94a3b8;
-    --border: #334155;
+    --bg: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --border: #30363d;
+    --critical: #f85149;
+    --high: #db6d28;
+    --medium: #d29922;
+    --low: #3fb950;
+    --success: #3fb950;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 

@@ -79,8 +79,16 @@
 
     const ctx = document.getElementById('timeSeriesChart').getContext('2d');
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textColor = isDark ? '#f1f5f9' : '#1a1a1a';
-    const gridColor = isDark ? '#334155' : '#e5e7eb';
+    const textColor = isDark ? '#c9d1d9' : '#1a1a1a';
+    const gridColor = isDark ? '#30363d' : '#e5e7eb';
+
+    // GitHub-style colors: pastel in dark mode, vibrant in light mode
+    const colors = {
+        critical: isDark ? '#f85149' : '#dc2626',
+        high: isDark ? '#db6d28' : '#f97316',
+        medium: isDark ? '#d29922' : '#eab308',
+        low: isDark ? '#3fb950' : '#22c55e'
+    };
 
     new Chart(ctx, {
         type: 'line',
@@ -90,32 +98,32 @@
                 {
                     label: 'Critical',
                     data: data.map(d => d.critical),
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    borderColor: colors.critical,
+                    backgroundColor: isDark ? 'rgba(248, 81, 73, 0.1)' : 'rgba(220, 38, 38, 0.1)',
                     fill: true,
                     tension: 0.3
                 },
                 {
                     label: 'High',
                     data: data.map(d => d.high),
-                    borderColor: '#f97316',
-                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                    borderColor: colors.high,
+                    backgroundColor: isDark ? 'rgba(219, 109, 40, 0.1)' : 'rgba(249, 115, 22, 0.1)',
                     fill: true,
                     tension: 0.3
                 },
                 {
                     label: 'Medium',
                     data: data.map(d => d.medium),
-                    borderColor: '#eab308',
-                    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                    borderColor: colors.medium,
+                    backgroundColor: isDark ? 'rgba(210, 153, 34, 0.1)' : 'rgba(234, 179, 8, 0.1)',
                     fill: true,
                     tension: 0.3
                 },
                 {
                     label: 'Low',
                     data: data.map(d => d.low),
-                    borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderColor: colors.low,
+                    backgroundColor: isDark ? 'rgba(63, 185, 80, 0.1)' : 'rgba(34, 197, 94, 0.1)',
                     fill: true,
                     tension: 0.3
                 }
