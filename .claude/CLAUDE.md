@@ -24,8 +24,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Git Configuration
 
 - Commit to `main` branch (not `master`)
+- Do use `-S` to cryptographically sign the commit
 - Do NOT add `Co-Authored-By` lines (organization policy)
-- Use DCO sign-off: `git commit -s -m "message"`
+- Do not sign-off commits (no `-s` flag)
 
 ## Build and Development Commands
 
