@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"os"
 
 	"github.com/mchmarny/vimp/internal/target"
@@ -10,7 +11,6 @@ import (
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/mchmarny/vimp/pkg/sarif"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // Query queries the vulnerability data from the target data store.
@@ -34,39 +34,19 @@ func QueryWithContext(ctx context.Context, opt *query.Options) error {
 
 	switch gt {
 	case query.Undefined:
-		log.Info().
-			Str("target", opt.Target).
-			Msg("querying (undefined):")
+		slog.Info("querying (undefined)", "target", opt.Target)
 	case query.Images:
-		log.Info().
-			Str("target", opt.Target).
-			Msg("querying:")
+		slog.Info("querying", "target", opt.Target)
 	case query.Digests:
-		log.Info().
-			Str("target", opt.Target).
-			Str("image", opt.Image).
-			Msg("querying:")
+		slog.Info("querying", "target", opt.Target, "image", opt.Image)
 	case query.Exposure:
-		log.Info().Str("target", opt.Target).
-			Str("image", opt.Image).
-			Str("digest", opt.Digest).
-			Msg("querying:")
+		slog.Info("querying", "target", opt.Target, "image", opt.Image, "digest", opt.Digest)
 	case query.Packages:
-		log.Info().
-			Str("target", opt.Target).
-			Str("image", opt.Image).
-			Str("digest", opt.Digest).
-			Msg("querying:")
+		slog.Info("querying", "target", opt.Target, "image", opt.Image, "digest", opt.Digest)
 	case query.TimeSeries:
-		log.Info().
-			Str("target", opt.Target).
-			Str("image", opt.Image).
-			Msg("querying time-series:")
+		slog.Info("querying time-series", "target", opt.Target, "image", opt.Image)
 	case query.CommonVulns:
-		log.Info().
-			Str("target", opt.Target).
-			Int("images", len(opt.Images)).
-			Msg("querying common vulnerabilities:")
+		slog.Info("querying common vulnerabilities", "target", opt.Target, "images", len(opt.Images))
 	}
 
 	q, err := target.GetQuerier(opt.Target)

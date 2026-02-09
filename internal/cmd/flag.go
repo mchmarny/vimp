@@ -6,7 +6,7 @@ import (
 
 	"github.com/mchmarny/vimp/internal/scanner"
 	"github.com/mchmarny/vimp/internal/target"
-	c "github.com/urfave/cli/v2"
+	c "github.com/urfave/cli/v3"
 )
 
 var (
@@ -31,7 +31,7 @@ var (
 	targetFlag = &c.StringFlag{
 		Name:    "target",
 		Aliases: []string{"t"},
-		EnvVars: []string{"VIMP_TARGET"},
+		Sources: c.EnvVars("VIMP_TARGET"),
 		Usage:   fmt.Sprintf("target (e.g. %s, etc.)", strings.Join(target.GetSampleTargets(), ", ")),
 	}
 

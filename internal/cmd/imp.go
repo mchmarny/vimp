@@ -6,7 +6,7 @@ import (
 
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/pkg/errors"
-	c "github.com/urfave/cli/v2"
+	c "github.com/urfave/cli/v3"
 )
 
 const (
@@ -16,9 +16,10 @@ const (
 
 var (
 	impCmd = &c.Command{
-		Name:   "import",
-		Usage:  "import vulnerabilities from file",
-		Action: runImport,
+		Name:     "import",
+		Category: categoryFunctional,
+		Usage:    "import vulnerabilities from file",
+		Action:   runImport,
 		Flags: []c.Flag{
 			sourceFlag,
 			fileFlag,
@@ -28,17 +29,15 @@ var (
 	}
 )
 
-func runImport(cc *c.Context) error {
+func runImport(ctx context.Context, cmd *c.Command) error {
 	opt := &processor.ImportOptions{
-		Source:   cc.String(sourceFlag.Name),
-		File:     cc.String(fileFlag.Name),
-		Target:   cc.String(targetFlag.Name),
-		Scanners: cc.String(scannersFlag.Name),
+		Source:   cmd.String(sourceFlag.Name),
+		File:     cmd.String(fileFlag.Name),
+		Target:   cmd.String(targetFlag.Name),
+		Scanners: cmd.String(scannersFlag.Name),
 	}
 
-	printVersion(cc)
-
-	ctx, cancel := context.WithTimeout(cc.Context, defaultImportTimeout)
+	ctx, cancel := context.WithTimeout(ctx, defaultImportTimeout)
 	defer cancel()
 
 	if err := processor.ImportWithContext(ctx, opt); err != nil {

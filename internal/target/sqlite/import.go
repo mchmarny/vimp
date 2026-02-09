@@ -2,19 +2,19 @@ package sqlite
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
-	insertSQL = `INSERT INTO vul 
-		(image, digest, source, processed, exposure, package, version, severity, score, fixed) 
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
-		ON CONFLICT(image, digest, source, exposure, package, version) 
+	insertSQL = `INSERT INTO vul
+		(image, digest, source, processed, exposure, package, version, severity, score, fixed)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(image, digest, source, exposure, package, version)
 		DO UPDATE SET
 			processed=excluded.processed,
 			severity=excluded.severity,
@@ -73,7 +73,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 			v.IsFixed,
 		)
 		if err != nil {
-			log.Err(err).Msgf("insert: %s", insertSQL)
+			slog.Error("insert failed", "error", err, "sql", insertSQL)
 			if err = tx.Rollback(); err != nil {
 				return errors.Wrapf(err, "failed to rollback transaction")
 			}
@@ -85,7 +85,7 @@ func Import(ctx context.Context, uri string, vuls []*data.ImageVulnerability) er
 		return errors.Wrapf(err, "failed to commit transaction")
 	}
 
-	log.Debug().Int("count", len(vuls)).Msg("inserted")
+	slog.Debug("inserted", "count", len(vuls))
 
 	return nil
 }
