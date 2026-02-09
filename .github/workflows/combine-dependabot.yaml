@@ -4,7 +4,7 @@ name: Combine Dependabot PRs
 #
 # SETUP REQUIRED:
 # To push workflow file changes, this workflow needs a Personal Access Token (PAT)
-# with 'repo' and 'workflow' scopes stored as a repository secret named 'PAT'.
+# with 'repo' and 'workflow' scopes stored as a repository secret named 'DEPENDABOT_PR_MERGE'.
 #
 # Create one at: https://github.com/settings/tokens
 # Add it to repo secrets at: Settings > Secrets and variables > Actions
@@ -23,10 +23,10 @@ jobs:
     steps:
       - name: Check for PAT
         env:
-          PAT: ${{ secrets.PAT }}
+          TOKEN: ${{ secrets.DEPENDABOT_PR_MERGE }}
         run: |
-          if [ -z "$PAT" ]; then
-            echo "::error::PAT secret is not configured. Please add a Personal Access Token with 'repo' and 'workflow' scopes as a repository secret named 'PAT'."
+          if [ -z "$TOKEN" ]; then
+            echo "::error::DEPENDABOT_PR_MERGE secret is not configured. Please add a Personal Access Token with 'repo' and 'workflow' scopes as a repository secret named 'DEPENDABOT_PR_MERGE'."
             exit 1
           fi
 
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.DEPENDABOT_PR_MERGE }}
 
       - name: Configure Git
         run: |
@@ -44,7 +44,7 @@ jobs:
       - name: Get Dependabot PRs
         id: get-prs
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_PR_MERGE }}
         run: |
           # Get all open PRs matching the branch prefix
           prs=$(gh pr list --state open --json number,headRefName,title \
@@ -71,7 +71,7 @@ jobs:
         if: steps.get-prs.outputs.has_prs == 'true'
         id: combine
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_PR_MERGE }}
         run: |
           # Create a new branch for combined changes
           combined_branch="dependabot/combined-$(date +%Y%m%d-%H%M%S)"
@@ -112,7 +112,7 @@ jobs:
       - name: Create combined PR
         if: steps.get-prs.outputs.has_prs == 'true'
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_PR_MERGE }}
         run: |
           merged=$(cat /tmp/merged.txt)
           failed=$(cat /tmp/failed.txt)
