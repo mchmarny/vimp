@@ -32,13 +32,13 @@ vimp query --image docker.io/library/redis --digest sha256:... --diff
 ## Workflow Overview
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Scanner   │────▶│   Import    │────▶│   Query     │
-│   (scan)    │     │  (import)   │     │  (query)    │
-└─────────────┘     └─────────────┘     └─────────────┘
-      │                   │                   │
-      ▼                   ▼                   ▼
- JSON reports        SQLite/PG           JSON/SARIF
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Scanner   │────▶│   Import    │────▶│   Query     │     │   Server    │
+│   (scan)    │     │  (import)   │     │  (query)    │     │  (server)   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+      │                   │                   │                   │
+      ▼                   ▼                   ▼                   ▼
+ JSON reports        SQLite/PG           JSON/SARIF         Dashboard
 ```
 
 ## Step 1: Scan an Image
@@ -217,7 +217,35 @@ vimp query --image docker.io/library/redis
 
 # Export as SARIF for GitHub
 vimp query --image docker.io/library/redis --format sarif > redis-vulns.sarif
+
+# View results in web dashboard
+vimp server --open
 ```
+
+## Step 4: View Dashboard
+
+The `server` command starts a local web server with a visual dashboard for exploring vulnerability data.
+
+```bash
+# Start dashboard on default port (8080)
+vimp server
+
+# Start and open browser automatically
+vimp server --open
+
+# Use a custom port
+vimp server --port 3000
+```
+
+The dashboard provides:
+
+- **Overview**: Total images, exposures, and severity distribution
+- **Registry breakdown**: Vulnerability counts by registry
+- **Recent scans**: Latest scan results at a glance
+- **Image details**: Time series charts showing vulnerability trends
+- **Search**: Find specific images across your data
+
+![Dashboard](../etc/images/dash.png)
 
 ## Storage Targets
 
@@ -239,6 +267,21 @@ Set a default target using the `VIMP_TARGET` environment variable:
 export VIMP_TARGET="postgres://localhost:5432/vulns"
 vimp import --source docker.io/nginx:1.25 --file report.json
 ```
+
+## Docker Hub Mirror
+
+If you're behind a firewall or need to use a Docker Hub mirror (e.g., for rate limiting), use the `--docker-mirror` flag:
+
+```bash
+# Use Google's Docker Hub mirror
+vimp scan --image nginx:latest --docker-mirror mirror.gcr.io --yes
+
+# Or set via environment variable
+export VIMP_DOCKER_MIRROR="mirror.gcr.io"
+vimp scan --image alpine:latest --yes
+```
+
+The mirror is applied transparently during scanning - the original image URI is preserved in the database for consistent querying.
 
 ## Next Steps
 

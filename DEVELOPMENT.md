@@ -80,6 +80,7 @@ vimp/
 │   ├── processor/      # Import/query orchestration
 │   ├── registry/       # OCI registry operations (tag discovery)
 │   ├── scanner/        # Scanner execution
+│   ├── server/         # HTTP server and dashboard
 │   └── target/         # Storage backends
 │       ├── sqlite/
 │       ├── postgres/
@@ -100,7 +101,7 @@ vimp/
 
 #### CLI (`cmd/vimp`)
 - **Framework**: [urfave/cli v3](https://github.com/urfave/cli)
-- **Commands**: `scan`, `import`, `query`
+- **Commands**: `scan`, `import`, `query`, `server`
 - **Logging**: Custom slog handler with colored output
 
 #### Converters (`internal/converter/`)

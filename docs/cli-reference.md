@@ -17,6 +17,7 @@ These options are available for all commands:
 - [scan](#scan) - Scan container images for vulnerabilities
 - [import](#import) - Import vulnerability data from files
 - [query](#query) - Query stored vulnerability data
+- [server](#server) - Start web dashboard for vulnerability visualization
 
 ---
 
@@ -48,12 +49,14 @@ Use `--disco` to automatically discover recent tags from the registry and scan t
 | `--scan-only` | - | Skip auto-import after scanning | `false` |
 | `--disco` | - | Discover recent tags from registry | `false` |
 | `--tags` | - | Number of tags to discover (1-20, requires `--disco`) | `5` |
+| `--docker-mirror` | - | Docker Hub mirror URL (e.g., `mirror.gcr.io`) | - |
 
 ### Environment Variables
 
 | Variable | Description |
 |----------|-------------|
 | `VIMP_TARGET` | Default target URI |
+| `VIMP_DOCKER_MIRROR` | Docker Hub mirror URL |
 
 ### Examples
 
@@ -84,6 +87,9 @@ vimp scan --image nginx --disco --tags 3 --yes
 
 # Tag discovery with specific scanners
 vimp scan --image redis --disco --tags 3 --scanner grype --yes
+
+# Use Docker Hub mirror
+vimp scan --image alpine:latest --docker-mirror mirror.gcr.io --yes
 ```
 
 ### Output
@@ -121,12 +127,14 @@ Imports vulnerability data from scanner JSON output into a storage target. Suppo
 | `--file` | `-f` | Path to vulnerability report file | - |
 | `--target` | `-t` | Database target URI | `sqlite://~/.vimp.db` |
 | `--scanners` | - | Comma-separated list of scanners (when no file) | All available |
+| `--docker-mirror` | - | Docker Hub mirror URL (e.g., `mirror.gcr.io`) | - |
 
 ### Environment Variables
 
 | Variable | Description |
 |----------|-------------|
 | `VIMP_TARGET` | Default target URI |
+| `VIMP_DOCKER_MIRROR` | Docker Hub mirror URL |
 
 ### Target URI Formats
 
@@ -270,6 +278,60 @@ SARIF 2.1.0 format for GitHub Code Scanning integration. Includes:
 - Tool information
 - Rules with severity mappings
 - Results with locations
+
+---
+
+## server
+
+Start a local HTTP server for the vulnerability dashboard.
+
+```
+vimp server [options]
+```
+
+### Description
+
+Starts a local web server that provides a dashboard for visualizing vulnerability data. The dashboard includes:
+
+- Overview statistics (images, exposures, severity distribution)
+- Registry breakdown
+- Recent scan results
+- Image detail with time series charts
+- Searchable image list
+- Dark mode support
+
+### Options
+
+| Option | Shorthand | Description | Default |
+|--------|-----------|-------------|---------|
+| `--port` | `-p` | Port to listen on | `8080` |
+| `--target` | `-t` | Database target URI | `sqlite://~/.vimp.db` |
+| `--open` | - | Open browser automatically | `false` |
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VIMP_TARGET` | Default target URI |
+
+### Examples
+
+```bash
+# Start server with defaults
+vimp server
+
+# Start on custom port
+vimp server --port 3000
+
+# Start with PostgreSQL backend
+vimp server --target postgres://localhost:5432/vulns
+
+# Start and open browser automatically
+vimp server --open
+
+# Use a specific SQLite database
+vimp server --target sqlite:///path/to/db.db --open
+```
 
 ---
 
