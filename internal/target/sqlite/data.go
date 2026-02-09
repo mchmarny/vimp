@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	// sqlite3 driver
 	_ "modernc.org/sqlite"
@@ -36,10 +36,10 @@ func getStore(ctx context.Context, path string) (*sql.DB, error) {
 	path = strings.Replace(path, driverPrefix, "", 1)
 
 	wasCreated := false
-	log.Debug().Msgf("data path: %s", path)
+	slog.Debug("data path", "path", path)
 
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		log.Debug().Msg("data file does not exist, creating...")
+		slog.Debug("data file does not exist, creating...")
 		wasCreated = true
 	}
 
@@ -49,7 +49,7 @@ func getStore(ctx context.Context, path string) (*sql.DB, error) {
 	}
 
 	if wasCreated {
-		log.Debug().Msg("creating schema...")
+		slog.Debug("creating schema...")
 
 		b, err := f.ReadFile("sql/ddl.sql")
 		if err != nil {
@@ -66,7 +66,7 @@ func getStore(ctx context.Context, path string) (*sql.DB, error) {
 func parseTime(v string) time.Time {
 	t, err := time.Parse(time.RFC3339Nano, v)
 	if err != nil {
-		log.Error().Err(err).Msgf("failed to parse time: %s", v)
+		slog.Error("failed to parse time", "error", err, "value", v)
 		return time.Now().UTC()
 	}
 	return t

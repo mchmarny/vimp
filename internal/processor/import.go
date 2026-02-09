@@ -2,6 +2,7 @@ package processor
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/Jeffail/gabs/v2"
@@ -12,7 +13,6 @@ import (
 	"github.com/mchmarny/vimp/internal/target"
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // ImportOptions represents the input options.
@@ -64,18 +64,14 @@ func (o *ImportOptions) validate(_ context.Context) error {
 
 	// if image is set with digest, split it and set the digest
 	parts := strings.Split(o.Source, "@")
-	o.uri = parts[0]
+	o.uri = parts[0] // Store full image reference including tag
 	o.digest = parts[1]
 
 	if o.File == "" {
 		return errors.New("file path is required")
 	}
 
-	log.Info().
-		Str("image", o.uri).
-		Str("digest", o.digest).
-		Str("target", o.Target).
-		Msg("importing:")
+	slog.Info("importing", "image", o.uri, "digest", o.digest, "target", o.Target)
 
 	c, err := parser.GetContainer(o.File)
 	if err != nil {
@@ -168,7 +164,7 @@ func runImport(ctx context.Context, opt *ImportOptions) error {
 	}
 
 	uniques := unique(list)
-	log.Info().Msgf("found %d unique vulnerabilities", len(uniques))
+	slog.Info("found unique vulnerabilities", "count", len(uniques))
 
 	vulnData := data.DecorateVulnerabilities(uniques, opt.uri, opt.digest, opt.detectedConverter.Name())
 

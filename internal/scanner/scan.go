@@ -3,11 +3,11 @@ package scanner
 import (
 	"bytes"
 	"context"
+	"log/slog"
 	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // GetSampleScanners returns list of supported scanners.
@@ -35,7 +35,7 @@ func ScanWithContext(ctx context.Context, opt *Options) (*Result, error) {
 		return nil, errors.Wrap(err, "error parsing scan types")
 	}
 
-	log.Info().Msgf("scanning image %s", opt.Image)
+	slog.Info("scanning image", "image", opt.Image)
 
 	r := &Result{
 		Image: opt.Image,
@@ -52,12 +52,12 @@ func ScanWithContext(ctx context.Context, opt *Options) (*Result, error) {
 		// Get scanner from registry
 		scanner, ok := GetScanner(scanType.String())
 		if !ok {
-			log.Warn().Msgf("scanner not found in registry: %s", scanType)
+			slog.Warn("scanner not found in registry", "scanner", scanType)
 			continue
 		}
 
 		if !scanner.IsAvailable() {
-			log.Warn().Msgf("skipping scan: %s is not installed", scanType)
+			slog.Warn("skipping scan: scanner not installed", "scanner", scanType)
 			continue
 		}
 
@@ -66,7 +66,7 @@ func ScanWithContext(ctx context.Context, opt *Options) (*Result, error) {
 			return nil, errors.Wrapf(err, "error running %s scanner", scanType)
 		}
 
-		log.Info().Msgf("%s scan complete: %s", scanType, outputPath)
+		slog.Info("scan complete", "scanner", scanType, "output", outputPath)
 
 		r.Files[scanType] = outputPath
 	}
@@ -80,7 +80,7 @@ func ScanWithScanners(ctx context.Context, image string, scannerNames []string) 
 		return nil, errors.New("image is required")
 	}
 
-	log.Info().Msgf("scanning image %s with scanners: %v", image, scannerNames)
+	slog.Info("scanning image", "image", image, "scanners", scannerNames)
 
 	result := &ScanResult{
 		Image: image,
@@ -96,12 +96,12 @@ func ScanWithScanners(ctx context.Context, image string, scannerNames []string) 
 
 		scanner, ok := GetScanner(name)
 		if !ok {
-			log.Warn().Msgf("scanner not found: %s", name)
+			slog.Warn("scanner not found", "scanner", name)
 			continue
 		}
 
 		if !scanner.IsAvailable() {
-			log.Warn().Msgf("skipping scan: %s is not installed", name)
+			slog.Warn("skipping scan: scanner not installed", "scanner", name)
 			continue
 		}
 
@@ -110,7 +110,7 @@ func ScanWithScanners(ctx context.Context, image string, scannerNames []string) 
 			return nil, errors.Wrapf(err, "error running %s scanner", name)
 		}
 
-		log.Info().Msgf("%s scan complete: %s", name, outputPath)
+		slog.Info("scan complete", "scanner", name, "output", outputPath)
 
 		result.Files[name] = outputPath
 	}
@@ -153,7 +153,7 @@ func runCmdWithContext(ctx context.Context, cmd *exec.Cmd, outputPath string) er
 		if _, e := os.Stat(outputPath); errors.Is(e, os.ErrNotExist) {
 			// Only error if the file doesn't exist
 			// Some scanners (snyk) return non-zero when they find vulnerabilities
-			log.Error().Err(err).Msgf("out: %s, err: %s", outb.String(), errb.String())
+			slog.Error("scanner command failed", "error", err, "stdout", outb.String(), "stderr", errb.String())
 			return errors.Wrapf(err, "error executing scanner command: %s", cmd.String())
 		}
 		return nil

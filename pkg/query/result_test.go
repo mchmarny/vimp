@@ -42,12 +42,12 @@ func TestHasUniqueExposureSeverityScore(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "different score",
+			name: "different score same severity",
 			list: []*ExposureResult{
 				{Source: "grype", Severity: "high", Score: 7.5},
 				{Source: "trivy", Severity: "high", Score: 8.0},
 			},
-			want: true,
+			want: false, // same severity, only score differs - not a diff
 		},
 		{
 			name: "multiple sources different values",
@@ -68,32 +68,6 @@ func TestHasUniqueExposureSeverityScore(t *testing.T) {
 				t.Errorf("HasUniqueExposureSeverityScore() = %v, want %v", got, tc.want)
 			}
 		})
-	}
-}
-
-func TestExposureResultGetSeverityScoreHash(t *testing.T) {
-	t.Parallel()
-
-	e1 := &ExposureResult{Severity: "high", Score: 7.5}
-	e2 := &ExposureResult{Severity: "high", Score: 7.5}
-	e3 := &ExposureResult{Severity: "medium", Score: 7.5}
-
-	// Same severity and score should produce same hash
-	hash1 := e1.GetSeverityScoreHash()
-	hash2 := e2.GetSeverityScoreHash()
-	if hash1 != hash2 {
-		t.Errorf("Same values should produce same hash: %s != %s", hash1, hash2)
-	}
-
-	// Different severity should produce different hash
-	hash3 := e3.GetSeverityScoreHash()
-	if hash1 == hash3 {
-		t.Errorf("Different severity should produce different hash: %s == %s", hash1, hash3)
-	}
-
-	// Hash should be 64 characters (SHA256 hex)
-	if len(hash1) != 64 {
-		t.Errorf("Hash should be 64 chars, got %d", len(hash1))
 	}
 }
 

@@ -2,11 +2,11 @@ package bq
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 )
 
@@ -15,11 +15,7 @@ func configureTarget(ctx context.Context, t *targetConfig) error {
 		return errors.New("nil target config")
 	}
 
-	log.Debug().
-		Str("project", t.ProjectID).
-		Str("dataset", t.DatasetID).
-		Str("table", t.TableID).
-		Msg("configuring target")
+	slog.Debug("configuring target", "project", t.ProjectID, "dataset", t.DatasetID, "table", t.TableID)
 
 	exists, err := datasetExists(ctx, t)
 	if err != nil {

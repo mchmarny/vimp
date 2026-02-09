@@ -1,8 +1,6 @@
 package query
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"time"
 )
 
@@ -42,7 +40,8 @@ type ImageExposureResult struct {
 	Exposures map[string][]*ExposureResult `json:"exposures"`
 }
 
-// HasUniqueExposureSeverityScore returns true if the image has unique exposures.
+// HasUniqueSeverity returns true if scanners report different severities for the same CVE.
+// This is used by --diff to show only CVEs where scanners disagree on severity classification.
 func HasUniqueExposureSeverityScore(list []*ExposureResult) bool {
 	if len(list) == 0 {
 		return false
@@ -50,7 +49,7 @@ func HasUniqueExposureSeverityScore(list []*ExposureResult) bool {
 
 	m := make(map[string]bool, 0)
 	for _, x := range list {
-		m[x.GetSeverityScoreHash()] = true
+		m[x.Severity] = true
 	}
 
 	return len(m) > 1
@@ -68,11 +67,6 @@ type ExposureResult struct {
 
 	// Last is the last time the image was discovered.
 	Last time.Time `json:"last_discovered"`
-}
-
-func (e *ExposureResult) GetSeverityScoreHash() string {
-	s := fmt.Sprintf("%s-%.1f", e.Severity, e.Score)
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }
 
 type PackageExposureResult struct {

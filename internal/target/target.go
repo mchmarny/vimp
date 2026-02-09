@@ -2,6 +2,7 @@ package target
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 
 	"github.com/mchmarny/vimp/internal/target/bq"
@@ -12,7 +13,6 @@ import (
 	"github.com/mchmarny/vimp/pkg/data"
 	"github.com/mchmarny/vimp/pkg/query"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -47,7 +47,7 @@ func getTargetPrefix(uri string) string {
 	uri = strings.TrimSpace(uri)
 	p := strings.Split(uri, "://")
 	if len(p) != expectedURIParts {
-		log.Error().Str("uri", uri).Msg("invalid target URI")
+		slog.Error("invalid target URI", "uri", uri)
 		return uri
 	}
 	return strings.ToLower(p[0])

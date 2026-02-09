@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,8 +14,7 @@ import (
 	"github.com/mchmarny/vimp/internal/processor"
 	"github.com/mchmarny/vimp/internal/scanner"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
-	c "github.com/urfave/cli/v2"
+	c "github.com/urfave/cli/v3"
 )
 
 const (
@@ -28,8 +28,9 @@ var (
 	imageNameRegex = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._\-/:@]*$`)
 
 	scanCmd = &c.Command{
-		Name:  "scan",
-		Usage: "scan container image for vulnerabilities",
+		Name:     "scan",
+		Category: categoryFunctional,
+		Usage:    "scan container image for vulnerabilities",
 		Description: `Scan a container image using available vulnerability scanners.
 
 If no --scanner flag is provided, discovers available scanners and prompts
@@ -52,15 +53,13 @@ Examples:
 	}
 )
 
-func runScan(cc *c.Context) error {
-	printVersion(cc)
-
-	image := cc.String(scanImageFlag.Name)
-	selectedScanners := cc.StringSlice(scannerFlag.Name)
-	outputDir := cc.String(outputDirFlag.Name)
-	target := cc.String(targetFlag.Name)
-	autoYes := cc.Bool(yesFlag.Name)
-	scanOnly := cc.Bool(scanOnlyFlag.Name)
+func runScan(ctx context.Context, cmd *c.Command) error {
+	image := cmd.String(scanImageFlag.Name)
+	selectedScanners := cmd.StringSlice(scannerFlag.Name)
+	outputDir := cmd.String(outputDirFlag.Name)
+	target := cmd.String(targetFlag.Name)
+	autoYes := cmd.Bool(yesFlag.Name)
+	scanOnly := cmd.Bool(scanOnlyFlag.Name)
 
 	// Validate image name (security: prevent shell injection)
 	if err := validateImageName(image); err != nil {
@@ -76,7 +75,7 @@ func runScan(cc *c.Context) error {
 	// If no scanners specified by user, confirm before running
 	if len(selectedScanners) == 0 && !autoYes {
 		if !confirmScan(scannersToUse, image) {
-			log.Info().Msg("scan cancelled by user")
+			slog.Info("scan cancelled by user")
 			return nil
 		}
 	}
@@ -88,7 +87,7 @@ func runScan(cc *c.Context) error {
 		return errors.Wrapf(mkdirErr, "failed to create output directory: %s", reportDir)
 	}
 
-	ctx, cancel := context.WithTimeout(cc.Context, defaultScanTimeout)
+	ctx, cancel := context.WithTimeout(ctx, defaultScanTimeout)
 	defer cancel()
 
 	// Execute scans
@@ -104,10 +103,7 @@ func runScan(cc *c.Context) error {
 		}
 	}
 
-	log.Info().
-		Int("scanners", len(results)).
-		Str("output", reportDir).
-		Msg("scan complete")
+	slog.Info("scan complete", "scanners", len(results), "output", reportDir)
 
 	return nil
 }
@@ -204,19 +200,13 @@ func executeScanners(ctx context.Context, scanners []scanner.Scanner, image, rep
 
 		outputPath := filepath.Join(reportDir, fmt.Sprintf("%s.json", s.Name()))
 
-		log.Info().
-			Str("scanner", s.Name()).
-			Str("image", image).
-			Msg("running scan")
+		slog.Info("running scan", "scanner", s.Name(), "image", image)
 
 		if err := s.ScanToPath(ctx, image, outputPath); err != nil {
 			return nil, errors.Wrapf(err, "scanner %s failed", s.Name())
 		}
 
-		log.Info().
-			Str("scanner", s.Name()).
-			Str("output", outputPath).
-			Msg("scan complete")
+		slog.Info("scan complete", "scanner", s.Name(), "output", outputPath)
 
 		results[s.Name()] = outputPath
 	}
@@ -233,10 +223,7 @@ func importResults(ctx context.Context, results map[string]string, image, target
 		default:
 		}
 
-		log.Info().
-			Str("scanner", scannerName).
-			Str("file", filePath).
-			Msg("importing results")
+		slog.Info("importing results", "scanner", scannerName, "file", filePath)
 
 		opt := &processor.ImportOptions{
 			Source: image,
