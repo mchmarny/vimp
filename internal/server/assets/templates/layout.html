@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}} - vimp</title>
+    <script>
+        // Apply theme early to prevent flash and ensure charts detect correct theme
+        (function() {
+            var saved = localStorage.getItem('theme');
+            var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="/static/style.css">
     <script src="/static/htmx.min.js"></script>
 </head>
@@ -34,21 +42,10 @@
         <span>Database: {{.Target}}</span>
     </footer>
     <script>
-        // Theme toggle
-        const toggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-
-        // Check for saved theme or system preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            html.setAttribute('data-theme', savedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            html.setAttribute('data-theme', 'dark');
-        }
-
-        toggle.addEventListener('click', () => {
-            const current = html.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
+        // Theme toggle (initialization handled in head)
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            var html = document.documentElement;
+            var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
         });
