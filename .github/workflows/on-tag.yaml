@@ -46,7 +46,7 @@ jobs:
           cache: true
 
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0  # v0.18.0
+        uses: anchore/sbom-action/download-syft@28d71544de8eaf1b958d335707167c5f783590ad  # v0.22.2
         with:
           syft-version: ${{ steps.versions.outputs.syft }}
 
