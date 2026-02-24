@@ -1,6 +1,6 @@
 module github.com/mchmarny/vimp
 
-go 1.25
+go 1.25.0
 
 require (
 	cloud.google.com/go/bigquery v1.73.1
@@ -12,7 +12,7 @@ require (
 	github.com/urfave/cli/v3 v3.6.2
 	golang.org/x/mod v0.33.0
 	golang.org/x/sync v0.19.0
-	google.golang.org/api v0.265.0
+	google.golang.org/api v0.268.0
 	modernc.org/sqlite v1.45.0
 )
 
