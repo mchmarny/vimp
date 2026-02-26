@@ -1,9 +1,9 @@
 module github.com/mchmarny/vimp
 
-go 1.25
+go 1.25.0
 
 require (
-	cloud.google.com/go/bigquery v1.73.1
+	cloud.google.com/go/bigquery v1.74.0
 	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/google/go-containerregistry v0.20.7
 	github.com/jackc/pgx/v5 v5.8.0
