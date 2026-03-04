@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	cloud.google.com/go/bigquery v1.74.0
 	github.com/Jeffail/gabs/v2 v2.7.0
-	github.com/google/go-containerregistry v0.21.1
+	github.com/google/go-containerregistry v0.21.2
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
