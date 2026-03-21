@@ -47,13 +47,13 @@ jobs:
         run: make tidy
 
       - name: Install Grype
-        uses: anchore/scan-action/download-grype@7037fa011853d5a11690026fb85feee79f4c946c  # v7.3.2
+        uses: anchore/scan-action/download-grype@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2  # v7.4.0
 
       - name: Unit Test
         run: make test
 
       - name: Parse Coverage
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de  # v5.5.2
+        uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad  # v5.5.3
         with:
           flags: unittests
 
