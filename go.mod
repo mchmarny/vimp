@@ -10,7 +10,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
 	github.com/urfave/cli/v3 v3.8.0
-	golang.org/x/mod v0.34.0
+	golang.org/x/mod v0.35.0
 	golang.org/x/sync v0.20.0
 	google.golang.org/api v0.272.0
 	modernc.org/sqlite v1.48.1
@@ -60,15 +60,15 @@ require (
 	go.opentelemetry.io/otel v1.42.0 // indirect
 	go.opentelemetry.io/otel/metric v1.42.0 // indirect
 	go.opentelemetry.io/otel/trace v1.42.0 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260409153401-be6f6cb8b1fa // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20260217215200-42d3e9bedb6d // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260316180232-0b37fe3546d5 // indirect
